@@ -267,7 +267,7 @@ const AdminProducts: React.FC = () => {
                   </div>
                 </div>
                 <div className="col-span-2 text-gray-300">{p.gameTitleData?.name || p.gameTitle}</div>
-                <div className="col-span-2 text-gray-300">Rp {p.price.toLocaleString('id-ID')}</div>
+                <div className="col-span-2 text-gray-300">Rp {Number(p.price||0).toLocaleString('id-ID')}</div>
                 <div className="col-span-3 text-right">
                   <button onClick={() => startEdit(p)} className="px-3 py-1.5 rounded border border-white/20 text-white hover:bg-white/10 mr-2">Edit</button>
                   <button onClick={() => handleDelete(p.id)} className="px-3 py-1.5 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10">Hapus</button>

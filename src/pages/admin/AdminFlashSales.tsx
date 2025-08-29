@@ -136,7 +136,7 @@ const AdminFlashSales: React.FC = () => {
             flashSales.map((row: any) => (
               <div key={row.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-pink-500/10">
                 <div className="col-span-4 text-white line-clamp-1">{row.product?.name || row.productId}</div>
-                <div className="col-span-2 text-gray-300">{(row.salePrice || row.sale_price)?.toLocaleString('id-ID')}</div>
+                <div className="col-span-2 text-gray-300">Rp {Number((row.salePrice ?? row.sale_price) || 0).toLocaleString('id-ID')}</div>
                 <div className="col-span-2 text-gray-300">{(row.endTime || row.end_time)?.replace('T',' ').slice(0,16)}</div>
                 <div className="col-span-2">{(row.isActive ?? row.is_active) ? <span className="text-green-400">Aktif</span> : <span className="text-gray-400">Nonaktif</span>}</div>
                 <div className="col-span-2 text-right">

@@ -308,6 +308,7 @@ export class ProductService {
         return data.map((product: any) => ({
           ...product,
           rentalOptions: product.rental_options || [],
+          hasRental: product.has_rental ?? product.hasRental ?? ((product.rental_options || []).length > 0),
           tierData: product.tiers,
           gameTitleData: product.game_titles,
           tier: product.tiers?.slug as ProductTier,
@@ -343,6 +344,7 @@ export class ProductService {
       return (basic || []).map((p: any) => ({
         ...p,
         rentalOptions: rentalsByProduct.get(p.id) || [],
+        hasRental: p.has_rental ?? p.hasRental ?? ((rentalsByProduct.get(p.id) || []).length > 0),
         gameTitle: p.game_title || p.gameTitle,
       }));
     } catch (error) {
@@ -374,12 +376,12 @@ export class ProductService {
       }
 
       if (!data) return null;
-      let rentalOptions: any[] = [];
+  let rentalOptions: any[] = [];
       try {
         const { data: ro } = await supabase.from('rental_options').select('*').eq('product_id', id);
         rentalOptions = ro || [];
       } catch {}
-      return { ...data, rentalOptions } as any;
+  return { ...data, rentalOptions, hasRental: (data as any).has_rental ?? (data as any).hasRental ?? (rentalOptions.length > 0) } as any;
     } catch (error) {
       console.error('Error fetching product:', error);
       return sampleProducts.find(p => p.id === id) || null;
@@ -472,18 +474,22 @@ export class ProductService {
         const ids = (basic || []).map((b: any) => b.product_id);
         const { data: prods } = await supabase.from('products').select('*').in('id', ids);
         const pmap = new Map((prods || []).map((p: any) => [p.id, p]));
-        return (basic || []).map((sale: any) => ({
-          id: sale.id,
-          productId: sale.product_id,
-          salePrice: sale.sale_price,
-          originalPrice: sale.original_price,
-          startTime: sale.start_time,
-          endTime: sale.end_time,
-          stock: sale.stock,
-          isActive: sale.is_active,
-          createdAt: sale.created_at,
-          product: pmap.get(sale.product_id) || {},
-        }));
+        return (basic || []).map((sale: any) => {
+          const raw = pmap.get(sale.product_id) || {};
+          const product = { ...raw, hasRental: raw.has_rental ?? raw.hasRental ?? false };
+          return {
+            id: sale.id,
+            productId: sale.product_id,
+            salePrice: sale.sale_price,
+            originalPrice: sale.original_price,
+            startTime: sale.start_time,
+            endTime: sale.end_time,
+            stock: sale.stock,
+            isActive: sale.is_active,
+            createdAt: sale.created_at,
+            product,
+          };
+        });
       }
 
       return data?.map((sale: any) => {
@@ -492,6 +498,7 @@ export class ProductService {
         const tier = prod.tiers;
         const product = {
           ...prod,
+          hasRental: prod.has_rental ?? prod.hasRental ?? false,
           // Enrich with joined data for UI badges/monogram
           gameTitleData: gt ? {
             id: gt.id,
