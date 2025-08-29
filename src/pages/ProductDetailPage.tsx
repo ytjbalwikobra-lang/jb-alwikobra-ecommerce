@@ -399,8 +399,8 @@ const ProductDetailPage: React.FC = () => {
               </div>
             )}
 
-            {/* Rental Options */}
-            {product.hasRental && product.rentalOptions && product.rentalOptions.length > 0 && (
+            {/* Rental Options - hidden if user came from flash sale card */}
+            {(!cameFromFlashSaleCard) && product.hasRental && product.rentalOptions && product.rentalOptions.length > 0 && (
               <div className="mb-6">
                 <h3 className="font-semibold text-white mb-3 flex items-center space-x-2">
                   <Calendar className="text-pink-400" size={16} />
@@ -448,8 +448,8 @@ const ProductDetailPage: React.FC = () => {
                 </span>
               </button>
 
-              {/* Rental Button */}
-              {product.hasRental && selectedRental && (
+              {/* Rental Button - hidden if user came from flash sale card */}
+              {(!cameFromFlashSaleCard) && product.hasRental && selectedRental && (
         <button
                   onClick={() => handleRental(selectedRental)}
                   disabled={product.stock === 0}

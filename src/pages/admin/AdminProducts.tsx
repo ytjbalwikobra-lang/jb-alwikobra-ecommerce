@@ -5,6 +5,7 @@ import { ProductService } from '../../services/productService.ts';
 import { supabase } from '../../services/supabase.ts';
 import ImageUploader from '../../components/ImageUploader.tsx';
 import { uploadFiles } from '../../services/storageService.ts';
+import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
 import { useToast } from '../../components/Toast.tsx';
 // Admin page cleaned: diagnostics imports removed
 
@@ -293,11 +294,25 @@ const AdminProducts: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Harga</label>
-                  <input type="number" min={0} step={1000} value={form.price} onChange={(e)=>setForm({...form, price:Number(e.target.value)})} className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={form.price ? formatNumberID(form.price) : ''}
+                    onChange={(e)=>setForm({...form, price: parseNumberID(e.target.value)})}
+                    placeholder="0"
+                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Harga Asli (opsional)</label>
-                  <input type="number" min={0} step={1000} value={form.originalPrice} onChange={(e)=>setForm({...form, originalPrice:Number(e.target.value)})} className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={form.originalPrice ? formatNumberID(form.originalPrice) : ''}
+                    onChange={(e)=>setForm({...form, originalPrice: parseNumberID(e.target.value)})}
+                    placeholder="0"
+                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -361,9 +376,16 @@ const AdminProducts: React.FC = () => {
                   <input className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Durasi (mis. 1 Hari)" value={r.duration} onChange={(e)=>{
                     const next = [...form.rentals]; next[idx] = { ...r, duration: e.target.value }; setForm({...form, rentals: next});
                   }} />
-                  <input type="number" min={0} step={1000} className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Harga" value={r.price} onChange={(e)=>{
-                    const next = [...form.rentals]; next[idx] = { ...r, price: Number(e.target.value) }; setForm({...form, rentals: next});
-                  }} />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white"
+                    placeholder="Harga"
+                    value={r.price ? formatNumberID(r.price) : ''}
+                    onChange={(e)=>{
+                      const next = [...form.rentals]; next[idx] = { ...r, price: parseNumberID(e.target.value) }; setForm({...form, rentals: next});
+                    }}
+                  />
                   <button className="text-red-300 border border-red-500/40 rounded px-2 py-1 hover:bg-red-500/10" onClick={()=>{
                     const next = [...form.rentals]; next.splice(idx,1); setForm({...form, rentals: next});
                   }}>Hapus</button>

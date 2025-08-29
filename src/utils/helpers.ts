@@ -17,6 +17,21 @@ export const formatDate = (date: string): string => {
   }).format(new Date(date));
 };
 
+// Format a plain number with Indonesian thousand separators (no currency symbol)
+export const formatNumberID = (value: number | null | undefined): string => {
+  const n = Number(value || 0);
+  return new Intl.NumberFormat('id-ID', {
+    maximumFractionDigits: 0,
+  }).format(n);
+};
+
+// Parse an Indonesian-formatted number string back to number (keeps digits only)
+export const parseNumberID = (value: string): number => {
+  if (!value) return 0;
+  const digits = value.replace(/[^0-9]/g, '');
+  return digits ? Number(digits) : 0;
+};
+
 export const calculateTimeRemaining = (endTime: string): {
   days: number;
   hours: number;

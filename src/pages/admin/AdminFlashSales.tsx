@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Product } from '../../types/index.ts';
 import { ProductService } from '../../services/productService.ts';
+import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
 import { useToast } from '../../components/Toast.tsx';
 
 type FSForm = {
@@ -172,11 +173,25 @@ const AdminFlashSales: React.FC = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Harga Sale</label>
-                  <input type="number" min={0} step={1000} value={form.sale_price} onChange={(e)=>setForm({...form, sale_price: Number(e.target.value)})} className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={form.sale_price ? formatNumberID(form.sale_price) : ''}
+                    onChange={(e)=>setForm({...form, sale_price: parseNumberID(e.target.value)})}
+                    placeholder="0"
+                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Harga Asli (opsional)</label>
-                  <input type="number" min={0} step={1000} value={form.original_price} onChange={(e)=>setForm({...form, original_price: Number(e.target.value)})} className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={form.original_price ? formatNumberID(form.original_price) : ''}
+                    onChange={(e)=>setForm({...form, original_price: parseNumberID(e.target.value)})}
+                    placeholder="0"
+                    className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
