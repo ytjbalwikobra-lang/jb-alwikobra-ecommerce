@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Product, Tier, GameTitle } from '../../types/index.ts';
 import { ProductService } from '../../services/productService.ts';
+import { supabase } from '../../services/supabase.ts';
 import ImageUploader from '../../components/ImageUploader.tsx';
 import { uploadFiles } from '../../services/storageService.ts';
 import { useToast } from '../../components/Toast.tsx';
@@ -104,27 +105,32 @@ const AdminProducts: React.FC = () => {
         account_level: form.accountLevel,
         account_details: form.accountDetails,
         is_flash_sale: false,
-        has_rental: false,
+        has_rental: (form.rentals?.length || 0) > 0,
         stock: 1,
       };
 
       let saved: Product | null = null;
-      if (form.id) {
-        saved = await ProductService.updateProduct(form.id, payload as any);
+      const isUuid = (v?: string) => !!v && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+      const canUpdate = form.id && isUuid(form.id);
+      if (canUpdate) {
+        saved = await ProductService.updateProduct(form.id!, payload as any);
       } else {
+        if (form.id && !isUuid(form.id)) {
+          push('Produk contoh tidak bisa diubah, membuat salinan baru...', 'info');
+        }
         saved = await ProductService.createProduct(payload as any);
       }
 
       if (saved) {
         // Save rentals if provided (simple implementation: delete and recreate)
-        if (form.id && form.rentals?.length && (window as any).supabase) {
+        if (form.rentals?.length && supabase) {
           try {
-            const sb = (window as any).supabase || null;
-            if (sb) {
-              await sb.from('rental_options').delete().eq('product_id', form.id);
-              const inserts = form.rentals.map(r=>({ product_id: form.id, duration: r.duration, price: Number(r.price)||0, description: r.description || null }));
-              if (inserts.length) await sb.from('rental_options').insert(inserts);
+            const productId = saved.id;
+            if (canUpdate) {
+              await supabase.from('rental_options').delete().eq('product_id', productId);
             }
+            const inserts = form.rentals.map(r=>({ product_id: productId, duration: r.duration, price: Number(r.price)||0, description: r.description || null }));
+            if (inserts.length) await supabase.from('rental_options').insert(inserts);
           } catch {}
         }
         const updated = await ProductService.getAllProducts();

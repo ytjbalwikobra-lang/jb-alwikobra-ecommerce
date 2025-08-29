@@ -2,6 +2,12 @@ import { supabase } from './supabase.ts';
 import { deletePublicUrls } from './storageService.ts';
 import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
 
+// Capability detection: whether DB exposes relations (tiers/game_titles) in products
+let hasRelations: boolean | 'unknown' = 'unknown';
+function isUuid(v?: string | null) {
+  return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
+}
+
 // Sample data untuk development/testing
 const sampleTiers: Tier[] = [
   {
@@ -204,21 +210,46 @@ export class ProductService {
         `)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase error:', error);
-        console.warn('Falling back to sample data');
-        return sampleProducts;
+      if (!error && data) {
+        hasRelations = true;
+        return data.map((product: any) => ({
+          ...product,
+          rentalOptions: product.rental_options || [],
+          tierData: product.tiers,
+          gameTitleData: product.game_titles,
+          tier: product.tiers?.slug as ProductTier,
+          gameTitle: product.game_titles?.name || product.game_title
+        }));
       }
 
-      return data?.map(product => ({
-        ...product,
-        rentalOptions: product.rental_options || [],
-        tierData: product.tiers,
-        gameTitleData: product.game_titles,
-        // Backward compatibility
-        tier: product.tiers?.slug as ProductTier,
-        gameTitle: product.game_titles?.name || product.game_title
-      })) || sampleProducts;
+      console.warn('Products relational select failed, trying basic select');
+      const { data: basic, error: err2 } = await supabase
+        .from('products')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (err2) {
+        console.error('Supabase error (basic products):', err2);
+        return sampleProducts;
+      }
+      hasRelations = false;
+      // Fetch rental options separately
+      let rentalsByProduct = new Map<string, any[]>();
+      try {
+        const ids = (basic || []).map((p: any) => p.id);
+        if (ids.length) {
+          const { data: ros } = await supabase.from('rental_options').select('*').in('product_id', ids);
+          for (const ro of ros || []) {
+            const arr = rentalsByProduct.get(ro.product_id) || [];
+            arr.push(ro);
+            rentalsByProduct.set(ro.product_id, arr);
+          }
+        }
+      } catch {}
+      return (basic || []).map((p: any) => ({
+        ...p,
+        rentalOptions: rentalsByProduct.get(p.id) || [],
+        gameTitle: p.game_title || p.gameTitle,
+      }));
     } catch (error) {
       console.error('Error fetching products:', error);
       console.warn('Using sample data due to error');
@@ -238,10 +269,7 @@ export class ProductService {
 
   const { data, error } = await supabase
         .from('products')
-        .select(`
-          *,
-          rental_options (*)
-        `)
+        .select(`*`)
         .eq('id', id)
         .single();
 
@@ -250,10 +278,13 @@ export class ProductService {
         return sampleProducts.find(p => p.id === id) || null;
       }
 
-      return data ? {
-        ...data,
-        rentalOptions: data.rental_options || []
-      } : null;
+      if (!data) return null;
+      let rentalOptions: any[] = [];
+      try {
+        const { data: ro } = await supabase.from('rental_options').select('*').eq('product_id', id);
+        rentalOptions = ro || [];
+      } catch {}
+      return { ...data, rentalOptions } as any;
     } catch (error) {
       console.error('Error fetching product:', error);
       return sampleProducts.find(p => p.id === id) || null;
@@ -310,19 +341,42 @@ export class ProductService {
         .gte('end_time', new Date().toISOString());
 
       if (error) {
-        console.error('Supabase error:', error);
-        const flashSaleProducts = sampleProducts.filter(p => p.isFlashSale);
-        return flashSaleProducts.map(product => ({
-          id: `flash-${product.id}`,
-          productId: product.id,
-          salePrice: product.price,
-          originalPrice: product.originalPrice || product.price,
-          startTime: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-          endTime: product.flashSaleEndTime || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-          stock: product.stock,
-          isActive: true,
-          createdAt: product.createdAt,
-          product
+        console.warn('Flash sales relational select failed, trying basic');
+        const { data: basic, error: err2 } = await supabase
+          .from('flash_sales')
+          .select('*')
+          .eq('is_active', true)
+          .gte('end_time', new Date().toISOString());
+        if (err2) {
+          console.error('Supabase error:', err2);
+          const flashSaleProducts = sampleProducts.filter(p => p.isFlashSale);
+          return flashSaleProducts.map(product => ({
+            id: `flash-${product.id}`,
+            productId: product.id,
+            salePrice: product.price,
+            originalPrice: product.originalPrice || product.price,
+            startTime: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+            endTime: product.flashSaleEndTime || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            stock: product.stock,
+            isActive: true,
+            createdAt: product.createdAt,
+            product
+          }));
+        }
+        const ids = (basic || []).map((b: any) => b.product_id);
+        const { data: prods } = await supabase.from('products').select('*').in('id', ids);
+        const pmap = new Map((prods || []).map((p: any) => [p.id, p]));
+        return (basic || []).map((sale: any) => ({
+          id: sale.id,
+          productId: sale.product_id,
+          salePrice: sale.sale_price,
+          originalPrice: sale.original_price,
+          startTime: sale.start_time,
+          endTime: sale.end_time,
+          stock: sale.stock,
+          isActive: sale.is_active,
+          createdAt: sale.created_at,
+          product: pmap.get(sale.product_id) || {},
         }));
       }
 
@@ -511,15 +565,29 @@ export class ProductService {
     }
   }
 
-  static async createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product | null> {
+  static async createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & Record<string, any>): Promise<Product | null> {
     try {
   if (!supabase) return null;
-
-  const { data, error } = await supabase
-        .from('products')
-        .insert([product])
-        .select()
-        .single();
+  const payload: any = {
+    name: product.name,
+    description: product.description,
+    price: product.price,
+    original_price: product.originalPrice ?? product.original_price ?? null,
+    image: product.image,
+    images: product.images ?? [],
+    account_level: product.accountLevel ?? product.account_level ?? null,
+    account_details: product.accountDetails ?? product.account_details ?? null,
+    is_flash_sale: product.isFlashSale ?? false,
+    has_rental: product.hasRental ?? false,
+    stock: product.stock ?? 1,
+  };
+  if (hasRelations === true) {
+    payload.game_title_id = product.gameTitleId ?? product.game_title_id ?? null;
+    payload.tier_id = product.tierId ?? product.tier_id ?? null;
+  } else {
+    payload.game_title = product.gameTitle ?? product.game_title ?? null;
+  }
+  const { data, error } = await supabase.from('products').insert([payload]).select().single();
 
       if (error) throw error;
       return data;
@@ -529,16 +597,34 @@ export class ProductService {
     }
   }
 
-  static async updateProduct(id: string, updates: Partial<Product>): Promise<Product | null> {
+  static async updateProduct(id: string, updates: Partial<Product> & Record<string, any>): Promise<Product | null> {
     try {
   if (!supabase) return null;
-
-  const { data, error } = await supabase
-        .from('products')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .single();
+  if (!isUuid(id)) {
+    console.warn('Refusing to update non-UUID id (likely sample data):', id);
+    return null;
+  }
+  const payload: any = {
+    name: updates.name,
+    description: updates.description,
+    price: updates.price,
+    original_price: (updates as any).original_price ?? updates.originalPrice,
+    image: (updates as any).image,
+    images: (updates as any).images,
+    account_level: (updates as any).account_level ?? updates.accountLevel,
+    account_details: (updates as any).account_details ?? updates.accountDetails,
+    is_flash_sale: (updates as any).is_flash_sale ?? updates.isFlashSale,
+    has_rental: (updates as any).has_rental ?? updates.hasRental,
+    stock: (updates as any).stock ?? updates.stock,
+  };
+  if (hasRelations === true) {
+    payload.game_title_id = (updates as any).game_title_id ?? updates.gameTitleId ?? null;
+    payload.tier_id = (updates as any).tier_id ?? updates.tierId ?? null;
+  } else {
+    payload.game_title = (updates as any).game_title ?? updates.gameTitle ?? null;
+  }
+  Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+  const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
 
       if (error) throw error;
       return data;
@@ -551,6 +637,10 @@ export class ProductService {
   static async deleteProduct(id: string, options?: { images?: string[] }): Promise<boolean> {
     try {
   if (!supabase) return false;
+  if (!isUuid(id)) {
+    console.warn('Refusing to delete non-UUID id (likely sample data):', id);
+    return false;
+  }
 
   const { error } = await supabase
         .from('products')
