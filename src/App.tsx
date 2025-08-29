@@ -66,6 +66,14 @@ function App() {
   <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200">
           <Header />
       <main className="flex-1 pb-16 md:pb-0">
+            {!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY ? (
+              <div className="max-w-3xl mx-auto p-4">
+                <div className="bg-black/60 border border-yellow-500/40 rounded-lg p-4 mb-4">
+                  <p className="text-yellow-300 font-semibold">Konfigurasi Supabase belum lengkap.</p>
+                  <p className="text-gray-300 text-sm">Aplikasi tetap menampilkan data contoh agar tidak blank. Setel REACT_APP_SUPABASE_URL dan REACT_APP_SUPABASE_ANON_KEY di environment.</p>
+                </div>
+              </div>
+            ) : null}
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<ProductsPage />} />
