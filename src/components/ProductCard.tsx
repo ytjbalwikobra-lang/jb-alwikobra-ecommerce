@@ -190,6 +190,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             {product.name}
           </h3>
 
+
           {/* Tags Row - hidden for flash sale cards */}
           {!showFlashSaleTimer && (
             <div className="flex flex-wrap items-center gap-2">
@@ -214,20 +215,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 </span>
               )}
 
-              {/* Rental Available */}
-              {product.hasRental && (
-                <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-500/25 text-white border border-emerald-400/60 backdrop-blur-sm">
-                  <Sparkles size={12} />
-                  RENTAL
-                </span>
-              )}
-
               {/* Account Level */}
               {product.accountLevel && (
                 <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/25 text-white border border-purple-400/60 backdrop-blur-sm">
                   {product.accountLevel}
                 </span>
               )}
+            </div>
+          )}
+
+          {/* Rental Tag - always visible if hasRental */}
+          {product.hasRental && (
+            <div className="mt-2">
+              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600 text-white border-2 border-emerald-400 shadow-lg animate-pulse uppercase tracking-wide" style={{letterSpacing:'0.08em'}}>
+                <Sparkles size={18} className="drop-shadow" />
+                Tersedia untuk Rental
+              </span>
             </div>
           )}
 
