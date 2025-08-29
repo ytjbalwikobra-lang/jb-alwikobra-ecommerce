@@ -289,7 +289,7 @@ const ProductDetailPage: React.FC = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
+                    className={`flex-shrink-0 w-20 h-20 aspect-square rounded-lg overflow-hidden border-2 ${
                       selectedImage === index ? 'border-pink-500' : 'border-pink-500/30'
                     }`}
                   >
