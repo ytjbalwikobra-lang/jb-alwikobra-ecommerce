@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { supabase } from '../../services/supabase.ts';
 import { useToast } from '../../components/Toast.tsx';
+import { RefreshCw, Filter } from 'lucide-react';
 
 type OrderRow = {
   id: string;
@@ -17,22 +18,50 @@ type OrderRow = {
 };
 
 const AdminOrders: React.FC = () => {
-  const [rows, setRows] = useState<OrderRow[]>([]);
+  const [rows, setRows] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [errorMsg, setErrorMsg] = useState<string>('');
+  const [statusFilter, setStatusFilter] = useState<'all'|'pending'|'paid'|'completed'|'cancelled'>('all');
   const { push } = useToast();
 
+  const mapRow = (r: any): OrderRow => ({
+    id: r.id,
+    product_id: r.product_id ?? r.productId ?? null,
+    customer_name: r.customer_name ?? r.customerName ?? r.customer?.name ?? 'Unknown',
+    customer_email: r.customer_email ?? r.customerEmail ?? r.customer?.email ?? '',
+    customer_phone: r.customer_phone ?? r.customerPhone ?? r.customer?.phone ?? '',
+    order_type: r.order_type ?? r.orderType ?? 'purchase',
+    amount: Number(r.amount ?? 0),
+    status: (r.status ?? 'pending') as OrderRow['status'],
+    payment_method: r.payment_method ?? r.paymentMethod ?? 'whatsapp',
+    rental_duration: r.rental_duration ?? r.rentalDuration ?? null,
+    created_at: r.created_at ?? r.createdAt ?? new Date().toISOString(),
+  });
+
   const load = async () => {
+    setLoading(true); setErrorMsg('');
     try {
       if (!supabase) return;
-      const { data, error } = await (supabase as any).from('orders').select('*').order('created_at', { ascending: false }).limit(200);
+      const { data, error } = await (supabase as any)
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(500);
       if (error) throw error;
-      setRows(data || []);
+      setRows((data || []).map(mapRow));
     } catch (e: any) {
-      push(`Gagal memuat orders: ${e?.message || e}`, 'error');
+      const m = e?.message || String(e);
+      setErrorMsg(m);
+      push(`Gagal memuat orders: ${m}`, 'error');
     } finally { setLoading(false); }
   };
 
   useEffect(()=>{ load(); }, []);
+
+  const filtered = useMemo(() => {
+    if (statusFilter === 'all') return rows as OrderRow[];
+    return (rows as OrderRow[]).filter(r => r.status === statusFilter);
+  }, [rows, statusFilter]);
 
   const updateStatus = async (id: string, status: OrderRow['status']) => {
     if (!supabase) return;
@@ -49,7 +78,32 @@ const AdminOrders: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-black/60 border border-pink-500/30 rounded-xl overflow-hidden">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 text-sm">
+          <Filter size={16} className="text-gray-400" />
+          <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value as any)} className="bg-black/60 border border-white/10 rounded px-2 py-1">
+            <option value="all">Semua</option>
+            <option value="pending">Pending</option>
+            <option value="paid">Paid</option>
+            <option value="completed">Completed</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+        </div>
+        <button onClick={load} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm">
+          <RefreshCw size={16} /> Refresh
+        </button>
+      </div>
+
+      <div className="bg-black/60 border border-pink-500/30 rounded-xl overflow-hidden mt-3">
+        {errorMsg && (
+          <div className="px-4 py-2 text-sm text-amber-300 bg-amber-900/30 border-b border-amber-700/40">
+            {errorMsg.includes('permission') || errorMsg.includes('RLS') ? (
+              <span>Akses dibatasi oleh RLS. Pastikan kebijakan RLS untuk tabel orders mengizinkan admin melihat semua data.</span>
+            ) : (
+              <span>{errorMsg}</span>
+            )}
+          </div>
+        )}
         <div className="grid grid-cols-12 text-xs uppercase text-gray-400 px-4 py-2 border-b border-pink-500/20">
           <div className="col-span-3">Customer</div>
           <div className="col-span-2">Jenis</div>
@@ -59,9 +113,9 @@ const AdminOrders: React.FC = () => {
         </div>
         {loading ? (
           <div className="p-4 text-gray-400">Memuat…</div>
-        ) : rows.length === 0 ? (
-          <div className="p-4 text-gray-400">Belum ada order.</div>
-        ) : rows.map((r) => (
+        ) : filtered.length === 0 ? (
+          <div className="p-4 text-gray-400">Belum ada order{statusFilter!=='all' ? ` dengan status ${statusFilter}` : ''}.</div>
+        ) : filtered.map((r) => (
           <div key={r.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-pink-500/10">
             <div className="col-span-3 text-white">
               <div className="font-medium">{r.customer_name}</div>
