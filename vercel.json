@@ -18,17 +18,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "REACT_APP_SUPABASE_URL": "@supabase-url",
-    "REACT_APP_SUPABASE_ANON_KEY": "@supabase-anon-key",
-    "REACT_APP_XENDIT_PUBLIC_KEY": "@xendit-public-key",
-  "XENDIT_SECRET_KEY": "@xendit-secret-key",
-  "SUPABASE_URL": "@supabase-url",
-  "SUPABASE_SERVICE_ROLE_KEY": "@supabase-service-role-key",
-  "XENDIT_CALLBACK_TOKEN": "@xendit-callback-token",
-    "REACT_APP_WHATSAPP_NUMBER": "@whatsapp-number",
-    "REACT_APP_SITE_NAME": "@site-name",
-    "REACT_APP_SITE_URL": "@site-url"
-  }
+  ]
 }
