@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ],
+  "env": {
+    "REACT_APP_SUPABASE_URL": "@supabase-url",
+    "REACT_APP_SUPABASE_ANON_KEY": "@supabase-anon-key",
+    "REACT_APP_XENDIT_PUBLIC_KEY": "@xendit-public-key",
+    "REACT_APP_WHATSAPP_NUMBER": "@whatsapp-number",
+    "REACT_APP_SITE_NAME": "@site-name",
+    "REACT_APP_SITE_URL": "@site-url"
+  }
+}
