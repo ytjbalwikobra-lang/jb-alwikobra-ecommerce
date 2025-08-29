@@ -311,7 +311,7 @@ const ProductDetailPage: React.FC = () => {
               <span className="bg-pink-500/10 text-pink-400 px-3 py-1 rounded-full text-sm font-medium">
                 {product.gameTitle}
               </span>
-              {product.hasRental && (
+              {(!cameFromFlashSaleCard) && product.hasRental && (
                 <span className="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-sm font-medium">
                   Tersedia Rental
                 </span>
