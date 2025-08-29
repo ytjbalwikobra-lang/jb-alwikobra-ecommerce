@@ -10,21 +10,27 @@ const AdminBanners: React.FC = () => {
   const [form, setForm] = useState<{ title: string; subtitle?: string; linkUrl?: string; sortOrder: number; isActive: boolean; file: File | null }>(
     { title: '', subtitle: '', linkUrl: '', sortOrder: 1, isActive: true, file: null }
   );
+  const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => { (async () => { setLoading(true); setBanners(await BannerService.list()); setLoading(false); })(); }, []);
 
-  const resetForm = () => setForm({ title: '', subtitle: '', linkUrl: '', sortOrder: 1, isActive: true, file: null });
+  const resetForm = () => { setForm({ title: '', subtitle: '', linkUrl: '', sortOrder: 1, isActive: true, file: null }); setPreviewUrl(''); };
 
   const startCreate = () => { setEditing(null); resetForm(); };
 
   const startEdit = (b: Banner) => {
     setEditing(b);
     setForm({ title: b.title, subtitle: b.subtitle, linkUrl: b.linkUrl, sortOrder: b.sortOrder, isActive: b.isActive, file: null });
+    setPreviewUrl(b.imageUrl || '');
   };
 
   const onFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0] || null;
     setForm(prev => ({ ...prev, file: f }));
+    if (f) {
+      const url = URL.createObjectURL(f);
+      setPreviewUrl(url);
+    }
   };
 
   const save = async () => {
@@ -68,7 +74,7 @@ const AdminBanners: React.FC = () => {
       </div>
 
       {/* Form */}
-      <div className="bg-black/40 border border-pink-500/20 rounded-xl p-4 space-y-3">
+  <div className="bg-black/40 border border-pink-500/20 rounded-xl p-4 space-y-3">
         <div className="grid md:grid-cols-2 gap-3">
           <div>
             <label className="text-sm text-gray-400">Judul</label>
@@ -103,6 +109,9 @@ const AdminBanners: React.FC = () => {
                 <input type="file" className="hidden" accept="image/*" onChange={onFile} />
               </label>
               <span className="text-xs text-gray-400">{form.file?.name || (editing ? 'Biarkan kosong jika tidak diubah' : 'Belum ada file')}</span>
+              {previewUrl && (
+                <img src={previewUrl} alt="preview" className="h-14 rounded border border-white/10" />
+              )}
             </div>
           </div>
         </div>

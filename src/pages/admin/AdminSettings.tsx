@@ -10,6 +10,8 @@ const AdminSettings: React.FC = () => {
   const [form, setForm] = useState<any>({});
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string>('');
+  const [faviconPreview, setFaviconPreview] = useState<string>('');
 
   useEffect(() => { (async () => {
     setLoading(true);
@@ -87,10 +89,13 @@ const AdminSettings: React.FC = () => {
               <div className="mt-1 flex items-center gap-3">
                 <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 cursor-pointer">
                   <ImageIcon size={16} /> Pilih Logo
-                  <input type="file" className="hidden" accept="image/*" onChange={e=>setLogoFile(e.target.files?.[0]||null)} />
+                  <input type="file" className="hidden" accept="image/*" onChange={e=>{
+                    const f = e.target.files?.[0]||null; setLogoFile(f);
+                    if (f) setLogoPreview(URL.createObjectURL(f));
+                  }} />
                 </label>
-                {settings?.logoUrl && (
-                  <img src={settings.logoUrl} alt="logo" className="h-8" />
+                {(logoPreview || settings?.logoUrl) && (
+                  <img src={logoPreview || settings?.logoUrl!} alt="logo" className="h-8 rounded border border-white/10" />
                 )}
               </div>
             </div>
@@ -99,10 +104,13 @@ const AdminSettings: React.FC = () => {
               <div className="mt-1 flex items-center gap-3">
                 <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 cursor-pointer">
                   <ImageIcon size={16} /> Pilih Favicon
-                  <input type="file" className="hidden" accept="image/*" onChange={e=>setFaviconFile(e.target.files?.[0]||null)} />
+                  <input type="file" className="hidden" accept="image/*" onChange={e=>{
+                    const f = e.target.files?.[0]||null; setFaviconFile(f);
+                    if (f) setFaviconPreview(URL.createObjectURL(f));
+                  }} />
                 </label>
-                {settings?.faviconUrl && (
-                  <img src={settings.faviconUrl} alt="favicon" className="h-8" />
+                {(faviconPreview || settings?.faviconUrl) && (
+                  <img src={faviconPreview || settings?.faviconUrl!} alt="favicon" className="h-8 rounded border border-white/10" />
                 )}
               </div>
             </div>
