@@ -117,13 +117,15 @@ const FlashSalesPage: React.FC = () => {
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
                 {flashSaleProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    showFlashSaleTimer={true}
-                  />
+                  <div key={product.id} className="min-w-[280px] snap-start">
+                    <ProductCard
+                      product={product}
+                      showFlashSaleTimer={true}
+                      className="w-[280px]"
+                    />
+                  </div>
                 ))}
               </div>
             </div>

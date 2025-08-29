@@ -97,6 +97,11 @@ npm install
    ```sql
    -- Copy dan paste content dari supabase/migrations/001_initial_schema.sql
    ```
+4. Jalankan juga file berikut di SQL Editor untuk RLS & kolom user_id:
+   ```sql
+   -- Copy dari supabase/migrations/002_enable_rls.sql
+   -- Copy dari supabase/migrations/003_add_user_id_to_orders.sql
+   ```
 
 ### 4. Environment Variables
 Buat file `.env.local` di root directory:
@@ -107,6 +112,15 @@ REACT_APP_XENDIT_PUBLIC_KEY=your_xendit_public_key
 REACT_APP_WHATSAPP_NUMBER=6281234567890
 REACT_APP_SITE_NAME=JB Alwikobra
 REACT_APP_SITE_URL=http://localhost:3000
+```
+
+Tambahkan environment server (di Vercel Project Settings):
+
+```
+SUPABASE_URL=your_supabase_project_url
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+XENDIT_SECRET_KEY=your_xendit_secret_key
+XENDIT_CALLBACK_TOKEN=optional_shared_token_from_xendit
 ```
 
 ### 5. Start Development Server
@@ -132,10 +146,13 @@ src/
 ├── pages/              # Page components
 │   ├── HomePage.tsx    # Landing page
 │   ├── ProductsPage.tsx # Product catalog
-│   └── ProductDetailPage.tsx # Product detail
+│   ├── ProductDetailPage.tsx # Product detail
+│   └── OrderHistoryPage.tsx # Order history (login only)
 ├── services/           # API services
 │   ├── supabase.ts     # Supabase client
-│   └── productService.ts # Product API calls
+│   ├── productService.ts # Product API calls
+│   ├── paymentService.ts # Xendit invoice client
+│   └── authService.ts    # Auth helpers (profile auto-fill)
 ├── types/              # TypeScript type definitions
 │   └── index.ts        # All type definitions
 ├── utils/              # Utility functions

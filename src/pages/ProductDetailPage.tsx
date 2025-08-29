@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
 import { Product, Customer, RentalOption } from '../types/index.ts';
-import { 
+import {
   formatCurrency, 
   calculateTimeRemaining,
   generateWhatsAppUrl,
@@ -24,6 +24,8 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
+import { createXenditInvoice } from '../services/paymentService.ts';
+import { getCurrentUserProfile, isLoggedIn, getAuthUserId } from '../services/authService.ts';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -62,6 +64,23 @@ const ProductDetailPage: React.FC = () => {
     fetchProduct();
   }, [id]);
 
+  // Prefill customer if logged in
+  useEffect(() => {
+    (async () => {
+      const logged = await isLoggedIn();
+      if (logged) {
+        const profile = await getCurrentUserProfile();
+        if (profile) {
+          setCustomer({
+            name: profile.name || '',
+            email: profile.email || '',
+            phone: profile.phone || '',
+          });
+        }
+      }
+    })();
+  }, []);
+
   const timeRemaining = product?.flashSaleEndTime 
     ? calculateTimeRemaining(product.flashSaleEndTime)
     : null;
@@ -85,7 +104,10 @@ const ProductDetailPage: React.FC = () => {
     let message = '';
     
     if (type === 'purchase') {
-      message = generatePurchaseMessage(product.name, product.price, currentUrl);
+      // Enforce Xendit for purchases: redirect to checkout modal instead of WA
+      setCheckoutType('purchase');
+      setShowCheckoutForm(true);
+      return;
     } else if (type === 'rental' && selectedRental) {
       message = generateRentalMessage(product.name, selectedRental.duration, selectedRental.price, currentUrl);
     }
@@ -94,9 +116,48 @@ const ProductDetailPage: React.FC = () => {
     window.open(whatsappUrl, '_blank');
   };
 
-  const handleCheckout = () => {
-    // Simulate Xendit payment integration
-    alert('Integrasi dengan Xendit akan diimplementasikan di sini');
+  const handleCheckout = async () => {
+    if (!product) return;
+    if (checkoutType === 'purchase') {
+      try {
+        const fallbackExternalId = `order_${product.id}_${Date.now()}`;
+        const uid = await getAuthUserId();
+        const invoice = await createXenditInvoice({
+          externalId: fallbackExternalId,
+          amount: product.price,
+          payerEmail: customer.email,
+          description: `Pembelian akun: ${product.name}`,
+          // We cannot know the server-created order_id ahead of time. We will update via webhook and let user return manually.
+          successRedirectUrl: `${window.location.origin}/payment-status`,
+          failureRedirectUrl: `${window.location.origin}/payment-status`,
+          customer: {
+            given_names: customer.name,
+            email: customer.email,
+            mobile_number: customer.phone,
+          },
+          order: {
+            product_id: product.id,
+            customer_name: customer.name,
+            customer_email: customer.email,
+            customer_phone: customer.phone,
+            order_type: 'purchase',
+            amount: product.price,
+            rental_duration: null,
+            user_id: uid || undefined as any,
+          }
+        });
+        if (invoice?.invoice_url) window.location.href = invoice.invoice_url;
+      } catch (e: any) {
+        alert(`Gagal membuat invoice Xendit: ${e?.message || e}`);
+      }
+      return;
+    }
+
+    if (checkoutType === 'rental' && selectedRental) {
+      handleWhatsAppContact('rental');
+      return;
+    }
+
     setShowCheckoutForm(false);
   };
 
@@ -375,14 +436,7 @@ const ProductDetailPage: React.FC = () => {
                 </button>
               )}
 
-              {/* WhatsApp Contact */}
-              <button
-                onClick={() => handleWhatsAppContact('purchase')}
-                className="w-full flex items-center justify-center space-x-2 py-3 px-6 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 transition-colors"
-              >
-                <MessageCircle size={20} />
-                <span>Hubungi via WhatsApp</span>
-              </button>
+              {/* WhatsApp Contact for rental will be presented in the checkout modal */}
             </div>
 
             {/* Additional Actions */}
@@ -476,7 +530,7 @@ const ProductDetailPage: React.FC = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    No. Telepon *
+                    No. WhatsApp *
                   </label>
                   <input
                     type="tel"
@@ -484,7 +538,7 @@ const ProductDetailPage: React.FC = () => {
                     value={customer.phone}
                     onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-                    placeholder="Masukkan nomor telepon"
+                    placeholder="Masukkan nomor WhatsApp (628...)"
                   />
                 </div>
 
@@ -493,7 +547,7 @@ const ProductDetailPage: React.FC = () => {
                     <div className="flex items-center space-x-2 text-blue-800">
                       <Info size={16} />
                       <span className="text-sm">
-                        Akun akan dikirim via email setelah pembayaran dikonfirmasi
+                        Pembelian wajib melalui Xendit. Akun akan dikirim via email setelah pembayaran dikonfirmasi.
                       </span>
                     </div>
                   </div>
@@ -518,10 +572,11 @@ const ProductDetailPage: React.FC = () => {
                   >
                     Batal
                   </button>
-                  {checkoutType === 'purchase' ? (
+
+          {checkoutType === 'purchase' ? (
                     <button
                       type="button"
-                      onClick={handleCheckout}
+            onClick={handleCheckout}
                       className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
                     >
                       Bayar dengan Xendit
@@ -529,10 +584,7 @@ const ProductDetailPage: React.FC = () => {
                   ) : (
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowCheckoutForm(false);
-                        handleWhatsAppContact('rental');
-                      }}
+                      onClick={() => handleWhatsAppContact('rental')}
                       className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
                       Lanjut ke WhatsApp

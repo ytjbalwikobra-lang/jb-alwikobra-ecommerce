@@ -353,17 +353,14 @@ const ProductsPage: React.FC = () => {
 
             {/* Products Grid */}
             {filteredProducts.length > 0 ? (
-              <div className={`grid gap-6 ${
-                viewMode === 'grid' 
-                  ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' 
-                  : 'grid-cols-1'
-              }`}>
+              <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
                 {filteredProducts.map((product) => (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    className={viewMode === 'list' ? 'flex-row' : ''}
-                  />
+                  <div key={product.id} className="min-w-[280px] snap-start">
+                    <ProductCard
+                      product={product}
+                      className={viewMode === 'list' ? 'flex-row w-[640px]' : 'w-[280px]'}
+                    />
+                  </div>
                 ))}
               </div>
             ) : (

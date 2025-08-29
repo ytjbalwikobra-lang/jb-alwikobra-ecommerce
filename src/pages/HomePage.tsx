@@ -13,6 +13,7 @@ import {
   Headphones,
   ChevronRight
 } from 'lucide-react';
+import BannerCarousel from '../components/BannerCarousel.tsx';
 
 const HomePage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
@@ -84,8 +85,15 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Top Banner Slideshow */}
+      <section className="py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <BannerCarousel />
+        </div>
+      </section>
+
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-50 to-pink-50 py-20">
+      <section className="bg-gradient-to-br from-primary-50 to-pink-50 py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
@@ -139,13 +147,15 @@ const HomePage: React.FC = () => {
               </Link>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {flashSaleProducts.slice(0, 4).map((product) => (
-                <ProductCard
-                  key={product.id}
-                  product={product}
-                  showFlashSaleTimer={true}
-                />
+            <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+              {flashSaleProducts.slice(0, 10).map((product) => (
+                <div key={product.id} className="min-w-[280px] snap-start">
+                  <ProductCard
+                    product={product}
+                    showFlashSaleTimer={true}
+                    className="w-[280px]"
+                  />
+                </div>
               ))}
             </div>
           </div>
@@ -162,12 +172,12 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
             {gameCategories.map((category, index) => (
               <Link
                 key={index}
                 to={`/products?game=${encodeURIComponent(category.name)}`}
-                className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-center group"
+                className="min-w-[160px] bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 text-center group snap-start"
               >
                 <div className="w-16 h-16 bg-gradient-to-br from-primary-100 to-primary-200 rounded-xl mx-auto mb-4 flex items-center justify-center">
                   <TrendingUp className="text-primary-600" size={24} />
@@ -199,9 +209,11 @@ const HomePage: React.FC = () => {
             </Link>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
             {products.map((product) => (
-              <ProductCard key={product.id} product={product} />
+              <div key={product.id} className="min-w-[280px] snap-start">
+                <ProductCard product={product} className="w-[280px]" />
+              </div>
             ))}
           </div>
         </div>

@@ -1,15 +1,23 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, Zap, Home, Settings } from 'lucide-react';
+import { isAdmin } from '../utils/auth.ts';
+import { isLoggedIn } from '../services/authService.ts';
+import { supabase } from '../services/supabase.ts';
 
 const Header: React.FC = () => {
   const location = useLocation();
+
+  const [authed, setAuthed] = React.useState(false);
+  React.useEffect(() => { (async () => setAuthed(await isLoggedIn()))(); }, []);
 
   const navItems = [
     { path: '/', label: 'Beranda', icon: Home },
     { path: '/flash-sales', label: 'Flash Sale', icon: Zap },
     { path: '/products', label: 'Katalog', icon: ShoppingBag },
-    { path: '/admin', label: 'Admin', icon: Settings },
+    ...(authed ? [{ path: '/orders', label: 'Order Saya', icon: ShoppingBag }] : []),
+    // Admin only, hidden for non-admins
+    ...(isAdmin() ? [{ path: '/admin', label: 'Admin', icon: Settings }] : []),
   ];
 
   return (
@@ -50,13 +58,16 @@ const Header: React.FC = () => {
             })}
           </nav>
 
-          {/* Mobile menu button */}
-          <div className="md:hidden">
-            <button className="p-2 rounded-lg text-gray-600 hover:text-primary-600 hover:bg-gray-50">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </button>
+          {/* Auth actions */}
+          <div className="flex items-center gap-2">
+            {authed ? (
+              <button
+                onClick={async ()=>{ if (supabase) await supabase.auth.signOut(); window.location.reload(); }}
+                className="px-3 py-2 text-sm rounded-lg border hover:bg-gray-50"
+              >Keluar</button>
+            ) : (
+              <Link to="/auth" className="px-3 py-2 text-sm rounded-lg border hover:bg-gray-50">Masuk</Link>
+            )}
           </div>
         </div>
       </div>

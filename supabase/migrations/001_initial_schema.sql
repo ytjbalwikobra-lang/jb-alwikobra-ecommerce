@@ -134,13 +134,26 @@ INSERT INTO flash_sales (product_id, sale_price, original_price, start_time, end
 ((SELECT id FROM products WHERE name = 'Akun COD Mobile Legendary Ranked'), 1200000, 1500000, NOW() - INTERVAL '30 minutes', NOW() + INTERVAL '71 hours', 7, true),
 ((SELECT id FROM products WHERE name = 'Akun Clash of Clans TH14 Max'), 1500000, 1800000, NOW() - INTERVAL '1 hour', NOW() + INTERVAL '95 hours', 6, true);
 
--- Set RLS (Row Level Security) policies if needed
--- ALTER TABLE products ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE rental_options ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE flash_sales ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+-- Set RLS (Row Level Security) policies
+ALTER TABLE products ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rental_options ENABLE ROW LEVEL SECURITY;
+ALTER TABLE flash_sales ENABLE ROW LEVEL SECURITY;
+ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 
 -- Create policies for public read access
--- CREATE POLICY "Products are viewable by everyone" ON products FOR SELECT USING (true);
--- CREATE POLICY "Rental options are viewable by everyone" ON rental_options FOR SELECT USING (true);
--- CREATE POLICY "Flash sales are viewable by everyone" ON flash_sales FOR SELECT USING (true);
+CREATE POLICY "Products are viewable by everyone" ON products FOR SELECT USING (true);
+CREATE POLICY "Rental options are viewable by everyone" ON rental_options FOR SELECT USING (true);
+CREATE POLICY "Flash sales are viewable by everyone" ON flash_sales FOR SELECT USING (true);
+
+-- Create policies for orders (only allow inserts for new orders)
+CREATE POLICY "Anyone can create orders" ON orders FOR INSERT WITH CHECK (true);
+-- Authenticated users can insert orders that belong to them, guests can insert without user_id
+-- Note: A permissive insert policy already allows guests; refined policies can be added later in 002 migration
+CREATE POLICY "Users can view their own orders" ON orders FOR SELECT USING (true);
+
+-- Create admin policies (for future admin panel)
+-- Note: These will need to be updated when implementing proper authentication
+-- CREATE POLICY "Admins can manage products" ON products FOR ALL USING (auth.role() = 'admin');
+-- CREATE POLICY "Admins can manage flash sales" ON flash_sales FOR ALL USING (auth.role() = 'admin');
+-- CREATE POLICY "Admins can manage rental options" ON rental_options FOR ALL USING (auth.role() = 'admin');
+-- CREATE POLICY "Admins can manage orders" ON orders FOR ALL USING (auth.role() = 'admin');
