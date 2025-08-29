@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Header from './components/Header.tsx';
+import MobileBottomNav from './components/MobileBottomNav.tsx';
+import ScrollToTop from './components/ScrollToTop.tsx';
 import Footer from './components/Footer.tsx';
 import HomePage from './pages/HomePage.tsx';
 import ProductsPage from './pages/ProductsPage.tsx';
@@ -8,6 +10,7 @@ import ProductDetailPage from './pages/ProductDetailPage.tsx';
 import FlashSalesPage from './pages/FlashSalesPage.tsx';
 import SellPage from './pages/SellPage.tsx';
 import PaymentStatusPage from './pages/PaymentStatusPage.tsx';
+import HelpPage from './pages/HelpPage.tsx';
 import './App.css';
 import OrderHistoryPage from './pages/OrderHistoryPage.tsx';
 import AuthPage from './pages/AuthPage.tsx';
@@ -30,10 +33,10 @@ class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasErr
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="min-h-screen flex items-center justify-center bg-app-dark text-gray-200">
           <div className="text-center p-8">
             <h1 className="text-2xl font-bold text-red-600 mb-4">Something went wrong!</h1>
-            <p className="text-gray-600 mb-4">Error: {this.state.error?.message}</p>
+            <p className="text-gray-300 mb-4">Error: {this.state.error?.message}</p>
             <button 
               onClick={() => window.location.reload()} 
               className="bg-pink-500 text-white px-4 py-2 rounded hover:bg-pink-600"
@@ -59,15 +62,17 @@ function App() {
   return (
     <ErrorBoundary>
       <Router>
-        <div className="App min-h-screen flex flex-col">
+        <ScrollToTop />
+  <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200">
           <Header />
-          <main className="flex-1">
+      <main className="flex-1 pb-16 md:pb-0">
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/products" element={<ProductsPage />} />
               <Route path="/products/:id" element={<ProductDetailPage />} />
               <Route path="/flash-sales" element={<FlashSalesPage />} />
               <Route path="/sell" element={<SellPage />} />
+        <Route path="/help" element={<HelpPage />} />
               <Route path="/payment-status" element={<PaymentStatusPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/orders" element={<OrderHistoryPage />} />
@@ -76,6 +81,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <MobileBottomNav />
         </div>
       </Router>
     </ErrorBoundary>

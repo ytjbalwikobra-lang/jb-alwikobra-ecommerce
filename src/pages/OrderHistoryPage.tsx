@@ -34,11 +34,11 @@ const OrderHistoryPage: React.FC = () => {
 
   if (!authed) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-app-dark text-gray-200">
         <div className="text-center">
-          <h1 className="text-2xl font-bold mb-2">Silakan login</h1>
-          <p className="text-gray-600 mb-4">Riwayat order hanya tersedia untuk pengguna yang login.</p>
-          <Link to="/" className="text-primary-600">Kembali</Link>
+          <h1 className="text-2xl font-bold mb-2 text-white">Silakan login</h1>
+          <p className="text-gray-300 mb-4">Riwayat order hanya tersedia untuk pengguna yang login.</p>
+          <Link to="/" className="text-pink-400">Kembali</Link>
         </div>
       </div>
     );
@@ -46,37 +46,37 @@ const OrderHistoryPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-app-dark text-gray-200">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat riwayat order...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Memuat riwayat order...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-app-dark text-gray-200">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Riwayat Order Saya</h1>
+        <h1 className="text-2xl font-bold text-white mb-6">Riwayat Order Saya</h1>
         {orders.length === 0 ? (
-          <div className="bg-white border rounded-lg p-6 text-center text-gray-600">Belum ada order.</div>
+          <div className="bg-black border border-pink-500/30 rounded-lg p-6 text-center text-gray-300">Belum ada order.</div>
         ) : (
-          <div className="bg-white border rounded-lg divide-y">
+          <div className="bg-black border border-pink-500/30 rounded-lg divide-y divide-pink-500/20">
             {orders.map(o => (
               <div key={o.id} className="p-4 flex items-center justify-between">
                 <div>
-                  <div className="text-sm text-gray-500">{new Date(o.created_at).toLocaleString('id-ID')}</div>
-                  <div className="font-mono text-gray-900">{o.id}</div>
+                  <div className="text-sm text-gray-400">{new Date(o.created_at).toLocaleString('id-ID')}</div>
+                  <div className="font-mono text-gray-200">{o.id}</div>
                   {o.payment_channel && (
-                    <div className="text-xs text-gray-600 mt-1">Metode: <span className="capitalize">{o.payment_channel.toLowerCase().replace(/_/g,' ')}</span></div>
+                    <div className="text-xs text-gray-400 mt-1">Metode: <span className="capitalize">{o.payment_channel.toLowerCase().replace(/_/g,' ')}</span></div>
                   )}
                 </div>
                 <div className="text-right">
-                  <div className="font-semibold">Rp {Number(o.amount).toLocaleString('id-ID')}</div>
-                  <div className="text-sm capitalize {o.status === 'paid' ? 'text-green-600' : o.status === 'pending' ? 'text-yellow-600' : o.status === 'cancelled' ? 'text-red-600' : 'text-gray-600'}">{o.status}</div>
+                  <div className="font-semibold text-white">Rp {Number(o.amount).toLocaleString('id-ID')}</div>
+                  <div className={`text-sm capitalize ${o.status === 'paid' ? 'text-green-400' : o.status === 'pending' ? 'text-yellow-400' : o.status === 'cancelled' ? 'text-red-400' : 'text-gray-400'}`}>{o.status}</div>
                   {o.xendit_invoice_url && (
-                    <div className="mt-1 text-xs"><a href={o.xendit_invoice_url} target="_blank" rel="noreferrer" className="text-primary-600">Buka invoice</a></div>
+                    <div className="mt-1 text-xs"><a href={o.xendit_invoice_url} target="_blank" rel="noreferrer" className="text-pink-400">Buka invoice</a></div>
                   )}
                 </div>
               </div>

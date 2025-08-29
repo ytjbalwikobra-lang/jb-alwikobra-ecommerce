@@ -1,3 +1,5 @@
+export type ProductTier = 'reguler' | 'pelajar' | 'premium';
+
 export interface Product {
   id: string;
   name: string;
@@ -8,6 +10,7 @@ export interface Product {
   images?: string[];
   category: string;
   gameTitle: string;
+  tier?: ProductTier;
   accountLevel?: string;
   accountDetails?: string;
   isFlashSale: boolean;
@@ -58,7 +61,8 @@ export interface Order {
 
 export interface CartItem {
   product: Product;
-  quantity: number;
+  // All products are single-quantity items
+  quantity: 1;
   type: 'purchase' | 'rental';
   rentalOption?: RentalOption;
 }

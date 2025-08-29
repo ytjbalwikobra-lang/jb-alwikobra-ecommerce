@@ -30,32 +30,32 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
-      <div className="w-full max-w-md bg-white border rounded-xl p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">{mode === 'login' ? 'Masuk' : 'Daftar'}</h1>
-        <p className="text-gray-600 mb-6">Gunakan email dan password.</p>
+    <div className="min-h-screen flex items-center justify-center bg-app-dark px-4 text-gray-200">
+      <div className="w-full max-w-md bg-black border border-pink-500/40 rounded-xl p-6">
+        <h1 className="text-2xl font-bold text-white mb-2">{mode === 'login' ? 'Masuk' : 'Daftar'}</h1>
+        <p className="text-gray-300 mb-6">Gunakan email dan password.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full border rounded-lg px-3 py-2" />
+            <label className="block text-sm font-medium mb-1 text-gray-300">Email</label>
+            <input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)} className="w-full border border-pink-500/40 bg-black text-white rounded-lg px-3 py-2" />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">Password</label>
-            <input type="password" required value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full border rounded-lg px-3 py-2" />
+            <label className="block text-sm font-medium mb-1 text-gray-300">Password</label>
+            <input type="password" required value={password} onChange={(e)=>setPassword(e.target.value)} className="w-full border border-pink-500/40 bg-black text-white rounded-lg px-3 py-2" />
           </div>
           {error && <div className="text-sm text-red-600">{error}</div>}
-          <button type="submit" disabled={loading} className="w-full bg-primary-600 text-white rounded-lg py-2 font-semibold hover:bg-primary-700 disabled:opacity-60">
+          <button type="submit" disabled={loading} className="w-full bg-pink-600 text-white rounded-lg py-2 font-semibold hover:bg-pink-700 disabled:opacity-60">
             {loading ? 'Memproses…' : (mode === 'login' ? 'Masuk' : 'Daftar')}
           </button>
         </form>
-        <div className="text-sm text-gray-600 mt-4">
+        <div className="text-sm text-gray-300 mt-4">
           {mode === 'login' ? (
-            <span>Belum punya akun? <button onClick={()=>setMode('signup')} className="text-primary-600">Daftar</button></span>
+            <span>Belum punya akun? <button onClick={()=>setMode('signup')} className="text-pink-400">Daftar</button></span>
           ) : (
-            <span>Sudah punya akun? <button onClick={()=>setMode('login')} className="text-primary-600">Masuk</button></span>
+            <span>Sudah punya akun? <button onClick={()=>setMode('login')} className="text-pink-400">Masuk</button></span>
           )}
         </div>
-        <div className="mt-4"><Link to="/" className="text-gray-600">Kembali</Link></div>
+        <div className="mt-4"><Link to="/" className="text-gray-300">Kembali</Link></div>
       </div>
     </div>
   );

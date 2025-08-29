@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
 import { Product } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
+import HorizontalScroller from '../components/HorizontalScroller.tsx';
 import { Search, Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
 
 const ProductsPage: React.FC = () => {
@@ -13,6 +14,7 @@ const ProductsPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedGame, setSelectedGame] = useState(searchParams.get('game') || '');
   const [priceRange, setPriceRange] = useState(searchParams.get('priceRange') || '');
+  const [selectedTier, setSelectedTier] = useState(searchParams.get('tier') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
@@ -47,6 +49,12 @@ const ProductsPage: React.FC = () => {
     { value: 'name-az', label: 'Nama A-Z' },
     { value: 'name-za', label: 'Nama Z-A' }
   ];
+  const tierOptions = [
+    { value: '', label: 'Semua Kategori' },
+    { value: 'reguler', label: 'Reguler' },
+    { value: 'pelajar', label: 'Pelajar' },
+    { value: 'premium', label: 'Premium' },
+  ];
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -80,6 +88,11 @@ const ProductsPage: React.FC = () => {
       filtered = filtered.filter(product =>
         product.gameTitle.toLowerCase() === selectedGame.toLowerCase()
       );
+    }
+
+    // Tier filter
+    if (selectedTier) {
+      filtered = filtered.filter(product => (product.tier || '').toLowerCase() === selectedTier.toLowerCase());
     }
 
     // Price range filter
@@ -127,11 +140,12 @@ const ProductsPage: React.FC = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (selectedGame) params.set('game', selectedGame);
-    if (priceRange) params.set('priceRange', priceRange);
+  if (priceRange) params.set('priceRange', priceRange);
+  if (selectedTier) params.set('tier', selectedTier);
     if (sortBy !== 'newest') params.set('sortBy', sortBy);
     
     setSearchParams(params);
-  }, [searchTerm, selectedGame, priceRange, sortBy, setSearchParams]);
+  }, [searchTerm, selectedGame, priceRange, sortBy, selectedTier, setSearchParams]);
 
   const clearFilters = () => {
     setSearchTerm('');
@@ -152,25 +166,30 @@ const ProductsPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-app-dark">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-gray-200">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Katalog Produk</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-bold text-white mb-2">Katalog Produk</h1>
+          <p className="text-gray-300">
             Temukan akun game impian Anda dari {products.length} produk tersedia
           </p>
+          <div className="mt-3 flex items-center gap-2 text-xs">
+            <span className="px-2 py-1 rounded border border-yellow-500/30 bg-yellow-500/10 text-yellow-400">Premium</span>
+            <span className="px-2 py-1 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400">Pelajar</span>
+            <span className="px-2 py-1 rounded border border-gray-500/30 bg-gray-500/10 text-gray-300">Reguler</span>
+          </div>
         </div>
 
         <div className="lg:grid lg:grid-cols-4 lg:gap-8">
           {/* Sidebar Filters - Desktop */}
           <div className="hidden lg:block">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 sticky top-24">
+            <div className="bg-black rounded-xl border border-pink-500/40 p-6 sticky top-24">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Filter</h3>
+                <h3 className="text-lg font-semibold text-white">Filter</h3>
                 <button
                   onClick={clearFilters}
-                  className="text-sm text-primary-600 hover:text-primary-700"
+                  className="text-sm text-pink-300 hover:text-pink-200"
                 >
                   Reset
                 </button>
@@ -178,16 +197,16 @@ const ProductsPage: React.FC = () => {
 
               {/* Search */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Cari Produk
                 </label>
                 <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" size={20} />
                   <input
                     type="text"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full pl-10 pr-4 py-2 border border-pink-500/40 bg-black text-gray-100 placeholder-gray-500 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                     placeholder="Nama akun, game..."
                   />
                 </div>
@@ -195,13 +214,13 @@ const ProductsPage: React.FC = () => {
 
               {/* Game Filter */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Game
                 </label>
                 <select
                   value={selectedGame}
                   onChange={(e) => setSelectedGame(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
                   <option value="">Semua Game</option>
                   {gameOptions.map(game => (
@@ -212,16 +231,30 @@ const ProductsPage: React.FC = () => {
 
               {/* Price Range Filter */}
               <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Rentang Harga
                 </label>
                 <select
                   value={priceRange}
                   onChange={(e) => setPriceRange(e.target.value)}
-                  className="w-full p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
                   {priceRanges.map(range => (
                     <option key={range.value} value={range.value}>{range.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Tier Filter */}
+              <div className="mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">Kategori</label>
+                <select
+                  value={selectedTier}
+                  onChange={(e) => setSelectedTier(e.target.value)}
+                  className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                >
+                  {tierOptions.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
                   ))}
                 </select>
               </div>
@@ -231,10 +264,10 @@ const ProductsPage: React.FC = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Mobile Filter Toggle */}
-            <div className="lg:hidden mb-4">
+      <div className="lg:hidden mb-4">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="w-full flex items-center justify-center space-x-2 bg-white border border-gray-300 rounded-lg px-4 py-2"
+        className="w-full flex items-center justify-center space-x-2 bg-black border border-pink-500/40 rounded-lg px-4 py-2 text-gray-200"
               >
                 <SlidersHorizontal size={20} />
                 <span>Filter & Urutkan</span>
@@ -243,24 +276,24 @@ const ProductsPage: React.FC = () => {
 
             {/* Mobile Filters */}
             {showFilters && (
-              <div className="lg:hidden bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+              <div className="lg:hidden bg-black rounded-xl border border-pink-500/40 p-4 mb-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Cari</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Cari</label>
                     <input
                       type="text"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
+                      className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
                       placeholder="Nama akun..."
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Game</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Game</label>
                     <select
                       value={selectedGame}
                       onChange={(e) => setSelectedGame(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
+                      className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
                     >
                       <option value="">Semua Game</option>
                       {gameOptions.map(game => (
@@ -269,11 +302,11 @@ const ProductsPage: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Harga</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Harga</label>
                     <select
                       value={priceRange}
                       onChange={(e) => setPriceRange(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
+                      className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
                     >
                       {priceRanges.map(range => (
                         <option key={range.value} value={range.value}>{range.label}</option>
@@ -281,11 +314,23 @@ const ProductsPage: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Urutkan</label>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Kategori</label>
+                    <select
+                      value={selectedTier}
+                      onChange={(e) => setSelectedTier(e.target.value)}
+                      className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
+                    >
+                      {tierOptions.map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-1">Urutkan</label>
                     <select
                       value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-lg"
+                      className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
                     >
                       {sortOptions.map(option => (
                         <option key={option.value} value={option.value}>{option.label}</option>
@@ -296,13 +341,13 @@ const ProductsPage: React.FC = () => {
                 <div className="mt-4 flex space-x-2">
                   <button
                     onClick={clearFilters}
-                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-4 py-2 text-gray-200 border border-pink-500/40 rounded-lg hover:bg-white/5"
                   >
                     Reset
                   </button>
                   <button
                     onClick={() => setShowFilters(false)}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                    className="px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700"
                   >
                     Terapkan
                   </button>
@@ -311,9 +356,9 @@ const ProductsPage: React.FC = () => {
             )}
 
             {/* Toolbar */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white rounded-xl shadow-sm border border-gray-100 p-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-black rounded-xl border border-pink-500/40 p-4 mb-6">
               <div className="flex items-center space-x-4 mb-4 sm:mb-0">
-                <span className="text-sm text-gray-600">
+        <span className="text-sm text-gray-300">
                   Menampilkan {filteredProducts.length} dari {products.length} produk
                 </span>
               </div>
@@ -321,11 +366,11 @@ const ProductsPage: React.FC = () => {
               <div className="flex items-center space-x-4">
                 {/* Sort - Desktop */}
                 <div className="hidden lg:flex items-center space-x-2">
-                  <label className="text-sm text-gray-600">Urutkan:</label>
+                  <label className="text-sm text-gray-300">Urutkan:</label>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value)}
-                    className="border border-gray-300 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="border border-pink-500/40 bg-black text-gray-100 rounded-lg px-3 py-1 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   >
                     {sortOptions.map(option => (
                       <option key={option.value} value={option.value}>{option.label}</option>
@@ -334,16 +379,16 @@ const ProductsPage: React.FC = () => {
                 </div>
 
                 {/* View Mode Toggle */}
-                <div className="flex border border-gray-300 rounded-lg overflow-hidden">
+        <div className="flex border border-pink-500/40 rounded-lg overflow-hidden">
                   <button
                     onClick={() => setViewMode('grid')}
-                    className={`p-2 ${viewMode === 'grid' ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+          className={`p-2 ${viewMode === 'grid' ? 'bg-pink-600 text-white' : 'bg-black text-gray-300 hover:bg-white/5'}`}
                   >
                     <Grid size={16} />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className={`p-2 ${viewMode === 'list' ? 'bg-primary-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+          className={`p-2 ${viewMode === 'list' ? 'bg-pink-600 text-white' : 'bg-black text-gray-300 hover:bg-white/5'}`}
                   >
                     <List size={16} />
                   </button>
@@ -353,30 +398,30 @@ const ProductsPage: React.FC = () => {
 
             {/* Products Grid */}
             {filteredProducts.length > 0 ? (
-              <div className="flex gap-4 overflow-x-auto pb-2 snap-x snap-mandatory">
+        <HorizontalScroller ariaLabel="Daftar Produk">
                 {filteredProducts.map((product) => (
-                  <div key={product.id} className="min-w-[280px] snap-start">
+          <div key={product.id} className="min-w-[300px] snap-start">
                     <ProductCard
                       product={product}
-                      className={viewMode === 'list' ? 'flex-row w-[640px]' : 'w-[280px]'}
+            className={viewMode === 'list' ? 'flex-row w-[640px]' : 'w-[300px]'}
                     />
                   </div>
                 ))}
-              </div>
+              </HorizontalScroller>
             ) : (
-              <div className="text-center py-12">
-                <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Search className="text-gray-400" size={32} />
+              <div className="text-center py-12 bg-black/60 rounded-xl border border-pink-500/30">
+                <div className="w-24 h-24 bg-black border border-pink-500/40 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="text-pink-400" size={32} />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                <h3 className="text-lg font-semibold text-white mb-2">
                   Tidak ada produk ditemukan
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-300 mb-4">
                   Coba ubah kata kunci pencarian atau filter Anda
                 </p>
                 <button
                   onClick={clearFilters}
-                  className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+                  className="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition-colors"
                 >
                   Reset Filter
                 </button>

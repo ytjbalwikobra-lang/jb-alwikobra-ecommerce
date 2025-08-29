@@ -120,7 +120,7 @@ Tambahkan environment server (di Vercel Project Settings):
 SUPABASE_URL=your_supabase_project_url
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 XENDIT_SECRET_KEY=your_xendit_secret_key
-XENDIT_CALLBACK_TOKEN=optional_shared_token_from_xendit
+XENDIT_CALLBACK_TOKEN=your_shared_webhook_token
 ```
 
 ### 5. Start Development Server
@@ -181,6 +181,15 @@ Tambahkan semua environment variables yang sama seperti di `.env.local`:
 - `REACT_APP_WHATSAPP_NUMBER`
 - `REACT_APP_SITE_NAME`
 - `REACT_APP_SITE_URL` (ganti dengan domain Vercel)
+Dan untuk server-side:
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `XENDIT_SECRET_KEY`
+- `XENDIT_CALLBACK_TOKEN`
+
+Catatan penting:
+- Jangan commit secret produksi ke repository. Isi nilai-nilai produksi hanya di Project Settings Vercel.
+- Pastikan webhook Xendit diarahkan ke: `https://<domain-anda>/api/xendit/webhook` dan gunakan token yang sama dengan `XENDIT_CALLBACK_TOKEN`.
 
 ## 🔧 Development
 

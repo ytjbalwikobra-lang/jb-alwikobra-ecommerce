@@ -52,7 +52,7 @@ const BannerCarousel: React.FC<Props> = ({ slides = defaultSlides }) => {
   const active = slides[index];
 
   return (
-    <div className="relative rounded-2xl overflow-hidden shadow-md border border-gray-100">
+  <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
       {/* 3:2 ratio container */}
       <div className="relative w-full" style={{ paddingTop: '66.6667%' }}>
         <img

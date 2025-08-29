@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types/index.ts';
 import { formatCurrency, calculateTimeRemaining } from '../utils/helpers.ts';
-import { Clock, Star, Zap } from 'lucide-react';
+import { Zap, ArrowUpRight } from 'lucide-react';
 
 interface ProductCardProps {
   product: Product;
@@ -15,131 +15,115 @@ const ProductCard: React.FC<ProductCardProps> = ({
   showFlashSaleTimer = false,
   className = ''
 }) => {
-  const timeRemaining = product.flashSaleEndTime 
+  const timeRemaining = product.flashSaleEndTime
     ? calculateTimeRemaining(product.flashSaleEndTime)
     : null;
 
   const isFlashSaleActive = product.isFlashSale && timeRemaining && !timeRemaining.isExpired;
+  const images = product.images && product.images.length > 0 ? product.images : [product.image];
+  const showBest = isFlashSaleActive || product.tier === 'premium';
+  const monogram = (product.gameTitle || 'JB').split(' ').map(s => s[0]).slice(0,2).join('').toUpperCase();
 
   return (
-    <Link 
+    <Link
       to={`/products/${product.id}`}
-      className={`group bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 ${className}`}
+  className={`group block rounded-3xl bg-gradient-to-br from-pink-600 to-rose-600 text-white shadow-none hover:shadow-none ring-1 ring-pink-500/40 transition-all duration-300 ${className}`}
     >
-      {/* Image Container */}
-      <div className="relative aspect-[4/3] overflow-hidden bg-gray-100">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-        />
-        
-        {/* Flash Sale Badge */}
-        {isFlashSaleActive && (
-          <div className="absolute top-3 left-3 bg-gradient-to-r from-red-500 to-pink-500 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center space-x-1">
-            <Zap size={12} />
-            <span>Flash Sale</span>
+      <div className="p-3">
+        {/* Image */}
+        <div className="relative aspect-[4/3] overflow-hidden rounded-2xl bg-pink-900/20 ring-1 ring-white/10">
+          <img
+            src={images[0]}
+            alt={product.name}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+          />
+          {showBest && (
+            <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 text-white text-xs font-medium px-2.5 py-1 backdrop-blur">
+              <Zap size={12} />
+              <span>{isFlashSaleActive ? 'Flash Sale' : 'Best Seller'}</span>
+            </div>
+          )}
+          {/* Game/Brand */}
+          <div className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white text-gray-900 text-xs font-bold flex items-center justify-center ring-1 ring-black/10">
+            {monogram}
           </div>
-        )}
 
-        {/* Stock Badge */}
-        {product.stock <= 5 && product.stock > 0 && (
-          <div className="absolute top-3 right-3 bg-orange-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-            Sisa {product.stock}
-          </div>
-        )}
+          {/* OOS overlay */}
+          {product.stock === 0 && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-semibold">Stok Habis</span>
+            </div>
+          )}
 
-        {/* Out of Stock */}
-        {product.stock === 0 && (
-          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-              Stok Habis
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Content */}
-      <div className="p-4">
-        {/* Game Title */}
-        <div className="flex items-center space-x-2 mb-2">
-          <span className="bg-primary-50 text-primary-600 px-2 py-1 rounded-md text-xs font-medium">
-            {product.gameTitle}
-          </span>
-          {product.hasRental && (
-            <span className="bg-green-50 text-green-600 px-2 py-1 rounded-md text-xs font-medium">
-              Rental
-            </span>
+          {/* Dots */}
+          {images.length > 1 && (
+            <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5">
+              {images.slice(0,5).map((_, i) => (
+                <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/50'}`}></span>
+              ))}
+            </div>
           )}
         </div>
 
-        {/* Product Name */}
-        <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2 group-hover:text-primary-600 transition-colors">
-          {product.name}
-        </h3>
-
-        {/* Account Level */}
-        {product.accountLevel && (
-          <p className="text-sm text-gray-600 mb-2 flex items-center space-x-1">
-            <Star size={14} className="text-yellow-400" />
-            <span>Level {product.accountLevel}</span>
-          </p>
-        )}
-
-        {/* Price */}
-        <div className="flex items-center justify-between">
-          <div>
-            {product.originalPrice && product.originalPrice > product.price ? (
-              <div className="space-y-1">
-                <div className="flex items-center space-x-2">
-                  <span className="text-lg font-bold text-primary-600">
-                    {formatCurrency(product.price)}
-                  </span>
-                  <span className="bg-red-100 text-red-600 px-1.5 py-0.5 rounded text-xs font-medium">
-                    -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                  </span>
-                </div>
-                <span className="text-sm text-gray-400 line-through">
-                  {formatCurrency(product.originalPrice)}
-                </span>
-              </div>
-            ) : (
-              <span className="text-lg font-bold text-gray-900">
-                {formatCurrency(product.price)}
+        {/* Text */}
+        <div className="mt-4">
+          <h3 className="text-[17px] font-semibold leading-snug text-white">{product.name}</h3>
+          {/* Badges row: game title, rental, level, tier */}
+      <div className="mt-1 flex flex-wrap items-center gap-2">
+            {product.gameTitle && (
+        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-black text-white border border-white/40 shadow-sm">
+                {product.gameTitle}
+              </span>
+            )}
+            {product.hasRental && (
+        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-black text-white border border-emerald-400/60 shadow-sm">
+                Rental
+              </span>
+            )}
+            {product.accountLevel && (
+        <span className="px-3 py-1 rounded-full text-sm font-semibold bg-black text-white border border-violet-400/60 shadow-sm">
+                Level {product.accountLevel}
+              </span>
+            )}
+            {product.tier && (
+              <span
+                className={
+          `px-3 py-1 rounded-full text-sm font-semibold bg-black text-white border shadow-sm ${
+                    product.tier === 'premium'
+            ? 'border-yellow-400/60'
+                      : product.tier === 'pelajar'
+            ? 'border-blue-400/60'
+            : 'border-gray-400/60'
+                  }`
+                }
+              >
+                {product.tier === 'premium' ? 'Premium' : product.tier === 'pelajar' ? 'Pelajar' : 'Reguler'}
               </span>
             )}
           </div>
-
-          {/* Rating (placeholder) */}
-          <div className="flex items-center space-x-1 text-yellow-400">
-            <Star size={14} fill="currentColor" />
-            <span className="text-sm text-gray-600">4.8</span>
-          </div>
         </div>
 
-        {/* Flash Sale Timer */}
-        {showFlashSaleTimer && isFlashSaleActive && timeRemaining && (
-          <div className="mt-3 p-2 bg-red-50 rounded-lg">
-            <div className="flex items-center space-x-1 text-red-600 text-sm font-medium mb-1">
-              <Clock size={14} />
-              <span>Berakhir dalam:</span>
-            </div>
-            <div className="flex space-x-2 text-xs">
-              <div className="bg-red-500 text-white px-2 py-1 rounded">
-                {timeRemaining.days.toString().padStart(2, '0')}d
+        {/* Footer */}
+        <div className="mt-4 flex items-end justify-between">
+          <div className="flex flex-col">
+            <span className="inline-flex items-center rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-gray-900">
+              {formatCurrency(product.price)}
+            </span>
+            {isFlashSaleActive && product.originalPrice && product.originalPrice > product.price && (
+              <div className="mt-1 flex items-center gap-2">
+                <span className="text-xs line-through text-white/90">
+                  {formatCurrency(product.originalPrice)}
+                </span>
+                <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-white/20 text-white">
+                  -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                </span>
               </div>
-              <div className="bg-red-500 text-white px-2 py-1 rounded">
-                {timeRemaining.hours.toString().padStart(2, '0')}h
-              </div>
-              <div className="bg-red-500 text-white px-2 py-1 rounded">
-                {timeRemaining.minutes.toString().padStart(2, '0')}m
-              </div>
-              <div className="bg-red-500 text-white px-2 py-1 rounded">
-                {timeRemaining.seconds.toString().padStart(2, '0')}s
-              </div>
-            </div>
+            )}
           </div>
-        )}
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-full bg-white text-gray-900 group-hover:bg-black group-hover:text-white transition-colors">
+            <ArrowUpRight size={16} />
+          </span>
+        </div>
       </div>
     </Link>
   );

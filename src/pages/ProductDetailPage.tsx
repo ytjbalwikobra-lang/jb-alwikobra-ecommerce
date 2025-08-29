@@ -163,10 +163,10 @@ const ProductDetailPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-app-dark text-gray-200">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat produk...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Memuat produk...</p>
         </div>
       </div>
     );
@@ -174,13 +174,13 @@ const ProductDetailPage: React.FC = () => {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-app-dark text-gray-200">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Produk tidak ditemukan</h2>
-          <p className="text-gray-600 mb-4">Produk yang Anda cari tidak tersedia</p>
+          <h2 className="text-2xl font-bold text-white mb-2">Produk tidak ditemukan</h2>
+          <p className="text-gray-300 mb-4">Produk yang Anda cari tidak tersedia</p>
           <Link
             to="/products"
-            className="bg-primary-600 text-white px-6 py-2 rounded-lg hover:bg-primary-700 transition-colors"
+            className="bg-pink-600 text-white px-6 py-2 rounded-lg hover:bg-pink-700 transition-colors"
           >
             Kembali ke Katalog
           </Link>
@@ -189,24 +189,24 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const images = product.images || [product.image];
+  const images = (product.images || [product.image]).slice(0, 15);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-app-dark text-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-600 mb-6">
-          <Link to="/" className="hover:text-primary-600">Beranda</Link>
+        <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-6">
+          <Link to="/" className="hover:text-pink-400">Beranda</Link>
           <span>/</span>
-          <Link to="/products" className="hover:text-primary-600">Produk</Link>
+          <Link to="/products" className="hover:text-pink-400">Produk</Link>
           <span>/</span>
-          <span className="text-gray-900">{product.name}</span>
+          <span className="text-white">{product.name}</span>
         </nav>
 
         {/* Back Button */}
         <Link
           to="/products"
-          className="inline-flex items-center space-x-2 text-gray-600 hover:text-primary-600 mb-6"
+          className="inline-flex items-center space-x-2 text-gray-400 hover:text-pink-400 mb-6"
         >
           <ChevronLeft size={20} />
           <span>Kembali ke Katalog</span>
@@ -215,7 +215,7 @@ const ProductDetailPage: React.FC = () => {
         <div className="lg:grid lg:grid-cols-2 lg:gap-12">
           {/* Image Gallery */}
           <div>
-            <div className="relative aspect-square mb-4 bg-gray-100 rounded-xl overflow-hidden">
+            <div className="relative aspect-square mb-4 bg-gray-900 rounded-xl overflow-hidden">
               <img
                 src={images[selectedImage]}
                 alt={product.name}
@@ -246,7 +246,7 @@ const ProductDetailPage: React.FC = () => {
                     key={index}
                     onClick={() => setSelectedImage(index)}
                     className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 ${
-                      selectedImage === index ? 'border-primary-500' : 'border-gray-200'
+                      selectedImage === index ? 'border-pink-500' : 'border-pink-500/30'
                     }`}
                   >
                     <img
@@ -264,54 +264,40 @@ const ProductDetailPage: React.FC = () => {
           <div>
             {/* Game Title */}
             <div className="flex items-center space-x-2 mb-4">
-              <span className="bg-primary-50 text-primary-600 px-3 py-1 rounded-full text-sm font-medium">
+              <span className="bg-pink-500/10 text-pink-400 px-3 py-1 rounded-full text-sm font-medium">
                 {product.gameTitle}
               </span>
               {product.hasRental && (
-                <span className="bg-green-50 text-green-600 px-3 py-1 rounded-full text-sm font-medium">
+                <span className="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-sm font-medium">
                   Tersedia Rental
                 </span>
               )}
             </div>
 
             {/* Product Name */}
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">{product.name}</h1>
+            <h1 className="text-3xl font-bold text-white mb-4">{product.name}</h1>
 
-            {/* Rating & Reviews */}
-            <div className="flex items-center space-x-4 mb-6">
-              <div className="flex items-center space-x-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star
-                    key={i}
-                    size={16}
-                    className={`${i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'}`}
-                  />
-                ))}
-                <span className="text-sm text-gray-600 ml-1">4.8 (127 ulasan)</span>
-              </div>
-              <div className="text-sm text-gray-600">
-                Terjual 345+
-              </div>
-            </div>
+            {/* Rating & Reviews removed as per requirements */}
+            <div className="h-2"></div>
 
             {/* Price */}
             <div className="mb-6">
               {product.originalPrice && product.originalPrice > product.price ? (
                 <div className="space-y-2">
                   <div className="flex items-center space-x-3">
-                    <span className="text-3xl font-bold text-primary-600">
+                    <span className="text-3xl font-bold text-pink-400">
                       {formatCurrency(product.price)}
                     </span>
-                    <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-sm font-medium">
+                    <span className="bg-red-500/10 border border-red-500/30 text-red-400 px-2 py-1 rounded text-sm font-medium">
                       -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                     </span>
                   </div>
-                  <span className="text-lg text-gray-400 line-through">
+                  <span className="text-lg text-gray-500 line-through">
                     {formatCurrency(product.originalPrice)}
                   </span>
                 </div>
               ) : (
-                <span className="text-3xl font-bold text-gray-900">
+                <span className="text-3xl font-bold text-white">
                   {formatCurrency(product.price)}
                 </span>
               )}
@@ -319,35 +305,35 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Flash Sale Timer */}
             {isFlashSaleActive && timeRemaining && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
-                <div className="flex items-center space-x-2 text-red-600 font-medium mb-2">
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                <div className="flex items-center space-x-2 text-red-400 font-medium mb-2">
                   <Clock size={20} />
                   <span>Flash Sale berakhir dalam:</span>
                 </div>
                 <div className="flex space-x-3">
                   <div className="text-center">
-                    <div className="bg-red-500 text-white px-3 py-2 rounded-lg font-bold text-lg">
+                    <div className="bg-red-600 text-white px-3 py-2 rounded-lg font-bold text-lg">
                       {timeRemaining.days.toString().padStart(2, '0')}
                     </div>
-                    <span className="text-xs text-red-600 mt-1">Hari</span>
+                    <span className="text-xs text-red-400 mt-1">Hari</span>
                   </div>
                   <div className="text-center">
-                    <div className="bg-red-500 text-white px-3 py-2 rounded-lg font-bold text-lg">
+                    <div className="bg-red-600 text-white px-3 py-2 rounded-lg font-bold text-lg">
                       {timeRemaining.hours.toString().padStart(2, '0')}
                     </div>
-                    <span className="text-xs text-red-600 mt-1">Jam</span>
+                    <span className="text-xs text-red-400 mt-1">Jam</span>
                   </div>
                   <div className="text-center">
-                    <div className="bg-red-500 text-white px-3 py-2 rounded-lg font-bold text-lg">
+                    <div className="bg-red-600 text-white px-3 py-2 rounded-lg font-bold text-lg">
                       {timeRemaining.minutes.toString().padStart(2, '0')}
                     </div>
-                    <span className="text-xs text-red-600 mt-1">Menit</span>
+                    <span className="text-xs text-red-400 mt-1">Menit</span>
                   </div>
                   <div className="text-center">
-                    <div className="bg-red-500 text-white px-3 py-2 rounded-lg font-bold text-lg">
+                    <div className="bg-red-600 text-white px-3 py-2 rounded-lg font-bold text-lg">
                       {timeRemaining.seconds.toString().padStart(2, '0')}
                     </div>
-                    <span className="text-xs text-red-600 mt-1">Detik</span>
+                    <span className="text-xs text-red-400 mt-1">Detik</span>
                   </div>
                 </div>
               </div>
@@ -355,16 +341,16 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Account Details */}
             {product.accountLevel && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-                <h3 className="font-semibold text-blue-900 mb-2 flex items-center space-x-2">
-                  <Star className="text-blue-600" size={16} />
+              <div className="mb-6 p-4 bg-black border border-pink-500/30 rounded-xl">
+                <h3 className="font-semibold text-white mb-2 flex items-center space-x-2">
+                  <Star className="text-yellow-400" size={16} />
                   <span>Detail Akun</span>
                 </h3>
-                <p className="text-blue-800">
+                <p className="text-gray-300">
                   <strong>Level:</strong> {product.accountLevel}
                 </p>
                 {product.accountDetails && (
-                  <p className="text-blue-800 mt-1">{product.accountDetails}</p>
+                  <p className="text-gray-300 mt-1">{product.accountDetails}</p>
                 )}
               </div>
             )}
@@ -372,8 +358,8 @@ const ProductDetailPage: React.FC = () => {
             {/* Rental Options */}
             {product.hasRental && product.rentalOptions && product.rentalOptions.length > 0 && (
               <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3 flex items-center space-x-2">
-                  <Calendar className="text-primary-600" size={16} />
+                <h3 className="font-semibold text-white mb-3 flex items-center space-x-2">
+                  <Calendar className="text-pink-400" size={16} />
                   <span>Opsi Rental</span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -383,16 +369,16 @@ const ProductDetailPage: React.FC = () => {
                       onClick={() => setSelectedRental(option)}
                       className={`p-3 border-2 rounded-lg text-left transition-colors ${
                         selectedRental?.id === option.id
-                          ? 'border-primary-500 bg-primary-50'
-                          : 'border-gray-200 hover:border-primary-300'
+                          ? 'border-pink-500 bg-pink-500/10'
+                          : 'border-pink-500/30 hover:bg-white/5'
                       }`}
                     >
-                      <div className="font-medium text-gray-900">{option.duration}</div>
-                      <div className="text-primary-600 font-semibold">
+                      <div className="font-medium text-white">{option.duration}</div>
+                      <div className="text-pink-400 font-semibold">
                         {formatCurrency(option.price)}
                       </div>
                       {option.description && (
-                        <div className="text-sm text-gray-600 mt-1">{option.description}</div>
+                        <div className="text-sm text-gray-300 mt-1">{option.description}</div>
                       )}
                     </button>
                   ))}
@@ -403,13 +389,13 @@ const ProductDetailPage: React.FC = () => {
             {/* Action Buttons */}
             <div className="space-y-3 mb-6">
               {/* Purchase Button */}
-              <button
+      <button
                 onClick={handlePurchase}
                 disabled={product.stock === 0}
                 className={`w-full flex items-center justify-center space-x-2 py-4 px-6 rounded-xl font-semibold transition-colors ${
                   product.stock === 0
-                    ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    : 'bg-primary-600 text-white hover:bg-primary-700'
+        ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+        : 'bg-pink-600 text-white hover:bg-pink-700'
                 }`}
               >
                 <CreditCard size={20} />
@@ -420,13 +406,13 @@ const ProductDetailPage: React.FC = () => {
 
               {/* Rental Button */}
               {product.hasRental && selectedRental && (
-                <button
+        <button
                   onClick={() => handleRental(selectedRental)}
                   disabled={product.stock === 0}
                   className={`w-full flex items-center justify-center space-x-2 py-4 px-6 rounded-xl font-semibold border-2 transition-colors ${
                     product.stock === 0
-                      ? 'border-gray-300 text-gray-500 cursor-not-allowed'
-                      : 'border-primary-600 text-primary-600 hover:bg-primary-50'
+          ? 'border-gray-700 text-gray-400 cursor-not-allowed'
+          : 'border-pink-600 text-pink-400 hover:bg-white/5'
                   }`}
                 >
                   <Calendar size={20} />
@@ -440,12 +426,12 @@ const ProductDetailPage: React.FC = () => {
             </div>
 
             {/* Additional Actions */}
-            <div className="flex items-center space-x-4 text-gray-600">
-              <button className="flex items-center space-x-1 hover:text-red-500 transition-colors">
+            <div className="flex items-center space-x-4 text-gray-300">
+              <button className="flex items-center space-x-1 hover:text-red-400 transition-colors">
                 <Heart size={16} />
                 <span>Favorit</span>
               </button>
-              <button className="flex items-center space-x-1 hover:text-primary-600 transition-colors">
+              <button className="flex items-center space-x-1 hover:text-pink-400 transition-colors">
                 <Share2 size={16} />
                 <span>Bagikan</span>
               </button>
@@ -453,19 +439,19 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Trust Badges */}
             <div className="mt-8 grid grid-cols-2 gap-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-gray-300">
                 <Shield className="text-green-500" size={16} />
                 <span>Garansi 100%</span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-gray-300">
                 <CheckCircle className="text-blue-500" size={16} />
                 <span>Akun Terverifikasi</span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-gray-300">
                 <Clock className="text-orange-500" size={16} />
                 <span>Proses 24 Jam</span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-gray-300">
                 <MessageCircle className="text-green-500" size={16} />
                 <span>Support 24/7</span>
               </div>
@@ -474,24 +460,24 @@ const ProductDetailPage: React.FC = () => {
         </div>
 
         {/* Product Description */}
-        <div className="mt-12 bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Deskripsi Produk</h2>
-          <div className="prose prose-gray max-w-none">
-            <p className="text-gray-700 leading-relaxed">{product.description}</p>
+        <div className="mt-12 bg-black rounded-xl border border-pink-500/30 p-6">
+          <h2 className="text-2xl font-bold text-white mb-4">Deskripsi Produk</h2>
+          <div className="max-w-none">
+            <p className="text-gray-300 leading-relaxed">{product.description}</p>
           </div>
         </div>
 
         {/* Checkout Modal */}
         {showCheckoutForm && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
-              <h3 className="text-xl font-bold text-gray-900 mb-4">
+            <div className="bg-black border border-pink-500/30 rounded-xl max-w-md w-full p-6 text-gray-200">
+              <h3 className="text-xl font-bold text-white mb-4">
                 {checkoutType === 'purchase' ? 'Beli Akun' : 'Rental Akun'}
               </h3>
               
-              <div className="mb-4 p-4 bg-gray-50 rounded-lg">
-                <p className="font-medium text-gray-900">{product.name}</p>
-                <p className="text-primary-600 font-semibold">
+              <div className="mb-4 p-4 bg-black border border-pink-500/30 rounded-lg">
+                <p className="font-medium text-white">{product.name}</p>
+                <p className="text-pink-400 font-semibold">
                   {checkoutType === 'rental' && selectedRental
                     ? `${formatCurrency(selectedRental.price)} (${selectedRental.duration})`
                     : formatCurrency(product.price)
@@ -501,7 +487,7 @@ const ProductDetailPage: React.FC = () => {
 
               <form className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Nama Lengkap *
                   </label>
                   <input
@@ -509,13 +495,13 @@ const ProductDetailPage: React.FC = () => {
                     required
                     value={customer.name}
                     onChange={(e) => setCustomer({ ...customer, name: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                     placeholder="Masukkan nama lengkap"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     Email *
                   </label>
                   <input
@@ -523,13 +509,13 @@ const ProductDetailPage: React.FC = () => {
                     required
                     value={customer.email}
                     onChange={(e) => setCustomer({ ...customer, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                     placeholder="Masukkan email"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
                     No. WhatsApp *
                   </label>
                   <input
@@ -537,14 +523,14 @@ const ProductDetailPage: React.FC = () => {
                     required
                     value={customer.phone}
                     onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                     placeholder="Masukkan nomor WhatsApp (628...)"
                   />
                 </div>
 
                 {checkoutType === 'purchase' && (
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <div className="flex items-center space-x-2 text-blue-800">
+                  <div className="p-3 bg-black border border-pink-500/30 rounded-lg">
+                    <div className="flex items-center space-x-2 text-gray-300">
                       <Info size={16} />
                       <span className="text-sm">
                         Pembelian wajib melalui Xendit. Akun akan dikirim via email setelah pembayaran dikonfirmasi.
@@ -554,8 +540,8 @@ const ProductDetailPage: React.FC = () => {
                 )}
 
                 {checkoutType === 'rental' && (
-                  <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
-                    <div className="flex items-center space-x-2 text-green-800">
+                  <div className="p-3 bg-black border border-pink-500/30 rounded-lg">
+                    <div className="flex items-center space-x-2 text-gray-300">
                       <Calendar size={16} />
                       <span className="text-sm">
                         Akses rental akan diberikan melalui WhatsApp
@@ -568,7 +554,7 @@ const ProductDetailPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setShowCheckoutForm(false)}
-                    className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="flex-1 px-4 py-2 border border-pink-500/40 text-gray-300 rounded-lg hover:bg-white/5 transition-colors"
                   >
                     Batal
                   </button>
@@ -577,7 +563,7 @@ const ProductDetailPage: React.FC = () => {
                     <button
                       type="button"
             onClick={handleCheckout}
-                      className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                      className="flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
                     >
                       Bayar dengan Xendit
                     </button>
