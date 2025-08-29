@@ -4,7 +4,7 @@ import { ProductService } from '../services/productService.ts';
 import { Product, Tier, GameTitle } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
 import HorizontalScroller from '../components/HorizontalScroller.tsx';
-import { Search, Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal } from 'lucide-react';
 
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -17,7 +17,7 @@ const ProductsPage: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState(searchParams.get('game') || '');
   const [selectedTier, setSelectedTier] = useState(searchParams.get('tier') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  // Removed grid/list toggle; always use horizontal cards
   const [showFilters, setShowFilters] = useState(false);
 
   const sortOptions = [
@@ -120,6 +120,18 @@ const ProductsPage: React.FC = () => {
     setSelectedTier('');
     setSortBy('newest');
   };
+
+  // Group filtered products by game title for sectioned display
+  const gamesMap: Record<string, Product[]> = React.useMemo(() => {
+    const map: Record<string, Product[]> = {};
+    filteredProducts.forEach((p) => {
+      const name = p.gameTitleData?.name || p.gameTitle || 'Lainnya';
+      if (!map[name]) map[name] = [];
+      map[name].push(p);
+    });
+    // If selectedGame is set but yields no results, map will be empty
+    return map;
+  }, [filteredProducts]);
 
   if (loading) {
     return (
@@ -307,7 +319,7 @@ const ProductsPage: React.FC = () => {
             )}
 
             {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-black rounded-xl border border-pink-500/40 p-4 mb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-black rounded-xl border border-pink-500/40 p-4 mb-4">
               <div className="flex items-center space-x-4 mb-4 sm:mb-0">
         <span className="text-sm text-gray-300">
                   Menampilkan {filteredProducts.length} dari {products.length} produk
@@ -328,37 +340,32 @@ const ProductsPage: React.FC = () => {
                     ))}
                   </select>
                 </div>
-
-                {/* View Mode Toggle */}
-        <div className="flex border border-pink-500/40 rounded-lg overflow-hidden">
-                  <button
-                    onClick={() => setViewMode('grid')}
-          className={`p-2 ${viewMode === 'grid' ? 'bg-pink-600 text-white' : 'bg-black text-gray-300 hover:bg-white/5'}`}
-                  >
-                    <Grid size={16} />
-                  </button>
-                  <button
-                    onClick={() => setViewMode('list')}
-          className={`p-2 ${viewMode === 'list' ? 'bg-pink-600 text-white' : 'bg-black text-gray-300 hover:bg-white/5'}`}
-                  >
-                    <List size={16} />
-                  </button>
-                </div>
               </div>
             </div>
 
-            {/* Products Grid */}
-            {filteredProducts.length > 0 ? (
-        <HorizontalScroller ariaLabel="Daftar Produk">
-                {filteredProducts.map((product) => (
-          <div key={product.id} className="min-w-[300px] snap-start">
-                    <ProductCard
-                      product={product}
-            className={viewMode === 'list' ? 'flex-row w-[640px]' : 'w-[300px]'}
-                    />
+            {/* Game Sections with Horizontal Product Lists */}
+            {Object.keys(gamesMap).length > 0 ? (
+              Object.entries(gamesMap).map(([gameName, prods]) => (
+                <section key={gameName} className="mb-10">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-2xl font-bold text-white">{gameName}</h2>
+                    {/* Quick filter to only this game */}
+                    <button
+                      onClick={() => setSelectedGame(gameName)}
+                      className="text-sm text-pink-300 hover:text-pink-200"
+                    >
+                      Lihat {gameName} saja
+                    </button>
                   </div>
-                ))}
-              </HorizontalScroller>
+                  <HorizontalScroller ariaLabel={`Produk ${gameName}`}>
+                    {prods.map((product) => (
+                      <div key={product.id} className="min-w-[320px] snap-start">
+                        <ProductCard product={product} className="w-[320px]" />
+                      </div>
+                    ))}
+                  </HorizontalScroller>
+                </section>
+              ))
             ) : (
               <div className="text-center py-12 bg-black/60 rounded-xl border border-pink-500/30">
                 <div className="w-24 h-24 bg-black border border-pink-500/40 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -378,6 +385,8 @@ const ProductsPage: React.FC = () => {
                 </button>
               </div>
             )}
+
+            {/* Sections rendered above */}
           </div>
         </div>
       </div>

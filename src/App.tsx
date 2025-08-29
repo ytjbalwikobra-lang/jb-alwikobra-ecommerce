@@ -14,6 +14,13 @@ import HelpPage from './pages/HelpPage.tsx';
 import './App.css';
 import OrderHistoryPage from './pages/OrderHistoryPage.tsx';
 import AuthPage from './pages/AuthPage.tsx';
+import AdminLayout from './layouts/AdminLayout.tsx';
+import AdminDashboard from './pages/admin/AdminDashboard.tsx';
+import AdminProducts from './pages/admin/AdminProducts.tsx';
+import AdminFlashSales from './pages/admin/AdminFlashSales.tsx';
+import AdminUsers from './pages/admin/AdminUsers.tsx';
+import RequireAdmin from './components/RequireAdmin.tsx';
+import { ToastProvider } from './components/Toast.tsx';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error?: Error}> {
@@ -61,6 +68,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <ToastProvider>
       <Router>
         <ScrollToTop />
   <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200">
@@ -84,7 +92,14 @@ function App() {
               <Route path="/payment-status" element={<PaymentStatusPage />} />
               <Route path="/auth" element={<AuthPage />} />
               <Route path="/orders" element={<OrderHistoryPage />} />
-              <Route path="/admin" element={<div className="min-h-screen flex items-center justify-center"><p className="text-gray-600">Admin panel akan segera tersedia</p></div>} />
+              <Route element={<RequireAdmin />}>
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="products" element={<AdminProducts />} />
+                  <Route path="flash-sales" element={<AdminFlashSales />} />
+                  <Route path="users" element={<AdminUsers />} />
+                </Route>
+              </Route>
               <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><p className="text-gray-600">Halaman tidak ditemukan</p></div>} />
             </Routes>
           </main>
@@ -92,6 +107,7 @@ function App() {
           <MobileBottomNav />
         </div>
       </Router>
+      </ToastProvider>
     </ErrorBoundary>
   );
 }

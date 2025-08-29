@@ -56,3 +56,34 @@ export async function getAuthUserId(): Promise<string | null> {
   } catch {}
   return null;
 }
+
+export async function getUserRole(): Promise<string> {
+  try {
+    if (!supabase) return 'user';
+    const { data } = await supabase.auth.getUser();
+    const user = data?.user;
+    if (!user) return 'guest';
+    const uid = user.id;
+    // Try profiles table first
+    try {
+      const { data: profile } = await (supabase as any)
+        .from('profiles')
+        .select('role')
+        .eq('id', uid)
+        .maybeSingle();
+    if (profile?.role) return String(profile.role);
+    } catch {}
+    // Fallback to user/app metadata
+    const meta = (user.user_metadata || user.app_metadata || {}) as any;
+    return meta.role || 'user';
+  } catch {
+    return 'user';
+  }
+}
+
+export async function isAdmin(): Promise<boolean> {
+  const role = await getUserRole();
+  const r = String(role).toLowerCase().trim().replace(/\s+/g, ' ');
+  const allowed = ['admin', 'superadmin', 'super-admin', 'super admin', 'owner'];
+  return allowed.includes(r);
+}

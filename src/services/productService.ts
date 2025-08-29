@@ -1,4 +1,5 @@
 import { supabase } from './supabase.ts';
+import { deletePublicUrls } from './storageService.ts';
 import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
 
 // Sample data untuk development/testing
@@ -445,6 +446,71 @@ export class ProductService {
     }
   }
 
+  // Flash Sale CRUD
+  static async createFlashSale(sale: {
+    product_id: string;
+    sale_price: number;
+    original_price?: number | null;
+    start_time?: string | null;
+    end_time: string;
+    stock?: number | null;
+    is_active?: boolean;
+  }): Promise<any | null> {
+    try {
+      if (!supabase) return null;
+      const { data, error } = await (supabase as any)
+        .from('flash_sales')
+        .insert([sale])
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error('Error creating flash sale:', e);
+      return null;
+    }
+  }
+
+  static async updateFlashSale(id: string, updates: Partial<{
+    product_id: string;
+    sale_price: number;
+    original_price?: number | null;
+    start_time?: string | null;
+    end_time: string;
+    stock?: number | null;
+    is_active?: boolean;
+  }>): Promise<any | null> {
+    try {
+      if (!supabase) return null;
+      const { data, error } = await (supabase as any)
+        .from('flash_sales')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error('Error updating flash sale:', e);
+      return null;
+    }
+  }
+
+  static async deleteFlashSale(id: string): Promise<boolean> {
+    try {
+      if (!supabase) return false;
+      const { error } = await (supabase as any)
+        .from('flash_sales')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      return true;
+    } catch (e) {
+      console.error('Error deleting flash sale:', e);
+      return false;
+    }
+  }
+
   static async createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'>): Promise<Product | null> {
     try {
   if (!supabase) return null;
@@ -482,7 +548,7 @@ export class ProductService {
     }
   }
 
-  static async deleteProduct(id: string): Promise<boolean> {
+  static async deleteProduct(id: string, options?: { images?: string[] }): Promise<boolean> {
     try {
   if (!supabase) return false;
 
@@ -492,6 +558,10 @@ export class ProductService {
         .eq('id', id);
 
       if (error) throw error;
+      // Best-effort delete related images from storage when provided
+      if (options?.images && options.images.length) {
+        try { await deletePublicUrls(options.images); } catch (_) {}
+      }
       return true;
     } catch (error) {
       console.error('Error deleting product:', error);

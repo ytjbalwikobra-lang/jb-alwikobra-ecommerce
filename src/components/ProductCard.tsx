@@ -20,9 +20,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
     ? calculateTimeRemaining(product.flashSaleEndTime)
     : null;
 
-  const isFlashSaleActive = (product.isFlashSale || showFlashSaleTimer) && timeRemaining && !timeRemaining.isExpired;
+  const isFlashSaleActive = showFlashSaleTimer && timeRemaining && !timeRemaining.isExpired;
   const images = product.images && product.images.length > 0 ? product.images : [product.image];
-  const showBest = isFlashSaleActive || showFlashSaleTimer || product.tier === 'premium';
+  const showBest = showFlashSaleTimer || product.tier === 'premium';
+
+  // Determine which price to show on the card
+  // - On flash sale cards with an active sale: show sale price (product.price)
+  // - Everywhere else (catalog, normal cards): show original/base price
+  const displayPrice = (() => {
+    const hasValidDiscount = product.originalPrice && product.originalPrice > product.price;
+    if (isFlashSaleActive && hasValidDiscount) return product.price;
+    return product.originalPrice && product.originalPrice > 0 ? product.originalPrice : product.price;
+  })();
 
   // Robust monogram: derive from game title name or slug, producing tokens initials (e.g., Free Fire -> FF, Mobile Legends -> ML)
   const getMonogram = (): string => {
@@ -125,7 +134,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <Link
       to={`/products/${product.id}`}
       state={{ fromFlashSaleCard: !!showFlashSaleTimer }}
-      className={`group block rounded-3xl ${showFlashSaleTimer ? 'bg-gradient-to-br from-red-500 via-pink-500 to-rose-500 ring-2 ring-red-400/50 shadow-lg shadow-red-500/25' : tierStyle.bg} text-white shadow-lg hover:shadow-xl ring-1 ${tierStyle.ring} transition-all duration-300 hover:scale-[1.02] ${className}`}
+  className={`group block rounded-3xl ${showFlashSaleTimer ? 'bg-gradient-to-br from-red-500 via-pink-500 to-rose-500 ring-2 ring-red-400/50 shadow-lg shadow-red-500/25' : tierStyle.bg} text-white shadow-lg ring-1 ${tierStyle.ring} transform-gpu transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${className}`}
     >
       <div className="p-4">
         {/* Image */}
@@ -133,7 +142,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <img
             src={images[0]}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.05]"
+    className="w-full h-full object-cover transition-transform duration-500 ease-out transform-gpu group-hover:scale-[1.05]"
           />
           
           {/* Flash Sale or Best Badge */}
@@ -226,7 +235,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
                 <span className="inline-flex items-center rounded-xl bg-white/95 backdrop-blur-sm px-4 py-2 text-base font-bold text-gray-900 shadow-lg border border-white/20">
-                  {formatCurrency(product.price)}
+                  {formatCurrency(displayPrice)}
                 </span>
                 {isFlashSaleActive && product.originalPrice && product.originalPrice > product.price && (
                   <span className="text-xs font-semibold px-2 py-1 rounded-lg bg-red-500/30 text-white border border-red-400/60 backdrop-blur-sm shadow-sm">
