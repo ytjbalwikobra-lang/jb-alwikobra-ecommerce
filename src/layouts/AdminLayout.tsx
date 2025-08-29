@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Package, Users, Zap, ListOrdered, Image as ImageIcon, Settings as SettingsIcon } from 'lucide-react';
-import { getUserRole } from '../services/authService.ts';
+import { getUserRole, logout } from '../services/authService.ts';
 
 const AdminLayout: React.FC = () => {
   const [role, setRole] = useState<string>('');
@@ -13,13 +13,10 @@ const AdminLayout: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
       {/* Top Navigation */}
-      <header className="sticky top-0 z-20 bg-black/80 backdrop-blur border-b border-pink-500/20">
+    <header className="sticky top-0 z-20 bg-black/80 backdrop-blur border-b border-pink-500/20">
         <div className="h-16 px-4 md:px-6 flex items-center justify-between">
-          {/* Brand */}
-          <Link to="/" className="flex items-center gap-2 text-white">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600" />
-            <span className="font-bold hidden sm:block">Admin Panel</span>
-          </Link>
+      {/* Left spacer to keep tabs centered */}
+      <div className="w-24" />
 
           {/* Nav Tabs */}
           <nav className="hidden md:flex items-center gap-1">
@@ -70,8 +67,14 @@ const AdminLayout: React.FC = () => {
             )}
           </nav>
 
-          {/* Right Slot */}
-          <div className="text-xs md:text-sm text-gray-400">JB Alwikobra</div>
+          {/* Right: Logout only */}
+          <button
+            onClick={async ()=>{ await logout(); window.location.href='/' }}
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm text-white"
+            title="Keluar"
+          >
+            Keluar
+          </button>
         </div>
       </header>
 

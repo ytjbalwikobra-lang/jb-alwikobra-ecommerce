@@ -348,28 +348,31 @@ const AdminProducts: React.FC = () => {
               />
               <p className="text-xs text-gray-500">Urutkan dengan drag & drop. Gambar pertama menjadi cover.</p>
 
-              <div className="mt-6 border-t border-white/10 pt-4">
-                <div className="text-sm text-gray-400 mb-2">Rental Options</div>
-                <div className="space-y-3">
-                  {(form.rentals || []).map((r, idx) => (
-                    <div key={idx} className="grid grid-cols-5 gap-2 items-center">
-                      <input className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Durasi (mis. 1 Hari)" value={r.duration} onChange={(e)=>{
-                        const next = [...form.rentals]; next[idx] = { ...r, duration: e.target.value }; setForm({...form, rentals: next});
-                      }} />
-                      <input type="number" min={0} step={1000} className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Harga" value={r.price} onChange={(e)=>{
-                        const next = [...form.rentals]; next[idx] = { ...r, price: Number(e.target.value) }; setForm({...form, rentals: next});
-                      }} />
-                      <button className="text-red-300 border border-red-500/40 rounded px-2 py-1 hover:bg-red-500/10" onClick={()=>{
-                        const next = [...form.rentals]; next.splice(idx,1); setForm({...form, rentals: next});
-                      }}>Hapus</button>
-                      <input className="col-span-5 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Deskripsi (opsional)" value={r.description || ''} onChange={(e)=>{
-                        const next = [...form.rentals]; next[idx] = { ...r, description: e.target.value }; setForm({...form, rentals: next});
-                      }} />
-                    </div>
-                  ))}
-                  <button className="text-white border border-white/20 rounded px-2 py-1 hover:bg-white/10" onClick={()=>setForm({...form, rentals:[...(form.rentals||[]), { duration:'', price:0 }]})}>Tambah Rental</button>
+              {/* Rental options moved below */}
+            </div>
+          </div>
+
+          {/* Rental section now below the entire form */}
+          <div className="mt-8 border-t border-white/10 pt-6">
+            <div className="text-sm text-gray-400 mb-2">Rental Options</div>
+            <div className="space-y-3">
+              {(form.rentals || []).map((r, idx) => (
+                <div key={idx} className="grid grid-cols-5 gap-2 items-center">
+                  <input className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Durasi (mis. 1 Hari)" value={r.duration} onChange={(e)=>{
+                    const next = [...form.rentals]; next[idx] = { ...r, duration: e.target.value }; setForm({...form, rentals: next});
+                  }} />
+                  <input type="number" min={0} step={1000} className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Harga" value={r.price} onChange={(e)=>{
+                    const next = [...form.rentals]; next[idx] = { ...r, price: Number(e.target.value) }; setForm({...form, rentals: next});
+                  }} />
+                  <button className="text-red-300 border border-red-500/40 rounded px-2 py-1 hover:bg-red-500/10" onClick={()=>{
+                    const next = [...form.rentals]; next.splice(idx,1); setForm({...form, rentals: next});
+                  }}>Hapus</button>
+                  <input className="col-span-5 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Deskripsi (opsional)" value={r.description || ''} onChange={(e)=>{
+                    const next = [...form.rentals]; next[idx] = { ...r, description: e.target.value }; setForm({...form, rentals: next});
+                  }} />
                 </div>
-              </div>
+              ))}
+              <button className="text-white border border-white/20 rounded px-2 py-1 hover:bg-white/10" onClick={()=>setForm({...form, rentals:[...(form.rentals||[]), { duration:'', price:0 }]})}>Tambah Rental</button>
             </div>
           </div>
 

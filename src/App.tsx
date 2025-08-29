@@ -74,9 +74,26 @@ function App() {
       <ToastProvider>
       <Router>
         <ScrollToTop />
-  <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200">
-          <Header />
-      <main className="flex-1 pb-16 md:pb-0">
+        {/* Public shell: shows global header/footer. Admin routes have their own layout without this shell. */}
+        <Routes>
+          {/* Admin branch without global header/footer */}
+          <Route element={<RequireAdmin />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="products" element={<AdminProducts />} />
+              <Route path="flash-sales" element={<AdminFlashSales />} />
+              <Route path="users" element={<AdminUsers />} />
+              <Route path="orders" element={<AdminOrders />} />
+              <Route path="banners" element={<AdminBanners />} />
+              <Route path="settings" element={<AdminSettings />} />
+            </Route>
+          </Route>
+          <Route
+            path="*"
+            element={
+              <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200">
+                <Header />
+                <main className="flex-1 pb-16 md:pb-0">
             {!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY ? (
               <div className="max-w-3xl mx-auto p-4">
                 <div className="bg-black/60 border border-yellow-500/40 rounded-lg p-4 mb-4">
@@ -85,33 +102,25 @@ function App() {
                 </div>
               </div>
             ) : null}
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/products" element={<ProductsPage />} />
-              <Route path="/products/:id" element={<ProductDetailPage />} />
-              <Route path="/flash-sales" element={<FlashSalesPage />} />
-              <Route path="/sell" element={<SellPage />} />
-        <Route path="/help" element={<HelpPage />} />
-              <Route path="/payment-status" element={<PaymentStatusPage />} />
-              <Route path="/auth" element={<AuthPage />} />
-              <Route path="/orders" element={<OrderHistoryPage />} />
-              <Route element={<RequireAdmin />}>
-                <Route path="/admin" element={<AdminLayout />}>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="products" element={<AdminProducts />} />
-                  <Route path="flash-sales" element={<AdminFlashSales />} />
-                  <Route path="users" element={<AdminUsers />} />
-                  <Route path="orders" element={<AdminOrders />} />
-                  <Route path="banners" element={<AdminBanners />} />
-                  <Route path="settings" element={<AdminSettings />} />
-                </Route>
-              </Route>
-              <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><p className="text-gray-600">Halaman tidak ditemukan</p></div>} />
-            </Routes>
-          </main>
-          <Footer />
-          <MobileBottomNav />
-        </div>
+                <Routes>
+                  <Route path="/" element={<HomePage />} />
+                  <Route path="/products" element={<ProductsPage />} />
+                  <Route path="/products/:id" element={<ProductDetailPage />} />
+                  <Route path="/flash-sales" element={<FlashSalesPage />} />
+                  <Route path="/sell" element={<SellPage />} />
+                  <Route path="/help" element={<HelpPage />} />
+                  <Route path="/payment-status" element={<PaymentStatusPage />} />
+                  <Route path="/auth" element={<AuthPage />} />
+                  <Route path="/orders" element={<OrderHistoryPage />} />
+                  <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><p className="text-gray-600">Halaman tidak ditemukan</p></div>} />
+                </Routes>
+                </main>
+                <Footer />
+                <MobileBottomNav />
+              </div>
+            }
+          />
+        </Routes>
       </Router>
       </ToastProvider>
     </ErrorBoundary>

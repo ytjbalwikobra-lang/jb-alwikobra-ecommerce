@@ -87,3 +87,12 @@ export async function isAdmin(): Promise<boolean> {
   const allowed = ['admin', 'superadmin', 'super-admin', 'super admin', 'owner'];
   return allowed.includes(r);
 }
+
+export async function logout(): Promise<void> {
+  try {
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+  } catch {}
+  try { localStorage.removeItem('user_profile'); } catch {}
+}
