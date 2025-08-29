@@ -224,11 +224,19 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
           )}
 
-          {/* Rental Tag - always visible if hasRental */}
-          {product.hasRental && (
+          {/* Rental Tag - consistent with other tags; visible on flash sale and normal cards */}
+          {(product.hasRental || (product as any).rentalOptions?.length > 0) && (
             <div className="mt-2">
-              <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600 text-white border-2 border-emerald-400 shadow-lg animate-pulse uppercase tracking-wide" style={{letterSpacing:'0.08em'}}>
-                <Sparkles size={18} className="drop-shadow" />
+              <span
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border backdrop-blur-sm"
+                style={{
+                  backgroundColor: 'rgba(16, 185, 129, 0.15)',
+                  borderColor: 'rgba(52, 211, 153, 0.6)',
+                  color: '#ffffff',
+                  textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                }}
+              >
+                <Sparkles size={12} />
                 Tersedia untuk Rental
               </span>
             </div>

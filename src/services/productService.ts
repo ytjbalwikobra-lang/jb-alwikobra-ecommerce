@@ -428,7 +428,7 @@ export class ProductService {
       if (hasFlashSaleJoin === false) {
         throw new Error('REL_SKIP');
       }
-      const { data, error } = await supabase
+  const { data, error } = await supabase
         .from('flash_sales')
         .select(`
           *,
@@ -473,10 +473,23 @@ export class ProductService {
         hasFlashSaleJoin = false;
         const ids = (basic || []).map((b: any) => b.product_id);
         const { data: prods } = await supabase.from('products').select('*').in('id', ids);
+        // Best-effort fetch rental options to derive hasRental when has_rental column is absent
+        let rentalsMap = new Map<string, number>();
+        try {
+          if (ids.length) {
+            const { data: ros } = await supabase
+              .from('rental_options')
+              .select('id, product_id')
+              .in('product_id', ids);
+            for (const ro of ros || []) {
+              rentalsMap.set(ro.product_id, (rentalsMap.get(ro.product_id) || 0) + 1);
+            }
+          }
+        } catch {}
         const pmap = new Map((prods || []).map((p: any) => [p.id, p]));
         return (basic || []).map((sale: any) => {
           const raw = pmap.get(sale.product_id) || {};
-          const product = { ...raw, hasRental: raw.has_rental ?? raw.hasRental ?? false };
+          const product = { ...raw, hasRental: (raw as any).has_rental ?? (raw as any).hasRental ?? ((rentalsMap.get(sale.product_id) || 0) > 0) };
           return {
             id: sale.id,
             productId: sale.product_id,
@@ -492,13 +505,28 @@ export class ProductService {
         });
       }
 
+      // When relational join succeeds, also check rental options to infer hasRental if needed
+      let rentalsMap = new Map<string, number>();
+      try {
+        const prodIds = (data || []).map((s: any) => s.product_id || s.productId || s.products?.id).filter(Boolean);
+        if (prodIds.length) {
+          const { data: ros } = await supabase
+            .from('rental_options')
+            .select('id, product_id')
+            .in('product_id', prodIds);
+          for (const ro of ros || []) {
+            rentalsMap.set(ro.product_id, (rentalsMap.get(ro.product_id) || 0) + 1);
+          }
+        }
+      } catch {}
+
       return data?.map((sale: any) => {
         const prod = sale.products || {};
         const gt = prod.game_titles;
         const tier = prod.tiers;
         const product = {
           ...prod,
-          hasRental: prod.has_rental ?? prod.hasRental ?? false,
+          hasRental: prod.has_rental ?? prod.hasRental ?? ((rentalsMap.get(prod.id) || 0) > 0),
           // Enrich with joined data for UI badges/monogram
           gameTitleData: gt ? {
             id: gt.id,
