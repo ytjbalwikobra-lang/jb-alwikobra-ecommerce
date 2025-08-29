@@ -88,14 +88,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
           borderColor: '#60a5fa'
         };
       default:
-        // Reguler -> Green
+        // Reguler -> Silver
         return {
-          bg: 'bg-gradient-to-br from-emerald-500 to-green-600',
-          ring: 'ring-emerald-500/40',
-          textColor: 'text-emerald-50',
-          badge: 'bg-emerald-400/20 text-emerald-100 border-emerald-300/60',
-          badgeColor: '#10b981',
-          borderColor: '#34d399'
+          bg: 'bg-gradient-to-br from-zinc-400 to-neutral-500',
+          ring: 'ring-gray-300/40',
+          textColor: 'text-gray-50',
+          badge: 'bg-gray-300/20 text-gray-100 border-gray-200/60',
+          badgeColor: '#C0C0C0',
+          borderColor: '#D1D5DB'
         };
     }
   };

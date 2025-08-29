@@ -87,6 +87,35 @@ export interface FlashSale {
   isActive: boolean;
 }
 
+export interface Banner {
+  id: string;
+  title: string;
+  subtitle?: string;
+  imageUrl: string;
+  linkUrl?: string;
+  sortOrder: number;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface WebsiteSettings {
+  id: string; // singleton row id
+  siteName?: string;
+  logoUrl?: string;
+  faviconUrl?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  whatsappNumber?: string;
+  address?: string;
+  facebookUrl?: string;
+  instagramUrl?: string;
+  tiktokUrl?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  updatedAt?: string;
+}
+
 export interface Customer {
   name: string;
   email: string;

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Package, Zap, LogOut, Home, Users, ListOrdered } from 'lucide-react';
+import { LayoutDashboard, Package, Zap, LogOut, Home, Users, ListOrdered, Image as ImageIcon, Settings as SettingsIcon } from 'lucide-react';
 import { getUserRole } from '../services/authService.ts';
 
 const AdminLayout: React.FC = () => {
@@ -65,6 +65,28 @@ const AdminLayout: React.FC = () => {
           >
             <ListOrdered size={18} />
             <span>Orders</span>
+          </NavLink>
+          <NavLink
+            to="/admin/banners"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                isActive ? 'bg-pink-600/20 text-pink-300' : 'hover:bg-white/5'
+              }`
+            }
+          >
+            <ImageIcon size={18} />
+            <span>Banners</span>
+          </NavLink>
+          <NavLink
+            to="/admin/settings"
+            className={({ isActive }) =>
+              `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                isActive ? 'bg-pink-600/20 text-pink-300' : 'hover:bg-white/5'
+              }`
+            }
+          >
+            <SettingsIcon size={18} />
+            <span>Settings</span>
           </NavLink>
           {isSuper && (
             <NavLink
