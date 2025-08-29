@@ -234,8 +234,11 @@ DECLARE
 BEGIN
     SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'game_titles' AND column_name = 'category') INTO has_category;
     
+    -- Drop existing view first to avoid column naming conflicts
+    DROP VIEW IF EXISTS products_with_details;
+    
     IF has_category THEN
-        view_sql := 'CREATE OR REPLACE VIEW products_with_details AS
+        view_sql := 'CREATE VIEW products_with_details AS
         SELECT 
             p.*,
             t.name as tier_name,
@@ -259,7 +262,7 @@ BEGIN
         LEFT JOIN tiers t ON p.tier_id = t.id
         LEFT JOIN game_titles gt ON p.game_title_id = gt.id';
     ELSE
-        view_sql := 'CREATE OR REPLACE VIEW products_with_details AS
+        view_sql := 'CREATE VIEW products_with_details AS
         SELECT 
             p.*,
             t.name as tier_name,
