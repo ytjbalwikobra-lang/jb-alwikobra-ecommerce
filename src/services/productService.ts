@@ -278,10 +278,10 @@ export class ProductService {
         .from('products')
         .select(`*`)
         .eq('id', id)
-        .single();
+        .maybeSingle(); // Use maybeSingle() instead of single() to avoid 406 errors
 
       if (error) {
-        console.error('Supabase error:', error);
+        console.error('Supabase error fetching product by ID:', JSON.stringify(error, null, 2));
         return sampleProducts.find(p => p.id === id) || null;
       }
 
@@ -644,7 +644,11 @@ export class ProductService {
   Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
   const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error updating product:', JSON.stringify(error, null, 2));
+        console.error('Update payload was:', JSON.stringify(payload, null, 2));
+        throw error;
+      }
       return data;
     } catch (error) {
       console.error('Error updating product:', error);
