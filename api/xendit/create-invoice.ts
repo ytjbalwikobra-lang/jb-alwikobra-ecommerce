@@ -53,7 +53,9 @@ export default async function handler(req: any, res: any) {
 
   try {
   const { external_id, amount, payer_email, description, success_redirect_url, failure_redirect_url, customer, order } = req.body || {};
-    if (!external_id || !amount) return res.status(400).json({ error: 'external_id and amount are required' });
+    if (!external_id || typeof external_id !== 'string') return res.status(400).json({ error: 'external_id (string) is required' });
+    if (!amount || typeof amount !== 'number' || amount <= 0) return res.status(400).json({ error: 'amount (number>0) is required' });
+    const desc = description || 'Invoice Pembelian JB Alwikobra';
     
     // Optionally create order on server and use its id as external_id for Xendit
     let finalExternalId = external_id;
@@ -69,26 +71,36 @@ export default async function handler(req: any, res: any) {
       return `${url}${sep}order_id=${createdOrder.id}`;
     };
 
+    // setup timeout for network call
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 20000);
+
+    console.log('[Xendit] Creating invoice', { external_id: finalExternalId, amount, hasCustomer: !!customer });
+
     const resp = await fetch('https://api.xendit.co/v2/invoices', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': 'Basic ' + Buffer.from(`${XENDIT_SECRET_KEY}:`).toString('base64')
+        'Authorization': 'Basic ' + Buffer.from(`${XENDIT_SECRET_KEY}:`).toString('base64'),
+        'X-IDEMPOTENCY-KEY': finalExternalId
       },
       body: JSON.stringify({
         external_id: finalExternalId,
         amount,
         payer_email,
-        description,
+        description: desc,
   success_redirect_url: withOrderId(success_redirect_url),
   failure_redirect_url: withOrderId(failure_redirect_url),
         customer,
         currency: 'IDR'
-      })
+      }),
+      signal: controller.signal
     });
 
-    const data = await resp.json();
+    clearTimeout(timeout);
+    const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {
+      console.error('[Xendit] Create invoice failed', resp.status, data);
       return res.status(resp.status).json({ error: data?.message || 'Failed to create invoice', details: data });
     }
     // Persist invoice metadata to order
@@ -97,6 +109,8 @@ export default async function handler(req: any, res: any) {
     }
     return res.status(200).json(data);
   } catch (err: any) {
-    return res.status(500).json({ error: 'Internal server error', message: err?.message || String(err) });
+    console.error('[Xendit] Handler error', err);
+    const isAbort = err?.name === 'AbortError';
+    return res.status(500).json({ error: 'Internal server error', message: isAbort ? 'Upstream timeout' : (err?.message || String(err)) });
   }
 }
