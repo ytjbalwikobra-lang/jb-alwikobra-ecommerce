@@ -42,13 +42,31 @@ const AdminOrders: React.FC = () => {
     setLoading(true); setErrorMsg('');
     try {
       if (!supabase) return;
-      const { data, error } = await (supabase as any)
-        .from('orders')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(500);
-      if (error) throw error;
+      // Attempt joined select for product info
+      let data: any[] | null = null;
+      let errMsg = '';
+      try {
+        const { data: d, error } = await (supabase as any)
+          .from('orders')
+          .select('*, products:product_id ( id, name )')
+          .order('created_at', { ascending: false })
+          .limit(500);
+        if (error) throw error; else data = d as any[];
+      } catch (e: any) {
+        // Fallback to basic select if relation or RLS blocks join
+        errMsg = e?.message || String(e);
+        const { data: d2, error: e2 } = await (supabase as any)
+          .from('orders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(500);
+        if (e2) throw e2; else data = d2 as any[];
+      }
       setRows((data || []).map(mapRow));
+      if (errMsg) {
+        // Show soft warning but keep data loaded
+        setErrorMsg(`Relasi produk tidak bisa dimuat: ${errMsg}`);
+      }
     } catch (e: any) {
       const m = e?.message || String(e);
       setErrorMsg(m);
@@ -121,7 +139,23 @@ const AdminOrders: React.FC = () => {
               <div className="font-medium">{r.customer_name}</div>
               <div className="text-xs text-gray-400">{r.customer_email} · {r.customer_phone}</div>
             </div>
-            <div className="col-span-2 text-gray-300">{r.order_type}</div>
+            <div className="col-span-2 text-gray-300">
+              <div className="capitalize">{r.order_type}</div>
+              {/* Product quick link when available */}
+              {((r as any).products || r.product_id) && (
+                <div className="mt-1 text-xs">
+                  <a
+                    href={`/products/${(r as any).products?.id || r.product_id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-pink-400 hover:text-pink-300 underline decoration-dotted"
+                    title={(r as any).products?.name || 'Lihat produk'}
+                  >
+                    {(r as any).products?.name || 'Buka produk'}
+                  </a>
+                </div>
+              )}
+            </div>
             <div className="col-span-2 text-gray-300">Rp {Number(r.amount||0).toLocaleString('id-ID')}</div>
             <div className="col-span-2 text-gray-300">{r.status}</div>
             <div className="col-span-3 text-right">

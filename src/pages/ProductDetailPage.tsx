@@ -306,11 +306,28 @@ const ProductDetailPage: React.FC = () => {
 
           {/* Product Info */}
           <div>
-            {/* Game Title */}
-            <div className="flex items-center space-x-2 mb-4">
+            {/* Tags: Game Title, Tier, Account Level (+ Rental availability when applicable) */}
+            <div className="flex flex-wrap items-center gap-2 mb-4">
+              {/* Game Title */}
               <span className="bg-pink-500/10 text-pink-400 px-3 py-1 rounded-full text-sm font-medium">
                 {product.gameTitle}
               </span>
+
+              {/* Tier (fallback to legacy tier name) */}
+              {(product.tierData || product.tier) && (
+                <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium border border-white/20">
+                  {product.tierData?.name || (product.tier === 'premium' ? 'Premium' : product.tier === 'pelajar' ? 'Pelajar' : 'Reguler')}
+                </span>
+              )}
+
+              {/* Account Level tag if available */}
+              {product.accountLevel && (
+                <span className="bg-purple-500/15 text-purple-300 px-3 py-1 rounded-full text-sm font-medium border border-purple-400/30">
+                  {product.accountLevel}
+                </span>
+              )}
+
+              {/* Rental availability (hidden when coming from flash sale flow) */}
               {(!cameFromFlashSaleCard) && product.hasRental && (
                 <span className="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-sm font-medium">
                   Tersedia Rental
