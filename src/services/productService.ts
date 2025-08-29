@@ -3,8 +3,10 @@ import { deletePublicUrls } from './storageService.ts';
 import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
 
 // Capability detection: whether DB exposes relations (tiers/game_titles) in products
-let hasRelations: boolean | 'unknown' = 'unknown';
-let hasFlashSaleJoin: boolean | 'unknown' = 'unknown';
+// Track database capabilities globally
+let hasRelations: boolean | null = null; // null = unknown, true = supports relations, false = legacy schema
+let hasFlashSaleJoin: boolean | null = null;
+let hasGameTitleText: boolean | null = null; // whether products has legacy text column game_title
 function isUuid(v?: string | null) {
   return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 }
@@ -184,6 +186,92 @@ const sampleProducts: Product[] = [
 ];
 
 export class ProductService {
+  // Force reset of capability detection - useful after schema changes
+  static resetCapabilities() {
+    hasRelations = null;
+    hasFlashSaleJoin = null;
+    console.log('🔄 ProductService capabilities reset');
+  }
+
+  // Test and detect current schema capabilities
+  static async detectSchemaCapabilities(): Promise<{
+    hasRelationalSchema: boolean;
+    hasRentalOptions: boolean;
+    hasFlashSales: boolean;
+  }> {
+    if (!supabase) {
+      return { hasRelationalSchema: false, hasRentalOptions: false, hasFlashSales: false };
+    }
+
+  const capabilities = {
+      hasRelationalSchema: false,
+      hasRentalOptions: false,
+      hasFlashSales: false
+    };
+
+    try {
+      // Test relational schema
+      const { data, error } = await supabase
+        .from('products')
+        .select('id, game_title_id, tier_id')
+        .limit(1);
+
+      if (!error) {
+        capabilities.hasRelationalSchema = true;
+        hasRelations = true;
+        console.log('✅ Relational schema detected');
+      } else {
+        hasRelations = false;
+        console.log('⚠️ Legacy schema detected');
+      }
+
+      // Detect presence of legacy text column game_title
+      try {
+        const { error: gtErr } = await supabase
+          .from('products')
+          .select('game_title')
+          .limit(1);
+        if (!gtErr) {
+          hasGameTitleText = true;
+          console.log('✅ Legacy text column detected: products.game_title');
+        } else {
+          hasGameTitleText = false;
+          console.log('ℹ️ No legacy text column products.game_title');
+        }
+      } catch (e) {
+        hasGameTitleText = false;
+        console.log('ℹ️ No legacy text column products.game_title');
+      }
+
+      // Test rental options
+      const { error: rentalError } = await supabase
+        .from('rental_options')
+        .select('id')
+        .limit(1);
+
+      if (!rentalError) {
+        capabilities.hasRentalOptions = true;
+        console.log('✅ Rental options table available');
+      }
+
+      // Test flash sales
+      const { error: flashError } = await supabase
+        .from('flash_sales')
+        .select('id')
+        .limit(1);
+
+      if (!flashError) {
+        capabilities.hasFlashSales = true;
+        console.log('✅ Flash sales table available');
+      }
+
+    } catch (error) {
+      console.error('🔥 Schema detection failed:', error);
+    }
+
+    return capabilities;
+  }
+
   static async getAllProducts(): Promise<Product[]> {
     try {
       // Check if Supabase is configured
@@ -585,73 +673,160 @@ export class ProductService {
 
   static async createProduct(product: Omit<Product, 'id' | 'createdAt' | 'updatedAt'> & Record<string, any>): Promise<Product | null> {
     try {
-  if (!supabase) return null;
-  const payload: any = {
-    name: product.name,
-    description: product.description,
-    price: product.price,
-    original_price: product.originalPrice ?? product.original_price ?? null,
-    image: product.image,
-    images: product.images ?? [],
-    account_level: product.accountLevel ?? product.account_level ?? null,
-    account_details: product.accountDetails ?? product.account_details ?? null,
-    is_flash_sale: product.isFlashSale ?? false,
-    has_rental: product.hasRental ?? false,
-    stock: product.stock ?? 1,
-  };
-  if (hasRelations === true) {
-    payload.game_title_id = product.gameTitleId ?? product.game_title_id ?? null;
-    payload.tier_id = product.tierId ?? product.tier_id ?? null;
-  } else {
-    payload.game_title = product.gameTitle ?? product.game_title ?? null;
-  }
-  const { data, error } = await supabase.from('products').insert([payload]).select().single();
+      console.log('🚀 ProductService.createProduct called with:', {
+        ...product,
+        // Mask sensitive fields
+        accountDetails: product.accountDetails ? '[PRESENT]' : '[EMPTY]'
+      });
 
-      if (error) throw error;
+      if (!supabase) {
+        console.error('❌ Supabase client not available');
+        return null;
+      }
+
+      const payload: any = {
+        name: product.name,
+        description: product.description,
+        price: product.price,
+        original_price: product.originalPrice ?? product.original_price ?? null,
+        image: product.image,
+        images: product.images ?? [],
+        category: product.category ?? 'general', // Add default category
+        account_level: product.accountLevel ?? product.account_level ?? null,
+        account_details: product.accountDetails ?? product.account_details ?? null,
+        is_flash_sale: product.isFlashSale ?? false,
+        has_rental: product.hasRental ?? false,
+        stock: product.stock ?? 1,
+      };
+
+      if (hasRelations === true) {
+        payload.game_title_id = product.gameTitleId ?? product.game_title_id ?? null;
+        payload.tier_id = product.tierId ?? product.tier_id ?? null;
+        console.log('📊 Using relational schema with foreign keys');
+        // Some deployments still require text column game_title (NOT NULL). Include when present.
+        if (hasGameTitleText === true) {
+          payload.game_title = product.gameTitle ?? (product as any).game_title ?? 'General';
+        }
+      } else {
+        payload.game_title = product.gameTitle ?? product.game_title ?? null;
+        console.log('📋 Using legacy schema with text fields');
+      }
+
+      console.log('💾 Final create payload:', payload);
+
+      const { data, error } = await supabase.from('products').insert([payload]).select().single();
+
+      if (error) {
+        console.error('❌ Database insert error:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
+
+        // Special handling for RLS policy errors
+        if (error.code === '42501') {
+          console.error('🔒 RLS Policy Error Detected!');
+          console.error('💡 This indicates that Row Level Security policies are blocking the operation.');
+          console.error('🔧 To fix this, the database administrator needs to update RLS policies.');
+          console.error('📋 Required policies for products table:');
+          console.error('   - Allow INSERT operations for admin users');
+          console.error('   - Allow UPDATE operations for admin users');
+          console.error('   - Allow DELETE operations for admin users');
+          
+          // Provide a user-friendly error message
+          const rlsError = new Error('Database access denied. This requires administrator access to fix Row Level Security policies.');
+          (rlsError as any).code = 'RLS_POLICY_ERROR';
+          (rlsError as any).originalError = error;
+          throw rlsError;
+        }
+
+        throw error;
+      }
+
+      console.log('✅ Product created successfully:', data?.id);
       return data;
     } catch (error) {
-      console.error('Error creating product:', error);
+      console.error('💥 ProductService.createProduct error:', error);
       return null;
     }
   }
 
   static async updateProduct(id: string, updates: Partial<Product> & Record<string, any>): Promise<Product | null> {
     try {
-  if (!supabase) return null;
-  if (!isUuid(id)) {
-    console.warn('Refusing to update non-UUID id (likely sample data):', id);
-    return null;
-  }
-  const payload: any = {
-    name: updates.name,
-    description: updates.description,
-    price: updates.price,
-    original_price: (updates as any).original_price ?? updates.originalPrice,
-    image: (updates as any).image,
-    images: (updates as any).images,
-    account_level: (updates as any).account_level ?? updates.accountLevel,
-    account_details: (updates as any).account_details ?? updates.accountDetails,
-    is_flash_sale: (updates as any).is_flash_sale ?? updates.isFlashSale,
-    has_rental: (updates as any).has_rental ?? updates.hasRental,
-    stock: (updates as any).stock ?? updates.stock,
-  };
-  if (hasRelations === true) {
-    payload.game_title_id = (updates as any).game_title_id ?? updates.gameTitleId ?? null;
-    payload.tier_id = (updates as any).tier_id ?? updates.tierId ?? null;
-  } else {
-    payload.game_title = (updates as any).game_title ?? updates.gameTitle ?? null;
-  }
-  Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
-  const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
+      console.log('🚀 ProductService.updateProduct called with:', {
+        id,
+        updates: {
+          ...updates,
+          // Mask sensitive fields
+          accountDetails: updates.accountDetails ? '[PRESENT]' : '[EMPTY]'
+        }
+      });
+
+      if (!supabase) {
+        console.error('❌ Supabase client not available');
+        return null;
+      }
+
+      if (!isUuid(id)) {
+        console.warn('❌ Refusing to update non-UUID id (likely sample data):', id);
+        return null;
+      }
+
+      const payload: any = {
+        name: updates.name,
+        description: updates.description,
+        price: updates.price,
+        original_price: (updates as any).original_price ?? updates.originalPrice,
+        image: (updates as any).image,
+        images: (updates as any).images,
+        category: (updates as any).category ?? 'general', // Add default category for updates
+        account_level: (updates as any).account_level ?? updates.accountLevel,
+        account_details: (updates as any).account_details ?? updates.accountDetails,
+        is_flash_sale: (updates as any).is_flash_sale ?? updates.isFlashSale,
+        has_rental: (updates as any).has_rental ?? updates.hasRental,
+        stock: (updates as any).stock ?? updates.stock,
+      };
+
+      if (hasRelations === true) {
+        payload.game_title_id = (updates as any).game_title_id ?? updates.gameTitleId ?? null;
+        payload.tier_id = (updates as any).tier_id ?? updates.tierId ?? null;
+        console.log('📊 Using relational schema with foreign keys');
+        // Also set text game_title if column exists
+        if (hasGameTitleText === true) {
+          payload.game_title = (updates as any).game_title ?? updates.gameTitle ?? 'General';
+        }
+      } else {
+        payload.game_title = (updates as any).game_title ?? updates.gameTitle ?? null;
+        console.log('📋 Using legacy schema with text fields');
+      }
+
+      // Remove undefined values to prevent database issues
+      Object.keys(payload).forEach(k => {
+        if (payload[k] === undefined) {
+          delete payload[k];
+        }
+      });
+
+      console.log('💾 Final update payload:', payload);
+
+      const { data, error } = await supabase.from('products').update(payload).eq('id', id).select().single();
 
       if (error) {
-        console.error('Error updating product:', JSON.stringify(error, null, 2));
-        console.error('Update payload was:', JSON.stringify(payload, null, 2));
+        console.error('❌ Database update error:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint,
+          payload: payload
+        });
         throw error;
       }
+
+      console.log('✅ Product updated successfully:', data?.id);
       return data;
     } catch (error) {
-      console.error('Error updating product:', error);
+      console.error('💥 ProductService.updateProduct error:', error);
       return null;
     }
   }

@@ -68,31 +68,34 @@ const ProductCard: React.FC<ProductCardProps> = ({
     // Fallback to static styling
     switch (tier) {
       case 'premium':
+        // Gold
         return {
-          bg: 'bg-gradient-to-br from-amber-500 to-orange-600',
-          ring: 'ring-amber-500/40',
-          textColor: 'text-amber-100',
-          badge: 'bg-amber-400/20 text-amber-200 border-amber-400/60',
-          badgeColor: '#f59e0b',
-          borderColor: '#fbbf24'
+          bg: 'bg-gradient-to-br from-amber-500 to-yellow-500',
+          ring: 'ring-amber-400/50',
+          textColor: 'text-amber-50',
+          badge: 'bg-amber-400/20 text-amber-100 border-amber-300/60',
+          badgeColor: '#FFD700',
+          borderColor: '#FFD700'
         };
       case 'pelajar':
+        // Blue
         return {
           bg: 'bg-gradient-to-br from-blue-500 to-indigo-600',
           ring: 'ring-blue-500/40',
-          textColor: 'text-blue-100',
-          badge: 'bg-blue-400/20 text-blue-200 border-blue-400/60',
+          textColor: 'text-blue-50',
+          badge: 'bg-blue-400/20 text-blue-100 border-blue-300/60',
           badgeColor: '#3b82f6',
           borderColor: '#60a5fa'
         };
       default:
+        // Reguler -> Green
         return {
-          bg: 'bg-gradient-to-br from-pink-600 to-rose-600',
-          ring: 'ring-pink-500/40',
-          textColor: 'text-white',
-          badge: 'bg-gray-400/20 text-gray-200 border-gray-400/60',
-          badgeColor: '#6b7280',
-          borderColor: '#9ca3af'
+          bg: 'bg-gradient-to-br from-emerald-500 to-green-600',
+          ring: 'ring-emerald-500/40',
+          textColor: 'text-emerald-50',
+          badge: 'bg-emerald-400/20 text-emerald-100 border-emerald-300/60',
+          badgeColor: '#10b981',
+          borderColor: '#34d399'
         };
     }
   };
