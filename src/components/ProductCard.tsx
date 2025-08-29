@@ -224,8 +224,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
             </div>
           )}
 
-          {/* Rental Tag - consistent with other tags; visible on flash sale and normal cards */}
-          {(product.hasRental || (product as any).rentalOptions?.length > 0) && (
+          {/* Rental Tag - only on normal product cards, never on flash sale cards */}
+          {!showFlashSaleTimer && (product.hasRental || (product as any).rentalOptions?.length > 0) && (
             <div className="mt-2">
               <span
                 className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border backdrop-blur-sm"
