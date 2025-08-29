@@ -120,6 +120,13 @@ const HomePage: React.FC = () => {
                 <ShoppingBag size={20} />
                 <span>Lihat Semua Produk</span>
               </Link>
+              <Link
+                to="/sell"
+                className="bg-white text-pink-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-100 transition-colors flex items-center justify-center space-x-2"
+              >
+                <ShoppingBag size={20} />
+                <span>Jual Akun Game Anda</span>
+              </Link>
             </div>
           </div>
         </div>
@@ -150,11 +157,11 @@ const HomePage: React.FC = () => {
 
       <HorizontalScroller ariaLabel="Produk Flash Sale">
               {flashSaleProducts.slice(0, 10).map((product) => (
-        <div key={product.id} className="min-w-[300px] snap-start">
+        <div key={product.id} className="min-w-[320px] snap-start">
                   <ProductCard
                     product={product}
                     showFlashSaleTimer={true}
-          className="w-[300px]"
+          className="w-[320px] h-auto"
                   />
                 </div>
               ))}

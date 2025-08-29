@@ -1,16 +1,5 @@
 export type ProductTier = 'reguler' | 'pelajar' | 'premium';
 
-export interface Category {
-  id: string;
-  name: string;
-  slug: string;
-  description?: string;
-  icon?: string;
-  color?: string;
-  isActive: boolean;
-  sortOrder: number;
-}
-
 export interface Tier {
   id: string;
   name: string;
@@ -18,6 +7,38 @@ export interface Tier {
   description?: string;
   color?: string;
   borderColor?: string;
+  backgroundGradient?: string;
+  icon?: string;
+  priceRangeMin?: number;
+  priceRangeMax?: number;
+  isActive: boolean;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GameTitle {
+  id: string;
+  slug: string;
+  name: string;
+  description?: string;
+  icon: string;
+  color: string;
+  logoUrl?: string;
+  isPopular: boolean;
+  isActive?: boolean;
+  sortOrder?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  color?: string;
   isActive: boolean;
   sortOrder: number;
 }
@@ -30,9 +51,13 @@ export interface Product {
   originalPrice?: number;
   image: string;
   images?: string[];
-  category: string;
-  gameTitle: string;
-  tier?: ProductTier;
+  category?: string; // Keep for backward compatibility (optional now)
+  gameTitle: string; // Keep for backward compatibility
+  tier?: ProductTier; // Keep for backward compatibility
+  tierId?: string; // New foreign key
+  gameTitleId?: string; // New foreign key
+  tierData?: Tier; // Populated tier data
+  gameTitleData?: GameTitle; // Populated game title data
   accountLevel?: string;
   accountDetails?: string;
   isFlashSale: boolean;

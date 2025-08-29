@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
-import { Product, Category, Tier } from '../types/index.ts';
+import { Product, Tier, GameTitle } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
 import HorizontalScroller from '../components/HorizontalScroller.tsx';
 import { Search, Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
@@ -10,8 +10,8 @@ const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [tiers, setTiers] = useState<Tier[]>([]);
+  const [gameTitles, setGameTitles] = useState<GameTitle[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedGame, setSelectedGame] = useState(searchParams.get('game') || '');
@@ -19,19 +19,6 @@ const ProductsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
-
-  const gameOptions = [
-    'Mobile Legends',
-    'PUBG Mobile',
-    'Free Fire',
-    'Genshin Impact',
-    'Call of Duty',
-    'Valorant',
-    'Arena of Valor',
-    'Clash of Clans',
-    'Clash Royale',
-    'Honkai Impact'
-  ];
 
   const sortOptions = [
     { value: 'newest', label: 'Terbaru' },
@@ -45,14 +32,14 @@ const ProductsPage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [productsData, categoriesData, tiersData] = await Promise.all([
+        const [productsData, tiersData, gameTitlesData] = await Promise.all([
           ProductService.getAllProducts(),
-          ProductService.getCategories(),
-          ProductService.getTiers()
+          ProductService.getTiers(),
+          ProductService.getGameTitles()
         ]);
         setProducts(productsData);
-        setCategories(categoriesData);
         setTiers(tiersData);
+        setGameTitles(gameTitlesData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -77,14 +64,18 @@ const ProductsPage: React.FC = () => {
 
     // Game filter
     if (selectedGame) {
-      filtered = filtered.filter(product =>
-        product.gameTitle.toLowerCase() === selectedGame.toLowerCase()
-      );
+      filtered = filtered.filter(product => {
+        const gameName = product.gameTitleData?.name || product.gameTitle;
+        return gameName?.toLowerCase() === selectedGame.toLowerCase();
+      });
     }
 
     // Tier filter
     if (selectedTier) {
-      filtered = filtered.filter(product => (product.tier || '').toLowerCase() === selectedTier.toLowerCase());
+      filtered = filtered.filter(product => {
+        const tierSlug = product.tierData?.slug || product.tier;
+        return tierSlug?.toLowerCase() === selectedTier.toLowerCase();
+      });
     }
 
     // Sort
@@ -209,8 +200,8 @@ const ProductsPage: React.FC = () => {
                   className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
                   <option value="">Semua Game</option>
-                  {gameOptions.map(game => (
-                    <option key={game} value={game}>{game}</option>
+                  {gameTitles.map(game => (
+                    <option key={game.slug} value={game.name}>{game.name}</option>
                   ))}
                 </select>
               </div>
@@ -267,8 +258,8 @@ const ProductsPage: React.FC = () => {
                       className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
                     >
                       <option value="">Semua Game</option>
-                      {gameOptions.map(game => (
-                        <option key={game} value={game}>{game}</option>
+                      {gameTitles.map(game => (
+                        <option key={game.slug} value={game.name}>{game.name}</option>
                       ))}
                     </select>
                   </div>

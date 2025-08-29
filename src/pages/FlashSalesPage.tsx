@@ -9,7 +9,8 @@ import {
   Clock, 
   Flame,
   TrendingUp,
-  Timer
+  Timer,
+  ArrowUpRight
 } from 'lucide-react';
 
 const FlashSalesPage: React.FC = () => {
@@ -113,11 +114,11 @@ const FlashSalesPage: React.FC = () => {
 
         <HorizontalScroller ariaLabel="Produk Flash Sale">
                 {flashSaleProducts.map((product) => (
-          <div key={product.id} className="min-w-[300px] snap-start">
+                  <div key={product.id} className="min-w-[320px] snap-start">
                     <ProductCard
                       product={product}
                       showFlashSaleTimer={true}
-            className="w-[300px]"
+                      className="w-[320px] h-auto"
                     />
                   </div>
                 ))}
@@ -128,20 +129,18 @@ const FlashSalesPage: React.FC = () => {
               <div className="w-24 h-24 bg-pink-500/10 border border-pink-500/40 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Zap className="text-pink-500" size={40} />
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">
-                Flash Sale Sedang Tidak Tersedia
-              </h3>
-              <p className="text-gray-300 mb-8 max-w-md mx-auto">
-                Saat ini belum ada produk flash sale. Tetap pantau halaman ini atau berlangganan newsletter untuk mendapat notifikasi flash sale terbaru!
+              <h3 className="text-xl font-bold text-white mb-2">Belum Ada Flash Sale</h3>
+              <p className="text-gray-400 max-w-md mx-auto">
+                Flash sale sedang tidak tersedia saat ini. Pantau terus untuk penawaran menarik berikutnya!
               </p>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Link
-                  to="/products"
-                  className="bg-pink-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-pink-700 transition-colors"
+              <div className="mt-6">
+                <Link 
+                  to="/" 
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-pink-600 hover:bg-pink-700 text-white rounded-xl font-semibold transition-colors"
                 >
-                  Lihat Semua Produk
+                  Lihat Produk Lainnya
+                  <ArrowUpRight size={18} />
                 </Link>
-                <button className="bg-black border-2 border-pink-600 text-pink-400 px-8 py-3 rounded-lg font-semibold hover:bg-white/5 transition-colors">Notifikasi Flash Sale</button>
               </div>
             </div>
           )}

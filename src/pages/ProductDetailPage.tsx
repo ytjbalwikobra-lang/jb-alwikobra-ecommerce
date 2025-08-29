@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useLocation } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
 import { Product, Customer, RentalOption } from '../types/index.ts';
 import {
@@ -31,6 +31,8 @@ const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const cameFromFlashSaleCard = Boolean((location as any)?.state?.fromFlashSaleCard);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedRental, setSelectedRental] = useState<RentalOption | null>(null);
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -40,7 +42,6 @@ const ProductDetailPage: React.FC = () => {
     email: '',
     phone: ''
   });
-
   const whatsappNumber = process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890';
   const currentUrl = window.location.href;
 
@@ -53,6 +54,20 @@ const ProductDetailPage: React.FC = () => {
         setProduct(data);
         if (data?.rentalOptions && data.rentalOptions.length > 0) {
           setSelectedRental(data.rentalOptions[0]);
+        }
+
+        // If navigated from a flash sale card, try to enrich with live flash sale info
+        if (data && cameFromFlashSaleCard) {
+          const sale = await ProductService.getActiveFlashSaleByProductId(data.id);
+          if (sale) {
+            setProduct(prev => prev ? {
+              ...prev,
+              isFlashSale: true,
+              flashSaleEndTime: sale.endTime,
+              price: sale.salePrice,
+              originalPrice: sale.originalPrice ?? prev.originalPrice
+            } : prev);
+          }
         }
       } catch (error) {
         console.error('Error fetching product:', error);
@@ -81,16 +96,39 @@ const ProductDetailPage: React.FC = () => {
     })();
   }, []);
 
-  const timeRemaining = product?.flashSaleEndTime 
-    ? calculateTimeRemaining(product.flashSaleEndTime)
-    : null;
+  // Live countdown state (updates every second when viewing from flash sale)
+  const [timeRemaining, setTimeRemaining] = useState<ReturnType<typeof calculateTimeRemaining> | null>(null);
 
-  const isFlashSaleActive = product?.isFlashSale && timeRemaining && !timeRemaining.isExpired;
+  useEffect(() => {
+    if (!cameFromFlashSaleCard || !product?.flashSaleEndTime) {
+      setTimeRemaining(null);
+      return;
+    }
+    // Set immediately
+    setTimeRemaining(calculateTimeRemaining(product.flashSaleEndTime));
+    const timer = setInterval(() => {
+      setTimeRemaining(calculateTimeRemaining(product.flashSaleEndTime!));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [cameFromFlashSaleCard, product?.flashSaleEndTime]);
+
+  // Show flash sale price/timer only when user arrives from flash sale card AND sale is active
+  const isFlashSaleActive = cameFromFlashSaleCard && product?.isFlashSale && timeRemaining && !timeRemaining.isExpired;
 
   const handlePurchase = () => {
     setCheckoutType('purchase');
     setShowCheckoutForm(true);
   };
+
+  // Determine effective price to display/charge
+  const effectivePrice = (() => {
+    if (!product) return 0;
+    if (isFlashSaleActive && product.originalPrice && product.originalPrice > product.price) {
+      return product.price; // sale price when active via flash sale navigation
+    }
+    // Not from flash sale or no active sale: show original/base price
+    return product.originalPrice && product.originalPrice > 0 ? product.originalPrice : product.price;
+  })();
 
   const handleRental = (rentalOption: RentalOption) => {
     setSelectedRental(rentalOption);
@@ -124,7 +162,7 @@ const ProductDetailPage: React.FC = () => {
         const uid = await getAuthUserId();
         const invoice = await createXenditInvoice({
           externalId: fallbackExternalId,
-          amount: product.price,
+          amount: effectivePrice,
           payerEmail: customer.email,
           description: `Pembelian akun: ${product.name}`,
           // We cannot know the server-created order_id ahead of time. We will update via webhook and let user return manually.
@@ -141,7 +179,7 @@ const ProductDetailPage: React.FC = () => {
             customer_email: customer.email,
             customer_phone: customer.phone,
             order_type: 'purchase',
-            amount: product.price,
+            amount: effectivePrice,
             rental_duration: null,
             user_id: uid || undefined as any,
           }
@@ -189,7 +227,18 @@ const ProductDetailPage: React.FC = () => {
     );
   }
 
-  const images = (product.images || [product.image]).slice(0, 15);
+  // Build gallery: ensure at least 5 images (fill with placeholders) and at most 15 images
+  let images: string[] = [];
+  const baseList: string[] = (product.images && product.images.length > 0)
+    ? product.images.slice(0, 15)
+    : (product.image ? [product.image] : []);
+  if (baseList.length < 5) {
+    const needed = 5 - baseList.length;
+    const placeholders = Array.from({ length: needed }, (_, i) => `https://source.unsplash.com/collection/190727/400x400?sig=${i}`);
+    images = [...baseList, ...placeholders];
+  } else {
+    images = baseList.slice(0, 15);
+  }
 
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
@@ -230,12 +279,7 @@ const ProductDetailPage: React.FC = () => {
                 </div>
               )}
 
-              {/* Stock Badge */}
-              {product.stock <= 5 && product.stock > 0 && (
-                <div className="absolute top-4 right-4 bg-orange-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  Sisa {product.stock}
-                </div>
-              )}
+              {/* Stock badge removed: qty is always 1 */}
             </div>
 
             {/* Image Thumbnails */}
@@ -282,7 +326,7 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Price */}
             <div className="mb-6">
-              {product.originalPrice && product.originalPrice > product.price ? (
+              {isFlashSaleActive && product.originalPrice && product.originalPrice > product.price ? (
                 <div className="space-y-2">
                   <div className="flex items-center space-x-3">
                     <span className="text-3xl font-bold text-pink-400">
@@ -298,7 +342,7 @@ const ProductDetailPage: React.FC = () => {
                 </div>
               ) : (
                 <span className="text-3xl font-bold text-white">
-                  {formatCurrency(product.price)}
+                  {formatCurrency(effectivePrice)}
                 </span>
               )}
             </div>
@@ -480,7 +524,7 @@ const ProductDetailPage: React.FC = () => {
                 <p className="text-pink-400 font-semibold">
                   {checkoutType === 'rental' && selectedRental
                     ? `${formatCurrency(selectedRental.price)} (${selectedRental.duration})`
-                    : formatCurrency(product.price)
+                    : formatCurrency(effectivePrice)
                   }
                 </p>
               </div>
