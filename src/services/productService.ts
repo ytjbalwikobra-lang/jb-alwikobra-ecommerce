@@ -4,6 +4,7 @@ import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index
 
 // Capability detection: whether DB exposes relations (tiers/game_titles) in products
 let hasRelations: boolean | 'unknown' = 'unknown';
+let hasFlashSaleJoin: boolean | 'unknown' = 'unknown';
 function isUuid(v?: string | null) {
   return typeof v === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(v);
 }
@@ -193,6 +194,10 @@ export class ProductService {
 
       if (!supabase) return sampleProducts;
 
+      // If we already know relations are unsupported, skip relational select entirely
+      if (hasRelations === false) {
+        throw new Error('REL_SKIP');
+      }
       const { data, error } = await supabase
         .from('products')
         .select(`
@@ -222,7 +227,9 @@ export class ProductService {
         }));
       }
 
-      console.warn('Products relational select failed, trying basic select');
+      if (error && (error as any).message !== 'REL_SKIP') {
+        console.warn('Products relational select failed, trying basic select');
+      }
       const { data: basic, error: err2 } = await supabase
         .from('products')
         .select('*')
@@ -327,6 +334,10 @@ export class ProductService {
         }));
       }
 
+      // If we already know join is unsupported, skip relational join
+      if (hasFlashSaleJoin === false) {
+        throw new Error('REL_SKIP');
+      }
       const { data, error } = await supabase
         .from('flash_sales')
         .select(`
@@ -340,8 +351,14 @@ export class ProductService {
         .eq('is_active', true)
         .gte('end_time', new Date().toISOString());
 
+      if (!error && data) {
+        hasFlashSaleJoin = true;
+      }
+
       if (error) {
-        console.warn('Flash sales relational select failed, trying basic');
+        if ((error as any).message !== 'REL_SKIP') {
+          console.warn('Flash sales relational select failed, trying basic');
+        }
         const { data: basic, error: err2 } = await supabase
           .from('flash_sales')
           .select('*')
@@ -363,6 +380,7 @@ export class ProductService {
             product
           }));
         }
+        hasFlashSaleJoin = false;
         const ids = (basic || []).map((b: any) => b.product_id);
         const { data: prods } = await supabase.from('products').select('*').in('id', ids);
         const pmap = new Map((prods || []).map((p: any) => [p.id, p]));
