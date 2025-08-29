@@ -20,17 +20,20 @@ const HomePage: React.FC = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [popularGames, setPopularGames] = useState<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>>([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [allProducts, flashSales] = await Promise.all([
+        const [allProducts, flashSales, popular] = await Promise.all([
           ProductService.getAllProducts(),
-          ProductService.getFlashSales()
+          ProductService.getFlashSales(),
+          ProductService.getPopularGames(20)
         ]);
 
         setProducts(allProducts.slice(0, 8)); // Show only 8 products
         setFlashSaleProducts(flashSales.map(sale => sale.product));
+        setPopularGames(popular);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -64,14 +67,7 @@ const HomePage: React.FC = () => {
     }
   ];
 
-  const gameCategories = [
-    { name: 'Mobile Legends', count: 45, image: '/api/placeholder/100/100' },
-    { name: 'PUBG Mobile', count: 32, image: '/api/placeholder/100/100' },
-    { name: 'Free Fire', count: 28, image: '/api/placeholder/100/100' },
-    { name: 'Genshin Impact', count: 19, image: '/api/placeholder/100/100' },
-    { name: 'Call of Duty', count: 15, image: '/api/placeholder/100/100' },
-    { name: 'Valorant', count: 12, image: '/api/placeholder/100/100' }
-  ];
+  // Popular game categories are now loaded from database via ProductService.getPopularGames
 
   if (loading) {
     return (
@@ -181,19 +177,19 @@ const HomePage: React.FC = () => {
           </div>
 
       <HorizontalScroller ariaLabel="Game Populer">
-            {gameCategories.map((category, index) => (
+            {popularGames.map((game) => (
               <Link
-                key={index}
-                to={`/products?game=${encodeURIComponent(category.name)}`}
+                key={game.id}
+                to={`/products?game=${encodeURIComponent(game.name)}`}
         className="min-w-[200px] bg-black border border-pink-500/40 p-6 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group snap-start"
               >
                 <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mx-auto mb-4 flex items-center justify-center">
                   <TrendingUp className="text-white" size={24} />
                 </div>
                 <h3 className="font-semibold text-white mb-1 group-hover:text-pink-400 transition-colors">
-                  {category.name}
+                  {game.name}
                 </h3>
-                <p className="text-sm text-gray-400">{category.count} akun</p>
+                <p className="text-sm text-gray-400">{game.count} akun</p>
               </Link>
             ))}
           </HorizontalScroller>

@@ -966,4 +966,76 @@ export class ProductService {
       return [];
     }
   }
+
+  // Popular games with product counts for the Home page carousel
+  static async getPopularGames(limit: number = 12): Promise<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>> {
+    try {
+      // Fallback to sample data when Supabase isn't configured
+      if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY || !supabase) {
+        const counts = new Map<string, number>();
+        for (const p of sampleProducts) {
+          const key = p.gameTitle || p.gameTitleData?.name || 'Lainnya';
+          counts.set(key, (counts.get(key) || 0) + 1);
+        }
+        const items = sampleGameTitles.map(gt => ({
+          id: gt.id,
+          name: gt.name,
+          slug: gt.slug,
+          logoUrl: (gt as any).logoUrl,
+          count: counts.get(gt.name) || 0,
+        })).filter(i => i.count > 0)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, limit);
+        return items;
+      }
+
+      // Load active game titles
+      const { data: games, error: gErr } = await supabase
+        .from('game_titles')
+        .select('id, name, slug, logo_url, is_active')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+      if (gErr) throw gErr;
+
+      const list = (games || []).map(g => ({ id: g.id as string, name: g.name as string, slug: g.slug as string, logoUrl: (g as any).logo_url as string | null }));
+      if (list.length === 0) return [];
+
+      // Capability check: if relational schema is unknown, try detect quickly
+      if (hasRelations === null) {
+        try {
+          const { error } = await supabase.from('products').select('game_title_id').limit(1);
+          hasRelations = !error;
+        } catch { hasRelations = false; }
+      }
+
+      // Count products per game (N queries; game titles expected to be small)
+      const counts = await Promise.all(list.map(async (g) => {
+        try {
+          if (hasRelations) {
+            const { count } = await (supabase as any)
+              .from('products')
+              .select('id', { count: 'exact', head: true })
+              .eq('game_title_id', g.id);
+            return { ...g, count: count || 0 };
+          } else {
+            const { count } = await (supabase as any)
+              .from('products')
+              .select('id', { count: 'exact', head: true })
+              .eq('game_title', g.name);
+            return { ...g, count: count || 0 };
+          }
+        } catch {
+          return { ...g, count: 0 };
+        }
+      }));
+
+      return counts
+        .filter(item => item.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, limit);
+    } catch (error) {
+      console.error('Error fetching popular games:', error);
+      return [];
+    }
+  }
 }

@@ -30,7 +30,7 @@ const PaymentStatusPage: React.FC = () => {
       setAuthed(ok);
       if (!supabase) { setLoading(false); return; }
       if (orderId) {
-        const { data } = await supabase.from('orders').select('*').eq('id', orderId).single();
+  const { data } = await supabase.from('orders').select('*').eq('id', orderId).maybeSingle();
         setOrder(data as any);
         setLoading(false);
         return;
