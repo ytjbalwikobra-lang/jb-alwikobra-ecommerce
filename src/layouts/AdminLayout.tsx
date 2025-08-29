@@ -1,8 +1,15 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Package, Zap, LogOut, Home, Users } from 'lucide-react';
+import { LayoutDashboard, Package, Zap, LogOut, Home, Users, ListOrdered } from 'lucide-react';
+import { getUserRole } from '../services/authService.ts';
 
 const AdminLayout: React.FC = () => {
+  const [role, setRole] = useState<string>('');
+  useEffect(()=>{ (async()=> setRole(await getUserRole()))(); }, []);
+  const isSuper = (()=>{
+    const r = String(role).toLowerCase().trim().replace(/\s+/g,' ');
+    return r==='super admin' || r==='superadmin' || r==='owner' || r==='super-admin';
+  })();
   return (
     <div className="min-h-screen bg-app-dark text-gray-200 flex">
       {/* Sidebar */}
@@ -49,16 +56,29 @@ const AdminLayout: React.FC = () => {
             <span>Flash Sale</span>
           </NavLink>
           <NavLink
-            to="/admin/users"
+            to="/admin/orders"
             className={({ isActive }) =>
               `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
                 isActive ? 'bg-pink-600/20 text-pink-300' : 'hover:bg-white/5'
               }`
             }
           >
-            <Users size={18} />
-            <span>Users</span>
+            <ListOrdered size={18} />
+            <span>Orders</span>
           </NavLink>
+          {isSuper && (
+            <NavLink
+              to="/admin/users"
+              className={({ isActive }) =>
+                `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                  isActive ? 'bg-pink-600/20 text-pink-300' : 'hover:bg-white/5'
+                }`
+              }
+            >
+              <Users size={18} />
+              <span>Users</span>
+            </NavLink>
+          )}
         </nav>
         <div className="p-4 border-t border-pink-500/20 text-sm text-gray-400">
           <p className="mb-3">Masuk sebagai <span className="text-white">Admin</span></p>

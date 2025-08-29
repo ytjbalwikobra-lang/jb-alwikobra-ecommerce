@@ -17,6 +17,7 @@ type FormState = {
   accountLevel?: string;
   accountDetails?: string;
   images: string[];
+  rentals: { id?: string; duration: string; price: number; description?: string }[];
 };
 
 const emptyForm: FormState = {
@@ -29,6 +30,7 @@ const emptyForm: FormState = {
   accountLevel: '',
   accountDetails: '',
   images: [],
+  rentals: [],
 };
 
 const AdminProducts: React.FC = () => {
@@ -75,6 +77,7 @@ const AdminProducts: React.FC = () => {
       accountLevel: p.accountLevel,
       accountDetails: p.accountDetails,
       images: p.images && p.images.length ? p.images : (p.image ? [p.image] : []),
+      rentals: (p.rentalOptions || []).map(r=>({ id: r.id, duration: r.duration, price: r.price, description: r.description }))
     });
     setShowForm(true);
   };
@@ -89,7 +92,7 @@ const AdminProducts: React.FC = () => {
     try {
       // Basic payload mapping; in real DB schema, tier/gameTitle should use FKs
       const primaryImage = form.images[0] || '';
-      const payload: any = {
+  const payload: any = {
         name: form.name,
         description: form.description,
         price: Number(form.price) || 0,
@@ -113,6 +116,17 @@ const AdminProducts: React.FC = () => {
       }
 
       if (saved) {
+        // Save rentals if provided (simple implementation: delete and recreate)
+        if (form.id && form.rentals?.length && (window as any).supabase) {
+          try {
+            const sb = (window as any).supabase || null;
+            if (sb) {
+              await sb.from('rental_options').delete().eq('product_id', form.id);
+              const inserts = form.rentals.map(r=>({ product_id: form.id, duration: r.duration, price: Number(r.price)||0, description: r.description || null }));
+              if (inserts.length) await sb.from('rental_options').insert(inserts);
+            }
+          } catch {}
+        }
         const updated = await ProductService.getAllProducts();
         setProducts(updated);
         setShowForm(false);
@@ -244,6 +258,29 @@ const AdminProducts: React.FC = () => {
                 max={15}
               />
               <p className="text-xs text-gray-500">Urutkan dengan drag & drop. Gambar pertama menjadi cover.</p>
+
+              <div className="mt-6 border-t border-white/10 pt-4">
+                <div className="text-sm text-gray-400 mb-2">Rental Options</div>
+                <div className="space-y-3">
+                  {(form.rentals || []).map((r, idx) => (
+                    <div key={idx} className="grid grid-cols-5 gap-2 items-center">
+                      <input className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Durasi (mis. 1 Hari)" value={r.duration} onChange={(e)=>{
+                        const next = [...form.rentals]; next[idx] = { ...r, duration: e.target.value }; setForm({...form, rentals: next});
+                      }} />
+                      <input type="number" min={0} step={1000} className="col-span-2 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Harga" value={r.price} onChange={(e)=>{
+                        const next = [...form.rentals]; next[idx] = { ...r, price: Number(e.target.value) }; setForm({...form, rentals: next});
+                      }} />
+                      <button className="text-red-300 border border-red-500/40 rounded px-2 py-1 hover:bg-red-500/10" onClick={()=>{
+                        const next = [...form.rentals]; next.splice(idx,1); setForm({...form, rentals: next});
+                      }}>Hapus</button>
+                      <input className="col-span-5 bg-black border border-white/20 rounded px-2 py-1 text-white" placeholder="Deskripsi (opsional)" value={r.description || ''} onChange={(e)=>{
+                        const next = [...form.rentals]; next[idx] = { ...r, description: e.target.value }; setForm({...form, rentals: next});
+                      }} />
+                    </div>
+                  ))}
+                  <button className="text-white border border-white/20 rounded px-2 py-1 hover:bg-white/10" onClick={()=>setForm({...form, rentals:[...(form.rentals||[]), { duration:'', price:0 }]})}>Tambah Rental</button>
+                </div>
+              </div>
             </div>
           </div>
 

@@ -19,6 +19,7 @@ import AdminDashboard from './pages/admin/AdminDashboard.tsx';
 import AdminProducts from './pages/admin/AdminProducts.tsx';
 import AdminFlashSales from './pages/admin/AdminFlashSales.tsx';
 import AdminUsers from './pages/admin/AdminUsers.tsx';
+import AdminOrders from './pages/admin/AdminOrders.tsx';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 
@@ -98,6 +99,7 @@ function App() {
                   <Route path="products" element={<AdminProducts />} />
                   <Route path="flash-sales" element={<AdminFlashSales />} />
                   <Route path="users" element={<AdminUsers />} />
+                  <Route path="orders" element={<AdminOrders />} />
                 </Route>
               </Route>
               <Route path="*" element={<div className="min-h-screen flex items-center justify-center"><p className="text-gray-600">Halaman tidak ditemukan</p></div>} />
