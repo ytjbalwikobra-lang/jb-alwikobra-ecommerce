@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
-import { Product } from '../types/index.ts';
+import { Product, Category, Tier } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
 import HorizontalScroller from '../components/HorizontalScroller.tsx';
 import { Search, Filter, Grid, List, SlidersHorizontal } from 'lucide-react';
@@ -10,10 +10,11 @@ const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [tiers, setTiers] = useState<Tier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedGame, setSelectedGame] = useState(searchParams.get('game') || '');
-  const [priceRange, setPriceRange] = useState(searchParams.get('priceRange') || '');
   const [selectedTier, setSelectedTier] = useState(searchParams.get('tier') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -32,15 +33,6 @@ const ProductsPage: React.FC = () => {
     'Honkai Impact'
   ];
 
-  const priceRanges = [
-    { value: '', label: 'Semua Harga' },
-    { value: '0-50000', label: 'Di bawah Rp 50.000' },
-    { value: '50000-100000', label: 'Rp 50.000 - Rp 100.000' },
-    { value: '100000-500000', label: 'Rp 100.000 - Rp 500.000' },
-    { value: '500000-1000000', label: 'Rp 500.000 - Rp 1.000.000' },
-    { value: '1000000-', label: 'Di atas Rp 1.000.000' }
-  ];
-
   const sortOptions = [
     { value: 'newest', label: 'Terbaru' },
     { value: 'oldest', label: 'Terlama' },
@@ -49,26 +41,26 @@ const ProductsPage: React.FC = () => {
     { value: 'name-az', label: 'Nama A-Z' },
     { value: 'name-za', label: 'Nama Z-A' }
   ];
-  const tierOptions = [
-    { value: '', label: 'Semua Kategori' },
-    { value: 'reguler', label: 'Reguler' },
-    { value: 'pelajar', label: 'Pelajar' },
-    { value: 'premium', label: 'Premium' },
-  ];
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const data = await ProductService.getAllProducts();
-        setProducts(data);
+        const [productsData, categoriesData, tiersData] = await Promise.all([
+          ProductService.getAllProducts(),
+          ProductService.getCategories(),
+          ProductService.getTiers()
+        ]);
+        setProducts(productsData);
+        setCategories(categoriesData);
+        setTiers(tiersData);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching data:', error);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
   useEffect(() => {
@@ -95,21 +87,6 @@ const ProductsPage: React.FC = () => {
       filtered = filtered.filter(product => (product.tier || '').toLowerCase() === selectedTier.toLowerCase());
     }
 
-    // Price range filter
-    if (priceRange) {
-      const [min, max] = priceRange.split('-').map(p => p ? parseInt(p) : null);
-      filtered = filtered.filter(product => {
-        if (min && max) {
-          return product.price >= min && product.price <= max;
-        } else if (min) {
-          return product.price >= min;
-        } else if (max) {
-          return product.price <= max;
-        }
-        return true;
-      });
-    }
-
     // Sort
     switch (sortBy) {
       case 'newest':
@@ -133,24 +110,23 @@ const ProductsPage: React.FC = () => {
     }
 
     setFilteredProducts(filtered);
-  }, [products, searchTerm, selectedGame, priceRange, sortBy]);
+  }, [products, searchTerm, selectedGame, selectedTier, sortBy]);
 
   useEffect(() => {
     // Update URL params
     const params = new URLSearchParams();
     if (searchTerm) params.set('search', searchTerm);
     if (selectedGame) params.set('game', selectedGame);
-  if (priceRange) params.set('priceRange', priceRange);
-  if (selectedTier) params.set('tier', selectedTier);
+    if (selectedTier) params.set('tier', selectedTier);
     if (sortBy !== 'newest') params.set('sortBy', sortBy);
     
     setSearchParams(params);
-  }, [searchTerm, selectedGame, priceRange, sortBy, selectedTier, setSearchParams]);
+  }, [searchTerm, selectedGame, selectedTier, sortBy, setSearchParams]);
 
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedGame('');
-    setPriceRange('');
+    setSelectedTier('');
     setSortBy('newest');
   };
 
@@ -175,9 +151,19 @@ const ProductsPage: React.FC = () => {
             Temukan akun game impian Anda dari {products.length} produk tersedia
           </p>
           <div className="mt-3 flex items-center gap-2 text-xs">
-            <span className="px-2 py-1 rounded border border-yellow-500/30 bg-yellow-500/10 text-yellow-400">Premium</span>
-            <span className="px-2 py-1 rounded border border-blue-500/30 bg-blue-500/10 text-blue-400">Pelajar</span>
-            <span className="px-2 py-1 rounded border border-gray-500/30 bg-gray-500/10 text-gray-300">Reguler</span>
+            {tiers.map(tier => (
+              <span 
+                key={tier.slug} 
+                className="px-2 py-1 rounded border"
+                style={{ 
+                  borderColor: tier.borderColor + '30', 
+                  backgroundColor: tier.color + '10', 
+                  color: tier.color 
+                }}
+              >
+                {tier.name}
+              </span>
+            ))}
           </div>
         </div>
 
@@ -229,22 +215,6 @@ const ProductsPage: React.FC = () => {
                 </select>
               </div>
 
-              {/* Price Range Filter */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Rentang Harga
-                </label>
-                <select
-                  value={priceRange}
-                  onChange={(e) => setPriceRange(e.target.value)}
-                  className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                >
-                  {priceRanges.map(range => (
-                    <option key={range.value} value={range.value}>{range.label}</option>
-                  ))}
-                </select>
-              </div>
-
               {/* Tier Filter */}
               <div className="mb-2">
                 <label className="block text-sm font-medium text-gray-300 mb-2">Kategori</label>
@@ -253,8 +223,9 @@ const ProductsPage: React.FC = () => {
                   onChange={(e) => setSelectedTier(e.target.value)}
                   className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
-                  {tierOptions.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  <option value="">Semua Kategori</option>
+                  {tiers.map(tier => (
+                    <option key={tier.slug} value={tier.slug}>{tier.name}</option>
                   ))}
                 </select>
               </div>
@@ -302,26 +273,15 @@ const ProductsPage: React.FC = () => {
                     </select>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Harga</label>
-                    <select
-                      value={priceRange}
-                      onChange={(e) => setPriceRange(e.target.value)}
-                      className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
-                    >
-                      {priceRanges.map(range => (
-                        <option key={range.value} value={range.value}>{range.label}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
                     <label className="block text-sm font-medium text-gray-300 mb-1">Kategori</label>
                     <select
                       value={selectedTier}
                       onChange={(e) => setSelectedTier(e.target.value)}
                       className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
                     >
-                      {tierOptions.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      <option value="">Semua Kategori</option>
+                      {tiers.map(tier => (
+                        <option key={tier.slug} value={tier.slug}>{tier.name}</option>
                       ))}
                     </select>
                   </div>

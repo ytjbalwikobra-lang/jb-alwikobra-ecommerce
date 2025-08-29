@@ -1,5 +1,27 @@
 export type ProductTier = 'reguler' | 'pelajar' | 'premium';
 
+export interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  icon?: string;
+  color?: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
+export interface Tier {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  color?: string;
+  borderColor?: string;
+  isActive: boolean;
+  sortOrder: number;
+}
+
 export interface Product {
   id: string;
   name: string;

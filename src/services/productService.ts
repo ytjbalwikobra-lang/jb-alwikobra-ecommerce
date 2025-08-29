@@ -279,4 +279,64 @@ export class ProductService {
       return false;
     }
   }
+
+  static async getCategories(): Promise<any[]> {
+    try {
+      if (!supabase) {
+        // Return sample categories if Supabase is not configured
+        return [
+          { id: '1', name: 'MOBA', slug: 'moba', description: 'Multiplayer Online Battle Arena games', icon: 'Shield', color: '#ec4899' },
+          { id: '2', name: 'Battle Royale', slug: 'battle-royale', description: 'Battle Royale games', icon: 'Target', color: '#f59e0b' },
+          { id: '3', name: 'RPG', slug: 'rpg', description: 'Role Playing Games', icon: 'Sword', color: '#8b5cf6' },
+          { id: '4', name: 'FPS', slug: 'fps', description: 'First Person Shooter games', icon: 'Zap', color: '#ef4444' },
+          { id: '5', name: 'Strategy', slug: 'strategy', description: 'Strategy games', icon: 'Brain', color: '#10b981' }
+        ];
+      }
+
+      const { data, error } = await supabase
+        .from('categories')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching categories:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      return [];
+    }
+  }
+
+  static async getTiers(): Promise<any[]> {
+    try {
+      if (!supabase) {
+        // Return sample tiers if Supabase is not configured
+        return [
+          { id: '1', name: 'Reguler', slug: 'reguler', description: 'Akun standar untuk pemula', color: '#6b7280', border_color: '#9ca3af' },
+          { id: '2', name: 'Pelajar', slug: 'pelajar', description: 'Akun premium untuk pelajar', color: '#3b82f6', border_color: '#60a5fa' },
+          { id: '3', name: 'Premium', slug: 'premium', description: 'Akun premium terbaik', color: '#f59e0b', border_color: '#fbbf24' }
+        ];
+      }
+
+      const { data, error } = await supabase
+        .from('tiers')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching tiers:', error);
+        return [];
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error fetching tiers:', error);
+      return [];
+    }
+  }
 }
