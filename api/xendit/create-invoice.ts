@@ -132,6 +132,16 @@ export default async function handler(req: any, res: any) {
   success_redirect_url: withOrderId(success_redirect_url),
   failure_redirect_url: withOrderId(failure_redirect_url),
         customer,
+        metadata: {
+          client_external_id: finalExternalId,
+          product_id: order?.product_id || null,
+          user_id: order?.user_id || null,
+          order_type: order?.order_type || 'purchase',
+          amount,
+          customer_name: order?.customer_name || null,
+          customer_email: order?.customer_email || payer_email || null,
+          customer_phone: order?.customer_phone || null,
+        },
         currency: 'IDR'
       }),
       signal: controller.signal

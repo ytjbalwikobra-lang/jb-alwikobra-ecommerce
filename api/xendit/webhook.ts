@@ -84,6 +84,47 @@ export default async function handler(req: any, res: any) {
       if (!e2) updated = (up2 || []).length;
     }
 
+    // If nothing updated yet, try to create/upsert order from metadata for resilience
+    if (updated === 0) {
+      const meta = (data.metadata || {}) as any;
+      if (meta && (externalId || meta.client_external_id)) {
+        const clientId = (externalId || meta.client_external_id) as string;
+        const baseRow: any = {
+          client_external_id: clientId,
+          product_id: meta.product_id || null,
+          user_id: meta.user_id || null,
+          order_type: meta.order_type || 'purchase',
+          amount: typeof meta.amount === 'number' ? meta.amount : (data.amount || null),
+          customer_name: meta.customer_name || null,
+          customer_email: meta.customer_email || payerEmail,
+          customer_phone: meta.customer_phone || null,
+          status: 'pending',
+          payment_method: 'xendit',
+        };
+        const { error: upErr } = await sb
+          .from('orders')
+          .upsert(baseRow, { onConflict: 'client_external_id' });
+        if (!upErr) {
+          // Now update with invoice details
+          const { data: up3, error: e3 } = await sb
+            .from('orders')
+            .update({
+              status,
+              paid_at: paidAt,
+              payment_channel: paymentChannel,
+              payer_email: payerEmail,
+              xendit_invoice_url: invoiceUrl,
+              xendit_invoice_id: invoiceId,
+              currency,
+              expires_at: expiresAt,
+            })
+            .eq('client_external_id', clientId)
+            .select('id');
+          if (!e3) updated = (up3 || []).length;
+        }
+      }
+    }
+
     // Archive product on successful payment
     try {
       if (updated > 0 && (status === 'paid' || status === 'completed')) {
