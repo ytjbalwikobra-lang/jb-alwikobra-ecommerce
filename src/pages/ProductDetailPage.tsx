@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
+import { SettingsService } from '../services/settingsService.ts';
 import { Product, Customer, RentalOption } from '../types/index.ts';
 import {
   formatCurrency, 
@@ -43,7 +44,15 @@ const ProductDetailPage: React.FC = () => {
     email: '',
     phone: ''
   });
-  const whatsappNumber = process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890';
+  const [whatsappNumber, setWhatsappNumber] = useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
+  React.useEffect(() => { 
+    (async () => { 
+      try { 
+        const s = await SettingsService.get(); 
+        if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber); 
+      } catch {} 
+    })(); 
+  }, []);
   const currentUrl = window.location.href;
 
   useEffect(() => {

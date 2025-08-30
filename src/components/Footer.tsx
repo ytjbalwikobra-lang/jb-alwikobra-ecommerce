@@ -1,9 +1,21 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Mail, Phone, MapPin } from 'lucide-react';
+import { SettingsService } from '../services/settingsService.ts';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const [siteName, setSiteName] = React.useState<string>('JB Alwikobra');
+  const [whatsappNumber, setWhatsappNumber] = React.useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const s = await SettingsService.get();
+        if (s?.siteName) setSiteName(s.siteName);
+        if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber);
+      } catch {}
+    })();
+  }, []);
 
   return (
   <footer className="bg-black text-gray-300 border-t border-pink-500/30">
@@ -16,7 +28,7 @@ const Footer: React.FC = () => {
                 <span className="text-white font-bold text-sm">JB</span>
               </div>
               <div>
-                <span className="text-xl font-bold">JB Alwikobra</span>
+                <span className="text-xl font-bold">{siteName}</span>
                 <p className="text-sm text-gray-400 -mt-1">Gaming Marketplace</p>
               </div>
             </div>
@@ -87,7 +99,7 @@ const Footer: React.FC = () => {
             <ul className="space-y-2">
               <li className="flex items-center space-x-2 text-gray-300">
                 <Phone size={16} />
-                <span>+62 812-3456-7890</span>
+                <span>+{whatsappNumber}</span>
               </li>
               <li className="flex items-center space-x-2 text-gray-300">
                 <Mail size={16} />
@@ -103,7 +115,7 @@ const Footer: React.FC = () => {
 
   <div className="border-t border-pink-500/30 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-400 text-sm">
-            © {currentYear} JB Alwikobra. All rights reserved.
+            © {currentYear} {siteName}. All rights reserved.
           </p>
           <div className="flex items-center space-x-3 text-gray-400 text-sm mt-4 md:mt-0">
             <Link to="/terms" className="hover:text-pink-300">Syarat & Ketentuan</Link>

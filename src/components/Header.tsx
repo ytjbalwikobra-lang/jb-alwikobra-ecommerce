@@ -4,12 +4,25 @@ import { ShoppingBag, Zap, Home, Settings, HelpCircle } from 'lucide-react';
 import { isAdmin } from '../utils/auth.ts';
 import { isLoggedIn } from '../services/authService.ts';
 import { supabase } from '../services/supabase.ts';
+import { SettingsService } from '../services/settingsService.ts';
 
 const Header: React.FC = () => {
   const location = useLocation();
 
   const [authed, setAuthed] = React.useState(false);
   React.useEffect(() => { (async () => setAuthed(await isLoggedIn()))(); }, []);
+
+  const [siteName, setSiteName] = React.useState<string>('JB Alwikobra');
+  const [logoUrl, setLogoUrl] = React.useState<string | undefined>(undefined);
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const s = await SettingsService.get();
+        if (s?.siteName) setSiteName(s.siteName);
+        if (s?.logoUrl) setLogoUrl(s.logoUrl);
+      } catch {}
+    })();
+  }, []);
 
   const navItems = [
     { path: '/', label: 'Beranda', icon: Home },
@@ -27,11 +40,15 @@ const Header: React.FC = () => {
           <div className="flex justify-between items-center h-16">
           {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">JB</span>
-              </div>
+              {logoUrl ? (
+                <img src={logoUrl} alt={siteName} className="h-8 w-auto rounded" />
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">JB</span>
+                </div>
+              )}
               <div>
-                <span className="text-xl font-bold text-white">JB Alwikobra</span>
+                <span className="text-xl font-bold text-white">{siteName}</span>
                 <p className="text-xs text-gray-400 -mt-1">Gaming Marketplace</p>
               </div>
             </Link>

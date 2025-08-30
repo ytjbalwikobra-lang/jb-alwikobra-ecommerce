@@ -1,4 +1,5 @@
 import React from 'react';
+import { SettingsService } from '../services/settingsService.ts';
 import { HelpCircle, ShieldCheck, CreditCard, Truck, MessageSquare, ChevronDown, Search, Sparkles } from 'lucide-react';
 
 const faqs = [
@@ -26,6 +27,15 @@ const faqs = [
 
 const HelpPage: React.FC = () => {
   const [open, setOpen] = React.useState<number | null>(0);
+  const [whatsappNumber, setWhatsappNumber] = React.useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
+  React.useEffect(() => {
+    (async () => {
+      try {
+        const s = await SettingsService.get();
+        if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber);
+      } catch {}
+    })();
+  }, []);
 
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
@@ -92,7 +102,7 @@ const HelpPage: React.FC = () => {
           <h2 className="text-xl font-bold text-white mb-2">Masih butuh bantuan?</h2>
           <p className="text-gray-300 mb-4">Hubungi admin melalui WhatsApp untuk bantuan cepat.</p>
           <a
-            href={`https://wa.me/${process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890'}`}
+            href={`https://wa.me/${whatsappNumber}`}
             target="_blank"
             rel="noreferrer"
             className="inline-block bg-pink-600 text-white px-4 py-2 rounded-lg hover:bg-pink-700"

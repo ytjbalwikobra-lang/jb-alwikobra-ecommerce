@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { 
+import {
   generateWhatsAppUrl,
   generateSellAccountMessage
 } from '../utils/helpers.ts';
+import { SettingsService } from '../services/settingsService.ts';
 import {
   MessageCircle,
   DollarSign,
@@ -27,7 +28,8 @@ const SellPage: React.FC = () => {
   ]);
   const [loadingGames, setLoadingGames] = useState(false);
 
-  const whatsappNumber = process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890';
+  const [whatsappNumber, setWhatsappNumber] = useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
+  useEffect(()=>{ (async ()=>{ try { const s = await SettingsService.get(); if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber); } catch {} })(); }, []);
 
   useEffect(() => {
     (async () => {
