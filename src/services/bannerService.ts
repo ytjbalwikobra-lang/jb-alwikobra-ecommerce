@@ -16,6 +16,24 @@ const sampleBanners: Banner[] = [
   },
 ];
 
+let hasBannerCtaText: boolean | null = null;
+
+async function ensureBannerCapabilities(): Promise<{ ctaText: boolean }> {
+  if (!supabase) return { ctaText: false };
+  if (hasBannerCtaText === null) {
+    try {
+      const { error } = await (supabase as any)
+        .from('banners')
+        .select('cta_text')
+        .limit(1);
+      hasBannerCtaText = !error;
+    } catch {
+      hasBannerCtaText = false;
+    }
+  }
+  return { ctaText: !!hasBannerCtaText };
+}
+
 export class BannerService {
   static async list(): Promise<Banner[]> {
     try {
@@ -46,6 +64,7 @@ export class BannerService {
   static async create(input: Omit<Banner, 'id'|'createdAt'|'updatedAt'> & { file?: File | null }): Promise<Banner | null> {
     try {
       if (!supabase) return null;
+      const caps = await ensureBannerCapabilities();
       let image_url = input.imageUrl;
       if (input.file instanceof File) {
         const url = await uploadFile(input.file, 'banners');
@@ -56,7 +75,7 @@ export class BannerService {
         subtitle: input.subtitle ?? null,
         image_url,
         link_url: input.linkUrl ?? null,
-  cta_text: (input as any).ctaText ?? null,
+        ...(caps.ctaText ? { cta_text: (input as any).ctaText ?? null } : {}),
         sort_order: input.sortOrder ?? 0,
         is_active: input.isActive ?? true,
       };
@@ -87,12 +106,13 @@ export class BannerService {
   static async update(id: string, updates: Partial<Banner> & { file?: File | null }): Promise<Banner | null> {
     try {
       if (!supabase) return null;
+      const caps = await ensureBannerCapabilities();
       const payload: any = {
         title: updates.title,
         subtitle: updates.subtitle,
         image_url: updates.imageUrl,
         link_url: updates.linkUrl,
-  cta_text: (updates as any).ctaText,
+        ...(caps.ctaText ? { cta_text: (updates as any).ctaText } : {}),
         sort_order: (updates as any).sortOrder,
         is_active: (updates as any).isActive,
       };
