@@ -182,6 +182,15 @@ const ProductDetailPage: React.FC = () => {
         const fallbackExternalId = paymentAttemptId || `order_${product.id}_${Date.now()}`;
         if (!paymentAttemptId) setPaymentAttemptId(fallbackExternalId);
         const uid = await getAuthUserId();
+        
+        console.log('[ProductDetail] Creating invoice with order data:', {
+          externalId: fallbackExternalId,
+          amount: effectivePrice,
+          customer: customer.name,
+          productId: product.id,
+          userId: uid
+        });
+        
         const invoice = await createXenditInvoice({
           externalId: fallbackExternalId,
           amount: effectivePrice,
@@ -206,6 +215,9 @@ const ProductDetailPage: React.FC = () => {
             user_id: uid || undefined as any,
           }
         });
+        
+        console.log('[ProductDetail] Invoice response:', invoice);
+        
         if (invoice?.invoice_url) {
           // reset flag; browser will navigate away
           setCreatingInvoice(false);
@@ -213,6 +225,7 @@ const ProductDetailPage: React.FC = () => {
           return;
         }
       } catch (e: any) {
+        console.error('[ProductDetail] Invoice creation failed:', e);
         alert(`Gagal membuat invoice Xendit: ${e?.message || e}`);
       } finally {
         setCreatingInvoice(false);

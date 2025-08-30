@@ -25,11 +25,19 @@ export type CreateInvoiceInput = {
 };
 
 export async function createXenditInvoice(input: CreateInvoiceInput) {
+  console.log('[paymentService] Creating invoice with input:', {
+    externalId: input.externalId,
+    amount: input.amount,
+    hasOrder: !!input.order,
+    orderProductId: input.order?.product_id,
+    orderCustomer: input.order?.customer_name
+  });
+  
   const res = await fetch('/api/xendit/create-invoice', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-  external_id: input.clientExternalId || input.externalId,
+      external_id: input.clientExternalId || input.externalId,
       amount: input.amount,
       payer_email: input.payerEmail,
       description: input.description,
@@ -39,7 +47,12 @@ export async function createXenditInvoice(input: CreateInvoiceInput) {
   ,order: input.order
     })
   });
+  
+  console.log('[paymentService] Server response status:', res.status);
+  
   const data = await res.json();
+  console.log('[paymentService] Server response data:', data);
+  
   if (!res.ok) throw new Error(data?.error || 'Failed to create invoice');
   return data as { id: string; invoice_url: string; status: string };
 }
