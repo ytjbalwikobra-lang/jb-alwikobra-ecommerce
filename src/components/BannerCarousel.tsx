@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { BannerService } from '../services/bannerService.ts';
 
 interface Slide {
   id: string;
@@ -38,18 +39,49 @@ const defaultSlides: Slide[] = [
 
 type Props = { slides?: Slide[] };
 
-const BannerCarousel: React.FC<Props> = ({ slides = defaultSlides }) => {
+const BannerCarousel: React.FC<Props> = ({ slides }) => {
   const [index, setIndex] = useState(0);
-  const count = Math.min(slides.length, 3);
+  const [dbSlides, setDbSlides] = useState<Slide[] | null>(null);
+
+  // Load banners from DB; if none, fall back to provided slides or defaults
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const banners = await BannerService.list();
+        const activeOnes = (banners || []).filter((b) => b.isActive);
+        const mapped: Slide[] = activeOnes.map((b) => ({
+          id: b.id,
+          image: b.imageUrl,
+          title: b.title,
+          subtitle: b.subtitle,
+          ctaText: b.linkUrl ? 'Lihat' : undefined,
+          ctaLink: b.linkUrl,
+        }));
+        if (mounted) setDbSlides(mapped.length > 0 ? mapped : []);
+      } catch (e) {
+        if (mounted) setDbSlides([]);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const resolvedSlides = (dbSlides && dbSlides.length > 0)
+    ? dbSlides
+    : (slides && slides.length > 0 ? slides : defaultSlides);
+
+  const count = Math.min(resolvedSlides.length, 3);
 
   useEffect(() => {
-    const id = setInterval(() => setIndex((i) => (i + 1) % count), 5000);
+    const id = setInterval(() => setIndex((i) => (i + 1) % (count || 1)), 5000);
     return () => clearInterval(id);
   }, [count]);
 
   if (count === 0) return null;
 
-  const active = slides[index];
+  const active = resolvedSlides[index];
 
   return (
   <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
