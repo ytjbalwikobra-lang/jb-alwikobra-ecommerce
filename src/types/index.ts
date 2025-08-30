@@ -93,6 +93,7 @@ export interface Banner {
   subtitle?: string;
   imageUrl: string;
   linkUrl?: string;
+  ctaText?: string; // optional CTA label
   sortOrder: number;
   isActive: boolean;
   createdAt: string;

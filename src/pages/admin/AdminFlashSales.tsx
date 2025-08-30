@@ -48,7 +48,22 @@ const AdminFlashSales: React.FC = () => {
     })();
   }, []);
 
-  const startCreate = () => { setForm(emptyFS); setShowForm(true); };
+  const startCreate = () => {
+    const now = new Date();
+    const in24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    // Format for datetime-local (YYYY-MM-DDTHH:MM)
+    const fmt = (d: Date) => new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    setForm({
+      product_id: '',
+      sale_price: 0,
+      original_price: 0,
+      start_time: fmt(now),
+      end_time: fmt(in24h),
+      stock: 1,
+      is_active: true,
+    });
+    setShowForm(true);
+  };
   const startEdit = (row: any) => {
     setForm({
       id: row.id,
@@ -189,7 +204,16 @@ const AdminFlashSales: React.FC = () => {
               ) : null}
               <div>
                 <label className="block text-sm text-gray-400 mb-1">Produk</label>
-                <select value={form.product_id} onChange={(e)=>setForm({...form, product_id: e.target.value})} className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white">
+                <select
+                  value={form.product_id}
+                  onChange={(e)=>{
+                    const id = e.target.value;
+                    const p = products.find(x=>x.id===id);
+                    const newOriginal = p ? (p.originalPrice && Number(p.originalPrice) > 0 ? Number(p.originalPrice) : Number(p.price)) : 0;
+                    setForm({...form, product_id: id, original_price: newOriginal});
+                  }}
+                  className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white"
+                >
                   <option value="">-- pilih produk --</option>
                   {products.map(p => (
                     <option key={p.id} value={p.id}>{p.name}</option>

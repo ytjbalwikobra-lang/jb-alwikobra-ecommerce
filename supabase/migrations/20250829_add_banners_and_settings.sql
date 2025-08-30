@@ -5,6 +5,7 @@ create table if not exists public.banners (
   subtitle text,
   image_url text not null,
   link_url text,
+  cta_text text,
   sort_order int default 1,
   is_active boolean default true,
   created_at timestamptz default now(),

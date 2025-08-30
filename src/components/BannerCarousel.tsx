@@ -55,7 +55,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
           image: b.imageUrl,
           title: b.title,
           subtitle: b.subtitle,
-          ctaText: b.linkUrl ? 'Lihat' : undefined,
+          ctaText: b.linkUrl ? (b as any).ctaText || 'Lihat' : undefined,
           ctaLink: b.linkUrl,
         }));
         if (mounted) setDbSlides(mapped.length > 0 ? mapped : []);

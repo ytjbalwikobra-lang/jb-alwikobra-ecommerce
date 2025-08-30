@@ -7,20 +7,20 @@ const AdminBanners: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Banner | null>(null);
-  const [form, setForm] = useState<{ title: string; subtitle?: string; linkUrl?: string; sortOrder: number; isActive: boolean; file: File | null }>(
-    { title: '', subtitle: '', linkUrl: '', sortOrder: 1, isActive: true, file: null }
+  const [form, setForm] = useState<{ title: string; subtitle?: string; linkUrl?: string; ctaText?: string; sortOrder: number; isActive: boolean; file: File | null }>(
+    { title: '', subtitle: '', linkUrl: '', ctaText: '', sortOrder: 1, isActive: true, file: null }
   );
   const [previewUrl, setPreviewUrl] = useState<string>('');
 
   useEffect(() => { (async () => { setLoading(true); setBanners(await BannerService.list()); setLoading(false); })(); }, []);
 
-  const resetForm = () => { setForm({ title: '', subtitle: '', linkUrl: '', sortOrder: 1, isActive: true, file: null }); setPreviewUrl(''); };
+  const resetForm = () => { setForm({ title: '', subtitle: '', linkUrl: '', ctaText: '', sortOrder: 1, isActive: true, file: null }); setPreviewUrl(''); };
 
   const startCreate = () => { setEditing(null); resetForm(); };
 
   const startEdit = (b: Banner) => {
     setEditing(b);
-    setForm({ title: b.title, subtitle: b.subtitle, linkUrl: b.linkUrl, sortOrder: b.sortOrder, isActive: b.isActive, file: null });
+  setForm({ title: b.title, subtitle: b.subtitle, linkUrl: b.linkUrl, ctaText: b.ctaText, sortOrder: b.sortOrder, isActive: b.isActive, file: null });
     setPreviewUrl(b.imageUrl || '');
   };
 
@@ -36,7 +36,7 @@ const AdminBanners: React.FC = () => {
   const save = async () => {
     if (!form.title || !form.file && !editing) return alert('Judul dan Gambar wajib diisi');
     if (editing) {
-      const updated = await BannerService.update(editing.id, { ...editing, ...form });
+  const updated = await BannerService.update(editing.id, { ...editing, ...form });
       if (updated) {
         setBanners(prev => prev.map(b => b.id === updated.id ? updated : b));
         setEditing(null); resetForm();
@@ -47,6 +47,7 @@ const AdminBanners: React.FC = () => {
         subtitle: form.subtitle,
         imageUrl: '',
         linkUrl: form.linkUrl,
+        ctaText: form.ctaText,
         sortOrder: form.sortOrder,
         isActive: form.isActive,
         file: form.file,
@@ -83,6 +84,10 @@ const AdminBanners: React.FC = () => {
           <div>
             <label className="text-sm text-gray-400">Subjudul</label>
             <input value={form.subtitle||''} onChange={e=>setForm(p=>({...p,subtitle:e.target.value}))} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400">CTA Text (opsional)</label>
+            <input value={form.ctaText||''} onChange={e=>setForm(p=>({...p,ctaText:e.target.value}))} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" placeholder="Contoh: Lihat, Beli Sekarang, Pelajari" />
           </div>
           <div>
             <label className="text-sm text-gray-400">Link</label>
