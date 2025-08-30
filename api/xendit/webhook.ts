@@ -65,8 +65,8 @@ export default async function handler(req: any, res: any) {
       if (!error) updated = (up || []).length;
     }
 
-    // Fallback: update by external id (we set external_id === order.id when creating invoice)
-    if (updated === 0 && externalId) {
+  // Fallback: update by client_external_id (we set external_id === client_external_id when creating invoice)
+  if (updated === 0 && externalId) {
       const { data: up2, error: e2 } = await sb
         .from('orders')
         .update({
@@ -79,7 +79,7 @@ export default async function handler(req: any, res: any) {
           currency,
           expires_at: expiresAt,
         })
-        .eq('id', externalId)
+    .eq('client_external_id', externalId)
         .select('id');
       if (!e2) updated = (up2 || []).length;
     }
@@ -89,8 +89,8 @@ export default async function handler(req: any, res: any) {
       if (updated > 0 && (status === 'paid' || status === 'completed')) {
         // Find related product id(s) for the updated orders and archive them
         let q = sb.from('orders').select('product_id').limit(50);
-        if (invoiceId) q = q.eq('xendit_invoice_id', invoiceId);
-        else if (externalId) q = q.eq('id', externalId);
+  if (invoiceId) q = q.eq('xendit_invoice_id', invoiceId);
+  else if (externalId) q = q.eq('client_external_id', externalId);
         const { data: ordersToArchive } = await q;
         const productIds = (ordersToArchive || []).map((o: any) => o.product_id).filter(Boolean);
         if (productIds.length) {

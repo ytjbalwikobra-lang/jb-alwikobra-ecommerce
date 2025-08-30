@@ -135,6 +135,7 @@ export interface Order {
   status: 'pending' | 'paid' | 'completed' | 'cancelled';
   paymentMethod: 'xendit' | 'whatsapp';
   rentalDuration?: string;
+  clientExternalId?: string;
   createdAt: string;
   updatedAt: string;
 }

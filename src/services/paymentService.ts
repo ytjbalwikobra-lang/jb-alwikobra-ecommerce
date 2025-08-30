@@ -1,5 +1,7 @@
 export type CreateInvoiceInput = {
   externalId: string;
+  // Optional alias for clarity; we still send externalId to server
+  clientExternalId?: string;
   amount: number;
   payerEmail?: string;
   description?: string;
@@ -27,7 +29,7 @@ export async function createXenditInvoice(input: CreateInvoiceInput) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      external_id: input.externalId,
+  external_id: input.clientExternalId || input.externalId,
       amount: input.amount,
       payer_email: input.payerEmail,
       description: input.description,

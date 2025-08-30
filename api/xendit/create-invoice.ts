@@ -3,7 +3,7 @@ const XENDIT_SECRET_KEY = process.env.XENDIT_SECRET_KEY as string | undefined;
 const SUPABASE_URL = process.env.SUPABASE_URL as string | undefined;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
 
-async function createOrderIfProvided(order: any) {
+async function createOrderIfProvided(order: any, clientExternalId?: string) {
   try {
     if (!order || !SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) return null;
     const { createClient } = await import('@supabase/supabase-js');
@@ -19,10 +19,53 @@ async function createOrderIfProvided(order: any) {
       payment_method: 'xendit',
       rental_duration: order.rental_duration || null,
       user_id: order.user_id || null,
+      client_external_id: clientExternalId || null,
     };
-    const { data, error } = await sb.from('orders').insert(payload).select('*').single();
-    if (error) throw error;
-    return data;
+    // If we have a client external id, try to reuse existing order row to be idempotent
+    if (clientExternalId) {
+      const existingRes = await sb
+        .from('orders')
+        .select('*')
+        .eq('client_external_id', clientExternalId)
+        .limit(1);
+      const existing = Array.isArray(existingRes.data) ? existingRes.data[0] : null;
+      if (existing) {
+        // If invoice already attached (likely paid/pending at gateway), just return it
+        if (existing.xendit_invoice_id) return existing;
+        // Otherwise, update basic fields and return
+        const { data: upd } = await sb
+          .from('orders')
+          .update({
+            product_id: payload.product_id,
+            customer_name: payload.customer_name,
+            customer_email: payload.customer_email,
+            customer_phone: payload.customer_phone,
+            order_type: payload.order_type,
+            amount: payload.amount,
+            rental_duration: payload.rental_duration,
+            user_id: payload.user_id,
+          })
+          .eq('id', existing.id)
+          .select('*')
+          .single();
+        return upd || existing;
+      }
+    }
+
+    // Insert new or upsert by client_external_id to avoid race duplicates
+    if (clientExternalId) {
+      const { data, error } = await sb
+        .from('orders')
+        .upsert(payload, { onConflict: 'client_external_id' })
+        .select('*')
+        .single();
+      if (error) throw error;
+      return data;
+    } else {
+      const { data, error } = await sb.from('orders').insert(payload).select('*').single();
+      if (error) throw error;
+      return data;
+    }
   } catch (e) {
     console.error('Failed to create order in Supabase:', e);
     return null;
@@ -57,12 +100,9 @@ export default async function handler(req: any, res: any) {
     if (!amount || typeof amount !== 'number' || amount <= 0) return res.status(400).json({ error: 'amount (number>0) is required' });
     const desc = description || 'Invoice Pembelian JB Alwikobra';
     
-    // Optionally create order on server and use its id as external_id for Xendit
-    let finalExternalId = external_id;
-    const createdOrder = await createOrderIfProvided(order);
-    if (createdOrder?.id) {
-      finalExternalId = createdOrder.id;
-    }
+    // Optionally create order on server using client external id for idempotency
+    const finalExternalId = external_id;
+    const createdOrder = await createOrderIfProvided(order, finalExternalId);
 
     const withOrderId = (url?: string | null) => {
       if (!url) return undefined;
@@ -75,7 +115,7 @@ export default async function handler(req: any, res: any) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 20000);
 
-    console.log('[Xendit] Creating invoice', { external_id: finalExternalId, amount, hasCustomer: !!customer });
+  console.log('[Xendit] Creating invoice', { external_id: finalExternalId, amount, hasCustomer: !!customer });
 
     const resp = await fetch('https://api.xendit.co/v2/invoices', {
       method: 'POST',

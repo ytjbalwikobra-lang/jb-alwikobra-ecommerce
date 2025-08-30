@@ -130,6 +130,13 @@ https://<domain-anda>/api/xendit/webhook
 ```
 Tambahkan header opsional `X-Callback-Token` di dashboard Xendit yang sama dengan `XENDIT_CALLBACK_TOKEN` untuk memverifikasi request.
 
+### Idempotensi Pembayaran
+
+Untuk mencegah duplikasi order saat pengguna mengklik tombol bayar berulang kali atau saat terjadi retry jaringan:
+- Frontend mengirim `external_id` yang stabil per percobaan pembayaran.
+- Server menyimpan nilai ini sebagai `orders.client_external_id` dan akan menggunakan baris order yang sama jika `external_id` yang sama diterima kembali (idempotent).
+- Webhook Xendit akan mencocokkan order berdasarkan `xendit_invoice_id` terlebih dahulu, lalu `client_external_id` sebagai cadangan.
+
 ### 5. Start Development Server
 ```bash
 npm start

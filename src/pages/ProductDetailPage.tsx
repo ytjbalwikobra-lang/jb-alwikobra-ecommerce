@@ -44,6 +44,8 @@ const ProductDetailPage: React.FC = () => {
     email: '',
     phone: ''
   });
+  const [creatingInvoice, setCreatingInvoice] = useState(false);
+  const [paymentAttemptId, setPaymentAttemptId] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
   React.useEffect(() => { 
     (async () => { 
@@ -173,8 +175,12 @@ const ProductDetailPage: React.FC = () => {
         alert('Harap setujui Syarat & Ketentuan terlebih dahulu.');
         return;
       }
+      if (creatingInvoice) return; // guard double submit
+      setCreatingInvoice(true);
       try {
-        const fallbackExternalId = `order_${product.id}_${Date.now()}`;
+        // Stable external id within this attempt to ensure idempotency on retries/double-clicks
+        const fallbackExternalId = paymentAttemptId || `order_${product.id}_${Date.now()}`;
+        if (!paymentAttemptId) setPaymentAttemptId(fallbackExternalId);
         const uid = await getAuthUserId();
         const invoice = await createXenditInvoice({
           externalId: fallbackExternalId,
@@ -200,9 +206,16 @@ const ProductDetailPage: React.FC = () => {
             user_id: uid || undefined as any,
           }
         });
-        if (invoice?.invoice_url) window.location.href = invoice.invoice_url;
+        if (invoice?.invoice_url) {
+          // reset flag; browser will navigate away
+          setCreatingInvoice(false);
+          window.location.href = invoice.invoice_url;
+          return;
+        }
       } catch (e: any) {
         alert(`Gagal membuat invoice Xendit: ${e?.message || e}`);
+      } finally {
+        setCreatingInvoice(false);
       }
       return;
     }
