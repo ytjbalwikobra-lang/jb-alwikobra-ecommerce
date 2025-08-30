@@ -37,6 +37,7 @@ const ProductDetailPage: React.FC = () => {
   const [selectedRental, setSelectedRental] = useState<RentalOption | null>(null);
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
   const [checkoutType, setCheckoutType] = useState<'purchase' | 'rental'>('purchase');
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [customer, setCustomer] = useState<Customer>({
     name: '',
     email: '',
@@ -118,6 +119,7 @@ const ProductDetailPage: React.FC = () => {
   const handlePurchase = () => {
     setCheckoutType('purchase');
     setShowCheckoutForm(true);
+  setAcceptedTerms(false);
   };
 
   // Determine effective price to display/charge
@@ -134,6 +136,7 @@ const ProductDetailPage: React.FC = () => {
     setSelectedRental(rentalOption);
     setCheckoutType('rental');
     setShowCheckoutForm(true);
+  setAcceptedTerms(false);
   };
 
   const handleWhatsAppContact = (type: 'purchase' | 'rental') => {
@@ -157,6 +160,10 @@ const ProductDetailPage: React.FC = () => {
   const handleCheckout = async () => {
     if (!product) return;
     if (checkoutType === 'purchase') {
+      if (!acceptedTerms) {
+        alert('Harap setujui Syarat & Ketentuan terlebih dahulu.');
+        return;
+      }
       try {
         const fallbackExternalId = `order_${product.id}_${Date.now()}`;
         const uid = await getAuthUserId();
@@ -611,6 +618,24 @@ const ProductDetailPage: React.FC = () => {
                   </div>
                 )}
 
+                {/* Terms acceptance (required for purchase) */}
+                {checkoutType === 'purchase' && (
+                  <label className="flex items-start space-x-2 text-sm text-gray-300">
+                    <input
+                      type="checkbox"
+                      checked={acceptedTerms}
+                      onChange={(e) => setAcceptedTerms(e.target.checked)}
+                      className="mt-0.5 form-checkbox h-4 w-4 text-pink-600 border-pink-500/40 bg-black rounded"
+                    />
+                    <span>
+                      Saya telah membaca dan menyetujui{' '}
+                      <Link to="/terms" className="text-pink-400 underline hover:text-pink-300" target="_blank" rel="noreferrer">
+                        Syarat & Ketentuan PT ALWI KOBRA INDONESIA
+                      </Link>
+                    </span>
+                  </label>
+                )}
+
                 <div className="flex space-x-3 pt-4">
                   <button
                     type="button"
@@ -624,7 +649,12 @@ const ProductDetailPage: React.FC = () => {
                     <button
                       type="button"
             onClick={handleCheckout}
-                      className="flex-1 px-4 py-2 bg-pink-600 text-white rounded-lg hover:bg-pink-700 transition-colors"
+                      disabled={!acceptedTerms}
+                      className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
+                        acceptedTerms
+                          ? 'bg-pink-600 text-white hover:bg-pink-700'
+                          : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                      }`}
                     >
                       Bayar dengan Xendit
                     </button>

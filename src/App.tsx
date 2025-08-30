@@ -25,6 +25,7 @@ import AdminOrders from './pages/admin/AdminOrders.tsx';
 import AdminGameTitles from './pages/admin/AdminGameTitles.tsx';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
+import TermsPage from './pages/TermsPage.tsx';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error?: Error}> {
@@ -111,6 +112,7 @@ function App() {
                   <Route path="/flash-sales" element={<FlashSalesPage />} />
                   <Route path="/sell" element={<SellPage />} />
                   <Route path="/help" element={<HelpPage />} />
+                  <Route path="/terms" element={<TermsPage />} />
                   <Route path="/payment-status" element={<PaymentStatusPage />} />
                   <Route path="/auth" element={<AuthPage />} />
                   <Route path="/orders" element={<OrderHistoryPage />} />

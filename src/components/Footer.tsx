@@ -73,6 +73,11 @@ const Footer: React.FC = () => {
                   Bantuan
                 </Link>
               </li>
+              <li>
+                <Link to="/terms" className="text-gray-300 hover:text-pink-300 transition-colors">
+                  Syarat & Ketentuan
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -100,7 +105,9 @@ const Footer: React.FC = () => {
           <p className="text-gray-400 text-sm">
             © {currentYear} JB Alwikobra. All rights reserved.
           </p>
-          <div className="flex items-center space-x-1 text-gray-400 text-sm mt-4 md:mt-0">
+          <div className="flex items-center space-x-3 text-gray-400 text-sm mt-4 md:mt-0">
+            <Link to="/terms" className="hover:text-pink-300">Syarat & Ketentuan</Link>
+            <span className="opacity-50">|</span>
             <span>Made with</span>
             <Heart size={14} className="text-primary-500" />
             <span>for Indonesian Gamers</span>
