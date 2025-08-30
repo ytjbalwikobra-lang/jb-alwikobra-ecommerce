@@ -653,9 +653,18 @@ export class ProductService {
   }): Promise<any | null> {
     try {
       if (!supabase) return null;
+      // Ensure NOT NULL columns are respected per initial schema
+      const payload: any = { ...sale };
+      if (!payload.start_time) payload.start_time = new Date().toISOString();
+      if (!payload.original_price || Number(payload.original_price) <= 0) payload.original_price = Number(payload.sale_price);
+      if (typeof payload.stock === 'undefined') payload.stock = 0;
+      // Normalize date strings to ISO
+      if (payload.start_time) payload.start_time = new Date(payload.start_time).toISOString();
+      if (payload.end_time) payload.end_time = new Date(payload.end_time).toISOString();
+
       const { data, error } = await (supabase as any)
         .from('flash_sales')
-        .insert([sale])
+        .insert([payload])
         .select()
         .single();
       if (error) throw error;
@@ -677,9 +686,15 @@ export class ProductService {
   }>): Promise<any | null> {
     try {
       if (!supabase) return null;
+      const payload: any = { ...updates };
+      // Normalize date strings to ISO when provided
+      if (payload.start_time) payload.start_time = new Date(payload.start_time).toISOString();
+      if (payload.end_time) payload.end_time = new Date(payload.end_time).toISOString();
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
       const { data, error } = await (supabase as any)
         .from('flash_sales')
-        .update(updates)
+        .update(payload)
         .eq('id', id)
         .select()
         .single();

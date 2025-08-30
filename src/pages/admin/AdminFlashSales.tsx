@@ -82,25 +82,51 @@ const AdminFlashSales: React.FC = () => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const v = validate();
+      // Compute safe defaults to satisfy DB NOT NULL constraints
+      const selected = products.find(p => p.id === form.product_id);
+      const computedOriginal = (form.original_price && Number(form.original_price) > 0)
+        ? Number(form.original_price)
+        : (selected?.originalPrice && Number(selected.originalPrice) > 0)
+          ? Number(selected.originalPrice)
+          : Number(selected?.price || form.sale_price || 0);
+
+      const computedStart = form.start_time && form.start_time.trim().length > 0
+        ? new Date(form.start_time).toISOString()
+        : new Date().toISOString();
+
+      const computedEnd = form.end_time ? new Date(form.end_time).toISOString() : '';
+
+      // Re-validate with computed values
+      const v = (() => {
+        const errs: string[] = [];
+        if (!form.product_id) errs.push('Produk wajib dipilih');
+        if (!computedEnd) errs.push('Waktu berakhir wajib diisi');
+        if (Number(form.sale_price) <= 0) errs.push('Harga sale harus lebih dari 0');
+        if (computedOriginal <= Number(form.sale_price)) errs.push('Harga asli harus lebih besar dari harga sale');
+        if (new Date(computedStart) >= new Date(computedEnd)) errs.push('Waktu mulai harus sebelum waktu berakhir');
+        return errs;
+      })();
       setErrors(v);
       if (v.length) { setSaving(false); return; }
+
       const payload = {
         product_id: form.product_id,
         sale_price: Number(form.sale_price),
-        original_price: Number(form.original_price) || null,
-        start_time: form.start_time || null,
-        end_time: form.end_time,
+        original_price: computedOriginal,
+        start_time: computedStart,
+        end_time: computedEnd,
         stock: form.stock ?? null,
         is_active: form.is_active ?? true,
       };
-  if (form.id) await ProductService.updateFlashSale(form.id, payload);
-  else await ProductService.createFlashSale(payload);
+
+      if (form.id) await ProductService.updateFlashSale(form.id, payload);
+      else await ProductService.createFlashSale(payload);
       await refresh();
       setShowForm(false);
   push('Flash sale disimpan', 'success');
     } catch (e: any) {
-  push(`Gagal menyimpan: ${e?.message || e}`, 'error');
+  const msg = e?.message || e?.error?.message || 'Terjadi kesalahan';
+  push(`Gagal menyimpan: ${msg}` , 'error');
     } finally { setSaving(false); }
   };
 
