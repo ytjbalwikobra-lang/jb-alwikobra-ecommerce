@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   generateWhatsAppUrl,
   generateSellAccountMessage
@@ -22,22 +22,26 @@ const SellPage: React.FC = () => {
   const [accountLevel, setAccountLevel] = useState('');
   const [estimatedPrice, setEstimatedPrice] = useState('');
   const [accountDetails, setAccountDetails] = useState('');
+  const [gameOptions, setGameOptions] = useState<string[]>([
+    'Mobile Legends','PUBG Mobile','Free Fire','Genshin Impact','Call of Duty Mobile','Valorant','Arena of Valor','Clash of Clans','Clash Royale','Honkai Impact','Lainnya'
+  ]);
+  const [loadingGames, setLoadingGames] = useState(false);
 
   const whatsappNumber = process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890';
 
-  const gameOptions = [
-    'Mobile Legends',
-    'PUBG Mobile',
-    'Free Fire',
-    'Genshin Impact',
-    'Call of Duty Mobile',
-    'Valorant',
-    'Arena of Valor',
-    'Clash of Clans',
-    'Clash Royale',
-    'Honkai Impact',
-    'Lainnya'
-  ];
+  useEffect(() => {
+    (async () => {
+      try {
+        setLoadingGames(true);
+        const { ProductService } = await import('../services/productService.ts');
+        const list = await ProductService.getGameTitles();
+        const names = list.filter(g=>g.isActive!==false).map(g=>g.name);
+        if (names.length) setGameOptions([...names, 'Lainnya']);
+      } catch (e) {
+        // keep defaults
+      } finally { setLoadingGames(false); }
+    })();
+  }, []);
 
   const handleSellAccount = () => {
     const gameInfo = selectedGame || 'Game yang ingin dijual';
@@ -155,7 +159,7 @@ const SellPage: React.FC = () => {
                   onChange={(e) => setSelectedGame(e.target.value)}
                   className="w-full px-4 py-3 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                 >
-                  <option value="">Pilih game...</option>
+                  <option value="">{loadingGames ? 'Memuat…' : 'Pilih game...'}</option>
                   {gameOptions.map(game => (
                     <option key={game} value={game}>{game}</option>
                   ))}

@@ -34,10 +34,12 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-app-dark overflow-hidden">
-      {/* Animated gradient orbs */}
-      <div className="pointer-events-none absolute -top-40 -left-40 w-80 h-80 rounded-full bg-pink-600/30 blur-3xl animate-pulse" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-rose-600/25 blur-3xl animate-[pulse_6s_ease-in-out_infinite]" />
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-black to-black">
+      {/* Subtle grid */}
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:3rem_3rem]" />
+      {/* Animated blobs */}
+      <div className="pointer-events-none absolute -top-40 -left-40 w-80 h-80 rounded-full bg-pink-600/25 blur-3xl animate-pulse" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-rose-600/20 blur-3xl animate-[pulse_6s_ease-in-out_infinite]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-10">
         <Link to="/" className="inline-flex items-center gap-2 text-gray-300 hover:text-white mb-6">
@@ -45,31 +47,34 @@ const AuthPage: React.FC = () => {
           <span>Kembali ke Beranda</span>
         </Link>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-stretch">
           {/* Left: Branding */}
-          <div className="hidden md:block">
-            <div className="bg-gradient-to-br from-pink-600/20 to-rose-600/20 border border-pink-500/30 rounded-3xl p-8 backdrop-blur">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 animate-[spin_12s_linear_infinite]" />
-                <div>
-                  <h2 className="text-3xl font-bold text-white">Selamat Datang</h2>
-                  <p className="text-gray-300">Masuk untuk mengelola akun dan pesanan Anda</p>
+          <div className="hidden md:flex">
+            <div className="bg-gradient-to-br from-pink-600/15 to-rose-600/15 border border-pink-500/30 rounded-3xl p-8 backdrop-blur w-full flex flex-col justify-between">
+              <div>
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 animate-[spin_12s_linear_infinite]" />
+                  <div>
+                    <h2 className="text-3xl font-bold text-white">Selamat Datang</h2>
+                    <p className="text-gray-300">Masuk untuk mengelola akun dan pesanan Anda</p>
+                  </div>
+                </div>
+                <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+                  <div className="bg-black/40 border border-white/10 rounded-xl p-4">
+                    <div className="text-2xl font-bold text-white">Aman</div>
+                    <div className="text-xs text-gray-400">Autentikasi Supabase</div>
+                  </div>
+                  <div className="bg-black/40 border border-white/10 rounded-xl p-4">
+                    <div className="text-2xl font-bold text-white">Cepat</div>
+                    <div className="text-xs text-gray-400">Proses instan</div>
+                  </div>
+                  <div className="bg-black/40 border border-white/10 rounded-xl p-4">
+                    <div className="text-2xl font-bold text-white">Modern</div>
+                    <div className="text-xs text-gray-400">UI tematik</div>
+                  </div>
                 </div>
               </div>
-              <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-                <div className="bg-black/40 border border-white/10 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-white">Aman</div>
-                  <div className="text-xs text-gray-400">Autentikasi Supabase</div>
-                </div>
-                <div className="bg-black/40 border border-white/10 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-white">Cepat</div>
-                  <div className="text-xs text-gray-400">Proses instan</div>
-                </div>
-                <div className="bg-black/40 border border-white/10 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-white">Modern</div>
-                  <div className="text-xs text-gray-400">UI tematik</div>
-                </div>
-              </div>
+              <div className="text-xs text-gray-400 text-center">Protected by RLS & Supabase Auth</div>
             </div>
           </div>
 

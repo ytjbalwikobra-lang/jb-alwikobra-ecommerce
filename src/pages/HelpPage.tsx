@@ -1,5 +1,5 @@
 import React from 'react';
-import { HelpCircle, ShieldCheck, CreditCard, Truck, MessageSquare, ChevronDown } from 'lucide-react';
+import { HelpCircle, ShieldCheck, CreditCard, Truck, MessageSquare, ChevronDown, Search, Sparkles } from 'lucide-react';
 
 const faqs = [
   {
@@ -29,15 +29,24 @@ const HelpPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-black border border-pink-500/40 mb-4">
-            <HelpCircle className="text-pink-400" />
+      {/* Hero */}
+      <div className="bg-gradient-to-r from-pink-600/20 to-rose-600/20 border-b border-pink-500/20">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+          <div className="text-center">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-black border border-pink-500/40 mb-4">
+              <HelpCircle className="text-pink-400" />
+            </div>
+            <h1 className="text-3xl font-bold text-white">Pusat Bantuan</h1>
+            <p className="text-gray-300 mt-2">FAQ, panduan, dan kontak untuk membantu Anda menggunakan JB Alwikobra</p>
+            <div className="mt-6 max-w-md mx-auto relative">
+              <input className="w-full bg-black/70 border border-white/10 rounded-xl pl-10 pr-3 py-2 text-white placeholder:text-gray-500" placeholder="Cari topik: pembayaran, rental, keamanan..." />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-white">Pusat Bantuan</h1>
-          <p className="text-gray-300 mt-2">FAQ, panduan, dan kontak untuk membantu Anda menggunakan JB Alwikobra</p>
         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
 
         {/* Quick topics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
@@ -90,6 +99,7 @@ const HelpPage: React.FC = () => {
           >
             Chat Admin via WhatsApp
           </a>
+          <p className="text-xs text-gray-500 mt-2 flex items-center gap-1"><Sparkles size={12}/> Respon cepat di jam kerja (09.00-21.00 WIB)</p>
         </div>
       </div>
     </div>

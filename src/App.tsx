@@ -22,6 +22,7 @@ import AdminUsers from './pages/admin/AdminUsers.tsx';
 import AdminBanners from './pages/admin/AdminBanners.tsx';
 import AdminSettings from './pages/admin/AdminSettings.tsx';
 import AdminOrders from './pages/admin/AdminOrders.tsx';
+import AdminGameTitles from './pages/admin/AdminGameTitles.tsx';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 
@@ -82,6 +83,7 @@ function App() {
               <Route index element={<AdminDashboard />} />
               <Route path="products" element={<AdminProducts />} />
               <Route path="flash-sales" element={<AdminFlashSales />} />
+              <Route path="game-titles" element={<AdminGameTitles />} />
               <Route path="users" element={<AdminUsers />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="banners" element={<AdminBanners />} />
