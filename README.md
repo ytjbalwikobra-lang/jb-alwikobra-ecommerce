@@ -123,6 +123,13 @@ XENDIT_SECRET_KEY=your_xendit_secret_key
 XENDIT_CALLBACK_TOKEN=your_shared_webhook_token
 ```
 
+Set Xendit Invoice Webhook URL ke:
+
+```
+https://<domain-anda>/api/xendit/webhook
+```
+Tambahkan header opsional `X-Callback-Token` di dashboard Xendit yang sama dengan `XENDIT_CALLBACK_TOKEN` untuk memverifikasi request.
+
 ### 5. Start Development Server
 ```bash
 npm start

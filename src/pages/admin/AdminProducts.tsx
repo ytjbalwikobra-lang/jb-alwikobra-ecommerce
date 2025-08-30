@@ -56,7 +56,7 @@ const AdminProducts: React.FC = () => {
   await ProductService.detectSchemaCapabilities();
         
         const [list, tList, gList] = await Promise.all([
-          ProductService.getAllProducts(),
+          ProductService.getAllProducts({ includeArchived: true }),
           ProductService.getTiers(),
           ProductService.getGameTitles()
         ]);
@@ -264,13 +264,32 @@ const AdminProducts: React.FC = () => {
                   <img src={p.image} alt={p.name} className="w-10 h-10 rounded object-cover" />
                   <div>
                     <div className="text-white font-medium line-clamp-1">{p.name}</div>
-                    <div className="text-xs text-gray-500 line-clamp-1">{p.accountLevel || '-'}</div>
+                    <div className="text-xs text-gray-500 line-clamp-1 flex items-center gap-2">
+                      <span>{p.accountLevel || '-'}</span>
+                      {((p as any).isActive === false || (p as any).archivedAt) && (
+                        <span className="px-2 py-0.5 rounded bg-yellow-900/50 text-amber-300 border border-amber-600/40">Diarsipkan</span>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="col-span-2 text-gray-300">{p.gameTitleData?.name || p.gameTitle}</div>
                 <div className="col-span-2 text-gray-300">Rp {Number(p.price||0).toLocaleString('id-ID')}</div>
                 <div className="col-span-3 text-right">
                   <button onClick={() => startEdit(p)} className="px-3 py-1.5 rounded border border-white/20 text-white hover:bg-white/10 mr-2">Edit</button>
+                  {(p as any).isActive === false || (p as any).archivedAt ? (
+                    <button onClick={async()=>{
+                      if (!supabase) return; await (supabase as any).from('products').update({ is_active: true, archived_at: null }).eq('id', p.id);
+                      setProducts(await ProductService.getAllProducts({ includeArchived: true }));
+                      push('Produk dipulihkan dari arsip', 'success');
+                    }} className="px-3 py-1.5 rounded border border-green-500/40 text-green-300 hover:bg-green-500/10 mr-2">Pulihkan</button>
+                  ) : (
+                    <button onClick={async()=>{
+                      if (!confirm('Arsipkan produk ini?')) return;
+                      if (!supabase) return; await (supabase as any).from('products').update({ is_active: false, archived_at: new Date().toISOString() }).eq('id', p.id);
+                      setProducts(await ProductService.getAllProducts({ includeArchived: true }));
+                      push('Produk diarsipkan', 'success');
+                    }} className="px-3 py-1.5 rounded border border-yellow-500/40 text-amber-300 hover:bg-yellow-500/10 mr-2">Arsipkan</button>
+                  )}
                   <button onClick={() => handleDelete(p.id)} className="px-3 py-1.5 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10">Hapus</button>
                 </div>
               </div>

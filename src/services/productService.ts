@@ -272,7 +272,7 @@ export class ProductService {
     return capabilities;
   }
 
-  static async getAllProducts(): Promise<Product[]> {
+  static async getAllProducts(opts?: { includeArchived?: boolean }): Promise<Product[]> {
     try {
       // Check if Supabase is configured
       if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
@@ -286,7 +286,7 @@ export class ProductService {
       if (hasRelations === false) {
         throw new Error('REL_SKIP');
       }
-      const { data, error } = await supabase
+  let query = supabase
         .from('products')
         .select(`
           *,
@@ -300,13 +300,19 @@ export class ProductService {
             id, name, slug, description, icon, color,
             logo_url, is_popular, is_active, sort_order, created_at, updated_at
           )
-        `)
-        .order('created_at', { ascending: false });
+        `);
+      if (!opts?.includeArchived) {
+        // Hide archived/inactive products from public lists
+        query = (query as any).eq('is_active', true).is('archived_at', null);
+      }
+      const { data, error } = await (query as any).order('created_at', { ascending: false });
 
       if (!error && data) {
         hasRelations = true;
         return data.map((product: any) => ({
           ...product,
+          isActive: product.is_active ?? product.isActive,
+          archivedAt: product.archived_at ?? product.archivedAt,
           rentalOptions: product.rental_options || [],
           hasRental: product.has_rental ?? product.hasRental ?? ((product.rental_options || []).length > 0),
           tierData: product.tiers,
@@ -319,10 +325,11 @@ export class ProductService {
       if (error && (error as any).message !== 'REL_SKIP') {
         console.warn('Products relational select failed, trying basic select');
       }
-      const { data: basic, error: err2 } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
+      let q2: any = supabase.from('products').select('*');
+      if (!opts?.includeArchived) {
+        q2 = q2.eq('is_active', true).is('archived_at', null);
+      }
+      const { data: basic, error: err2 } = await q2.order('created_at', { ascending: false });
       if (err2) {
         console.error('Supabase error (basic products):', err2);
         return sampleProducts;
@@ -341,8 +348,10 @@ export class ProductService {
           }
         }
       } catch {}
-      return (basic || []).map((p: any) => ({
+  return (basic || []).map((p: any) => ({
         ...p,
+  isActive: p.is_active ?? p.isActive,
+  archivedAt: p.archived_at ?? p.archivedAt,
         rentalOptions: rentalsByProduct.get(p.id) || [],
         hasRental: p.has_rental ?? p.hasRental ?? ((rentalsByProduct.get(p.id) || []).length > 0),
         gameTitle: p.game_title || p.gameTitle,
@@ -888,6 +897,18 @@ export class ProductService {
     console.warn('Refusing to delete non-UUID id (likely sample data):', id);
     return false;
   }
+  // Best-effort cleanup of dependent records to avoid FK constraint errors on delete
+  try {
+    // Some deployments don't have ON DELETE CASCADE on these tables
+    await (supabase as any).from('rental_options').delete().eq('product_id', id);
+  } catch (_) {}
+  try {
+    await (supabase as any).from('flash_sales').delete().eq('product_id', id);
+  } catch (_) {}
+  try {
+    // Orders usually reference product_id without cascade; set to NULL to keep order history
+    await (supabase as any).from('orders').update({ product_id: null }).eq('product_id', id);
+  } catch (_) {}
 
   const { error } = await supabase
         .from('products')

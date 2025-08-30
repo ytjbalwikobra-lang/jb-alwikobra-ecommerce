@@ -75,6 +75,18 @@ const AdminOrders: React.FC = () => {
   };
 
   useEffect(()=>{ load(); }, []);
+  // Realtime updates: refresh on any change in orders
+  useEffect(() => {
+    if (!supabase) return;
+    const channel = (supabase as any)
+      .channel('orders_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
+        // Lightweight: reload list to pick up latest status
+        load();
+      })
+      .subscribe();
+    return () => { try { (supabase as any).removeChannel?.(channel); } catch(_) {} };
+  }, []);
 
   const filtered = useMemo(() => {
     if (statusFilter === 'all') return rows as OrderRow[];

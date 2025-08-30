@@ -65,6 +65,9 @@ export interface Product {
   hasRental: boolean;
   rentalOptions?: RentalOption[];
   stock: number;
+  // Archiving
+  isActive?: boolean;
+  archivedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

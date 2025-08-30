@@ -84,6 +84,23 @@ export default async function handler(req: any, res: any) {
       if (!e2) updated = (up2 || []).length;
     }
 
+    // Archive product on successful payment
+    try {
+      if (updated > 0 && (status === 'paid' || status === 'completed')) {
+        // Find related product id(s) for the updated orders and archive them
+        let q = sb.from('orders').select('product_id').limit(50);
+        if (invoiceId) q = q.eq('xendit_invoice_id', invoiceId);
+        else if (externalId) q = q.eq('id', externalId);
+        const { data: ordersToArchive } = await q;
+        const productIds = (ordersToArchive || []).map((o: any) => o.product_id).filter(Boolean);
+        if (productIds.length) {
+          await sb.from('products').update({ is_active: false, archived_at: new Date().toISOString() }).in('id', productIds);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to archive product after payment:', e);
+    }
+
     return res.status(200).json({ ok: true, updated, by: updated ? (invoiceId ? 'invoice_id' : 'external_id') : 'none' });
   } catch (e: any) {
     console.error('Webhook error:', e);
