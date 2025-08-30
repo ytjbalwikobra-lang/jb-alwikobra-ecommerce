@@ -365,13 +365,21 @@ export class ProductService {
 
   static async getProductById(id: string): Promise<Product | null> {
     try {
+      console.log('[ProductService] getProductById called with id:', id, 'type:', typeof id);
+      
       // Check if Supabase is configured
       if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
         console.warn('Supabase not configured, using sample data');
-        return sampleProducts.find(p => p.id === id) || null;
+        const sample = sampleProducts.find(p => p.id === id) || null;
+        console.log('[ProductService] Returning sample product:', sample?.id);
+        return sample;
       }
 
-  if (!supabase) return sampleProducts.find(p => p.id === id) || null;
+  if (!supabase) {
+    const sample = sampleProducts.find(p => p.id === id) || null;
+    console.log('[ProductService] No supabase client, returning sample:', sample?.id);
+    return sample;
+  }
 
   const { data, error } = await supabase
         .from('products')
@@ -381,19 +389,32 @@ export class ProductService {
 
       if (error) {
         console.error('Supabase error fetching product by ID:', JSON.stringify(error, null, 2));
-        return sampleProducts.find(p => p.id === id) || null;
+        const sample = sampleProducts.find(p => p.id === id) || null;
+        console.log('[ProductService] Error fallback to sample:', sample?.id);
+        return sample;
       }
 
-      if (!data) return null;
+      if (!data) {
+        console.log('[ProductService] No product found for id:', id);
+        return null;
+      }
+      
+      console.log('[ProductService] Found product from DB:', { id: data.id, name: data.name, idType: typeof data.id });
+      
   let rentalOptions: any[] = [];
       try {
         const { data: ro } = await supabase.from('rental_options').select('*').eq('product_id', id);
         rentalOptions = ro || [];
       } catch {}
-  return { ...data, rentalOptions, hasRental: (data as any).has_rental ?? (data as any).hasRental ?? (rentalOptions.length > 0) } as any;
+      
+      const result = { ...data, rentalOptions, hasRental: (data as any).has_rental ?? (data as any).hasRental ?? (rentalOptions.length > 0) } as any;
+      console.log('[ProductService] Returning final product:', { id: result.id, name: result.name, idType: typeof result.id });
+      return result;
     } catch (error) {
       console.error('Error fetching product:', error);
-      return sampleProducts.find(p => p.id === id) || null;
+      const sample = sampleProducts.find(p => p.id === id) || null;
+      console.log('[ProductService] Exception fallback to sample:', sample?.id);
+      return sample;
     }
   }
 

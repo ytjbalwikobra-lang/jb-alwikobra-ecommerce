@@ -183,11 +183,20 @@ const ProductDetailPage: React.FC = () => {
         if (!paymentAttemptId) setPaymentAttemptId(fallbackExternalId);
         const uid = await getAuthUserId();
         
+        // Validate product ID before sending
+        if (!product.id) {
+          console.error('[ProductDetail] ERROR: product.id is missing or invalid:', product.id);
+          alert('Error: Product ID tidak valid. Silakan refresh halaman.');
+          return;
+        }
+        
         console.log('[ProductDetail] Creating invoice with order data:', {
           externalId: fallbackExternalId,
           amount: effectivePrice,
           customer: customer.name,
           productId: product.id,
+          productIdType: typeof product.id,
+          productIdLength: product.id?.length,
           userId: uid
         });
         
