@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useLocation } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
 import { Product, Tier, GameTitle } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
@@ -7,6 +7,7 @@ import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-rea
 
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [tiers, setTiers] = useState<Tier[]>([]);
@@ -18,8 +19,20 @@ const ProductsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
   const [showFilters, setShowFilters] = useState(false);
   
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
+  // Pagination state dengan logic untuk restore dari sessionStorage
+  const [currentPage, setCurrentPage] = useState(() => {
+    // Cek apakah user kembali dari detail produk
+    const savedState = sessionStorage.getItem('productsPageState');
+    if (savedState && location.state?.fromProductDetail) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        return parsedState.currentPage || 1;
+      } catch {
+        return 1;
+      }
+    }
+    return 1;
+  });
   const productsPerPage = 8; // 8 products per page (2 columns x 4 rows)
 
   const sortOptions = [
@@ -60,6 +73,34 @@ const ProductsPage: React.FC = () => {
 
     fetchData();
   }, []);
+
+  // Restore filter state jika user kembali dari detail produk
+  useEffect(() => {
+    const savedState = sessionStorage.getItem('productsPageState');
+    if (savedState && location.state?.fromProductDetail) {
+      try {
+        const parsedState = JSON.parse(savedState);
+        if (parsedState.searchTerm !== undefined) setSearchTerm(parsedState.searchTerm);
+        if (parsedState.selectedGame !== undefined) setSelectedGame(parsedState.selectedGame);
+        if (parsedState.selectedTier !== undefined) setSelectedTier(parsedState.selectedTier);
+        if (parsedState.sortBy !== undefined) setSortBy(parsedState.sortBy);
+      } catch (error) {
+        console.error('Error parsing saved state:', error);
+      }
+    }
+  }, [location.state]);
+
+  // Simpan state pagination dan filter setiap kali berubah
+  useEffect(() => {
+    const state = {
+      currentPage,
+      searchTerm,
+      selectedGame,
+      selectedTier,
+      sortBy
+    };
+    sessionStorage.setItem('productsPageState', JSON.stringify(state));
+  }, [currentPage, searchTerm, selectedGame, selectedTier, sortBy]);
 
   useEffect(() => {
     let filtered = [...products];
@@ -178,9 +219,6 @@ const ProductsPage: React.FC = () => {
         {/* Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">Katalog Produk</h1>
-          <p className="text-xs sm:text-sm lg:text-base text-gray-300">
-            Temukan akun game impian Anda dari {products.length} produk tersedia
-          </p>
           <div className="mt-2 sm:mt-3 flex items-center gap-2 text-xs overflow-x-auto scrollbar-hide pb-2">
             {tiers.map(tier => (
               <span 
@@ -405,7 +443,11 @@ const ProductsPage: React.FC = () => {
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
                   {currentProducts.map((product) => (
                     <div key={product.id} className="w-full">
-                      <ProductCard product={product} className="w-full h-full" />
+                      <ProductCard 
+                        product={product} 
+                        fromCatalogPage={true}
+                        className="w-full h-full" 
+                      />
                     </div>
                   ))}
                 </div>

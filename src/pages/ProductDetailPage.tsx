@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useLocation } from 'react-router-dom';
+import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
 import { SettingsService } from '../services/settingsService.ts';
 import { Product, Customer, RentalOption } from '../types/index.ts';
@@ -33,7 +33,9 @@ const ProductDetailPage: React.FC = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
+  const navigate = useNavigate();
   const cameFromFlashSaleCard = Boolean((location as any)?.state?.fromFlashSaleCard);
+  const cameFromCatalogPage = Boolean((location as any)?.state?.fromCatalogPage);
   const [selectedImage, setSelectedImage] = useState(0);
   const [selectedRental, setSelectedRental] = useState<RentalOption | null>(null);
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
@@ -58,6 +60,16 @@ const ProductDetailPage: React.FC = () => {
   const currentUrl = window.location.href;
 
   // Handle share functionality
+  const handleBackToCatalog = () => {
+    if (cameFromCatalogPage) {
+      // Jika datang dari katalog, kembali dengan state untuk restore pagination
+      navigate('/products', { state: { fromProductDetail: true } });
+    } else {
+      // Jika tidak dari katalog, navigate normal
+      navigate('/products');
+    }
+  };
+
   const handleShare = async () => {
     if (!product) return;
     
@@ -329,19 +341,19 @@ const ProductDetailPage: React.FC = () => {
         <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-6">
           <Link to="/" className="hover:text-pink-400">Beranda</Link>
           <span>/</span>
-          <Link to="/products" className="hover:text-pink-400">Produk</Link>
+          <button onClick={handleBackToCatalog} className="hover:text-pink-400 bg-transparent border-none p-0 text-inherit">Produk</button>
           <span>/</span>
           <span className="text-white">{product.name}</span>
         </nav>
 
         {/* Back Button */}
-        <Link
-          to="/products"
-          className="inline-flex items-center space-x-2 text-gray-400 hover:text-pink-400 mb-6"
+        <button
+          onClick={handleBackToCatalog}
+          className="inline-flex items-center space-x-2 text-gray-400 hover:text-pink-400 mb-6 transition-colors"
         >
           <ChevronLeft size={20} />
           <span>Kembali ke Katalog</span>
-        </Link>
+        </button>
 
         <div className="lg:grid lg:grid-cols-2 lg:gap-12">
           {/* Image Gallery */}

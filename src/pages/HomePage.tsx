@@ -178,9 +178,9 @@ const HomePage: React.FC = () => {
               <Link
                 key={game.id}
                 to={`/products?game=${encodeURIComponent(game.name)}`}
-                className="bg-black border border-pink-500/40 p-4 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group"
+                className="bg-black border border-pink-500/40 p-6 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mx-auto mb-3 flex items-center justify-center overflow-hidden">
+                <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mx-auto mb-4 flex items-center justify-center overflow-hidden">
                   {game.logoUrl ? (
                     <img 
                       src={game.logoUrl} 
@@ -188,13 +188,13 @@ const HomePage: React.FC = () => {
                       className="w-full h-full object-cover rounded-xl"
                     />
                   ) : (
-                    <TrendingUp className="text-white" size={24} />
+                    <TrendingUp className="text-white" size={32} />
                   )}
                 </div>
-                <h3 className="font-semibold text-white mb-1 group-hover:text-pink-400 transition-colors text-sm">
+                <h3 className="font-semibold text-white mb-1 group-hover:text-pink-400 transition-colors text-base">
                   {game.name}
                 </h3>
-                <p className="text-xs text-gray-400">{game.count} akun</p>
+                <p className="text-sm text-gray-400">{game.count} akun</p>
               </Link>
             ))}
           </div>

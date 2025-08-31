@@ -8,12 +8,14 @@ import FlashSaleTimer from './FlashSaleTimer.tsx';
 interface ProductCardProps {
   product: Product;
   showFlashSaleTimer?: boolean;
+  fromCatalogPage?: boolean;
   className?: string;
 }
 
 const ProductCard: React.FC<ProductCardProps> = ({ 
   product, 
   showFlashSaleTimer = false,
+  fromCatalogPage = false,
   className = ''
 }) => {
   const timeRemaining = product.flashSaleEndTime
@@ -136,7 +138,10 @@ const ProductCard: React.FC<ProductCardProps> = ({
   return (
     <Link
       to={`/products/${product.id}`}
-      state={{ fromFlashSaleCard: !!showFlashSaleTimer }}
+      state={{ 
+        fromFlashSaleCard: !!showFlashSaleTimer,
+        fromCatalogPage: fromCatalogPage
+      }}
       className={`group block rounded-2xl sm:rounded-3xl ${showFlashSaleTimer ? 'bg-gradient-to-br from-red-500 via-pink-500 to-rose-500 ring-2 ring-red-400/50 shadow-lg shadow-red-500/25' : tierStyle.bg} text-white shadow-lg ring-1 ${tierStyle.ring} transform-gpu transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${className}`}
     >
       <div className="p-3 sm:p-4">
@@ -268,8 +273,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 <div className="pt-2 sm:pt-3">
                   <FlashSaleTimer 
                     endTime={product.flashSaleEndTime} 
-                    compact={true}
-                    className="bg-white/95 text-red-600 font-bold text-xs"
+                    compact={false}
+                    className="bg-white/95 text-red-600 font-bold"
                   />
                 </div>
               )}
