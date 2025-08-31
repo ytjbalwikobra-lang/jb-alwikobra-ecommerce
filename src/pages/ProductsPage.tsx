@@ -424,8 +424,8 @@ const ProductsPage: React.FC = () => {
             {/* Grid Layout dengan Pagination */}
             {filteredProducts.length > 0 ? (
               <>
-                {/* Products Grid - Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                {/* Products Grid - Responsive: 2 cols mobile, 3 cols tablet and desktop */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
                   {currentProducts.map((product) => (
                     <div key={product.id} className="w-full">
                       <ProductCard 
