@@ -256,6 +256,41 @@ const ProductsPage: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-3">
+            {/* Mobile Category Filter - Horizontal Scroll */}
+            <div className="lg:hidden mb-4">
+              <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide">
+                <button
+                  onClick={() => setSelectedTier('')}
+                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                    selectedTier === ''
+                      ? 'bg-pink-600 text-white'
+                      : 'bg-black border border-pink-500/40 text-gray-200 hover:bg-pink-600/20'
+                  }`}
+                >
+                  Semua
+                </button>
+                {tiers.map(tier => (
+                  <button
+                    key={tier.slug}
+                    onClick={() => setSelectedTier(tier.slug)}
+                    className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                      selectedTier === tier.slug
+                        ? 'text-white'
+                        : 'text-gray-200 hover:bg-pink-600/20'
+                    }`}
+                    style={{
+                      backgroundColor: selectedTier === tier.slug ? tier.color : 'black',
+                      borderColor: tier.color + '40',
+                      borderWidth: '1px',
+                      borderStyle: 'solid'
+                    }}
+                  >
+                    {tier.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             {/* Mobile Filter Toggle */}
       <div className="lg:hidden mb-4">
               <button
@@ -263,7 +298,7 @@ const ProductsPage: React.FC = () => {
         className="w-full flex items-center justify-center space-x-2 bg-black border border-pink-500/40 rounded-lg px-4 py-2 text-gray-200"
               >
                 <SlidersHorizontal size={20} />
-                <span>Filter & Urutkan</span>
+                <span>Filter Lainnya</span>
               </button>
             </div>
 
@@ -294,20 +329,7 @@ const ProductsPage: React.FC = () => {
                       ))}
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-1">Kategori</label>
-                    <select
-                      value={selectedTier}
-                      onChange={(e) => setSelectedTier(e.target.value)}
-                      className="w-full p-2 border border-pink-500/40 bg-black text-gray-100 rounded-lg"
-                    >
-                      <option value="">Semua Kategori</option>
-                      {tiers.map(tier => (
-                        <option key={tier.slug} value={tier.slug}>{tier.name}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
+                  <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-300 mb-1">Urutkan</label>
                     <select
                       value={sortBy}
@@ -370,8 +392,8 @@ const ProductsPage: React.FC = () => {
             {/* Grid Layout dengan Pagination */}
             {filteredProducts.length > 0 ? (
               <>
-                {/* Products Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                {/* Products Grid - Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop */}
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                   {currentProducts.map((product) => (
                     <div key={product.id} className="w-full">
                       <ProductCard product={product} className="w-full h-full" />
@@ -379,21 +401,22 @@ const ProductsPage: React.FC = () => {
                   ))}
                 </div>
 
-                {/* Pagination */}
+                {/* Pagination - Better mobile spacing */}
                 {totalPages > 1 && (
-                  <div className="flex items-center justify-center space-x-2 mt-8">
+                  <div className="flex items-center justify-center space-x-1 sm:space-x-2 mt-8 px-4 sm:px-0">
                     {/* Previous Button */}
                     <button
                       onClick={prevPage}
                       disabled={currentPage === 1}
-                      className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+                      className={`flex items-center px-2 sm:px-3 py-2 rounded-lg transition-colors text-sm ${
                         currentPage === 1
                           ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                           : 'bg-black border border-pink-500/40 text-gray-200 hover:bg-pink-600 hover:text-white'
                       }`}
                     >
                       <ChevronLeft size={16} className="mr-1" />
-                      Sebelumnya
+                      <span className="hidden sm:inline">Sebelumnya</span>
+                      <span className="sm:hidden">Prev</span>
                     </button>
 
                     {/* Page Numbers */}
@@ -409,7 +432,7 @@ const ProductsPage: React.FC = () => {
                           // Show ellipsis for gaps
                           if (page === currentPage - 2 || page === currentPage + 2) {
                             return (
-                              <span key={page} className="px-2 py-1 text-gray-500">
+                              <span key={page} className="px-1 sm:px-2 py-1 text-gray-500 text-sm">
                                 ...
                               </span>
                             );
@@ -421,7 +444,7 @@ const ProductsPage: React.FC = () => {
                           <button
                             key={page}
                             onClick={() => goToPage(page)}
-                            className={`px-3 py-2 rounded-lg transition-colors ${
+                            className={`px-2 sm:px-3 py-2 rounded-lg transition-colors text-sm ${
                               currentPage === page
                                 ? 'bg-pink-600 text-white'
                                 : 'bg-black border border-pink-500/40 text-gray-200 hover:bg-pink-600 hover:text-white'
@@ -437,13 +460,14 @@ const ProductsPage: React.FC = () => {
                     <button
                       onClick={nextPage}
                       disabled={currentPage === totalPages}
-                      className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+                      className={`flex items-center px-2 sm:px-3 py-2 rounded-lg transition-colors text-sm ${
                         currentPage === totalPages
                           ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
                           : 'bg-black border border-pink-500/40 text-gray-200 hover:bg-pink-600 hover:text-white'
                       }`}
                     >
-                      Selanjutnya
+                      <span className="hidden sm:inline">Selanjutnya</span>
+                      <span className="sm:hidden">Next</span>
                       <ChevronRight size={16} className="ml-1" />
                     </button>
                   </div>
