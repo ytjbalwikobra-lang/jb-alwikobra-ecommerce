@@ -165,18 +165,18 @@ const ProductsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-app-dark">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-gray-200">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-6 sm:py-8 text-gray-200">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Katalog Produk</h1>
-          <p className="text-gray-300">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Katalog Produk</h1>
+          <p className="text-sm sm:text-base text-gray-300">
             Temukan akun game impian Anda dari {products.length} produk tersedia
           </p>
-          <div className="mt-3 flex items-center gap-2 text-xs">
+          <div className="mt-3 flex items-center gap-2 text-xs overflow-x-auto scrollbar-hide pb-2">
             {tiers.map(tier => (
               <span 
                 key={tier.slug} 
-                className="px-2 py-1 rounded border"
+                className="flex-shrink-0 px-2 py-1 rounded border whitespace-nowrap"
                 style={{ 
                   borderColor: tier.borderColor + '30', 
                   backgroundColor: tier.color + '10', 
@@ -393,7 +393,7 @@ const ProductsPage: React.FC = () => {
             {filteredProducts.length > 0 ? (
               <>
                 {/* Products Grid - Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
                   {currentProducts.map((product) => (
                     <div key={product.id} className="w-full">
                       <ProductCard product={product} className="w-full h-full" />

@@ -33,6 +33,16 @@ code {
 
 html {
   scroll-behavior: smooth;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+body {
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+/* Prevent container overflow */
+.max-w-7xl {
+  max-width: min(80rem, 100vw);
 }
 
 /* Custom scrollbar */
@@ -42,7 +52,8 @@ html {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -51,7 +62,7 @@ html {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #be185d;
+  background: #db2777;
 }
 
 /* Hide scrollbar utility */
@@ -61,7 +72,29 @@ html {
 }
 
 .scrollbar-hide::-webkit-scrollbar {
-  display: none;  /* Chrome, Safari, Opera */
+  display: none;
+}
+
+/* Mobile layout fixes */
+@media (max-width: 640px) {
+  .grid {
+    min-width: 0; /* Prevent grid overflow */
+  }
+  
+  .grid > * {
+    min-width: 0; /* Prevent grid item overflow */
+    max-width: 100%; /* Ensure items don't exceed container */
+  }
+  
+  /* Fix any flex item overflow */
+  .flex > * {
+    min-width: 0;
+  }
+  
+  /* Ensure text doesn't cause overflow */
+  .line-clamp-2 {
+    word-break: break-word;
+  }
 }
 
 /* Focus styles */

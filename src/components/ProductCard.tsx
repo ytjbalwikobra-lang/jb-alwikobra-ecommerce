@@ -137,44 +137,42 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <Link
       to={`/products/${product.id}`}
       state={{ fromFlashSaleCard: !!showFlashSaleTimer }}
-  className={`group block rounded-3xl ${showFlashSaleTimer ? 'bg-gradient-to-br from-red-500 via-pink-500 to-rose-500 ring-2 ring-red-400/50 shadow-lg shadow-red-500/25' : tierStyle.bg} text-white shadow-lg ring-1 ${tierStyle.ring} transform-gpu transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${className}`}
+      className={`group block rounded-2xl sm:rounded-3xl ${showFlashSaleTimer ? 'bg-gradient-to-br from-red-500 via-pink-500 to-rose-500 ring-2 ring-red-400/50 shadow-lg shadow-red-500/25' : tierStyle.bg} text-white shadow-lg ring-1 ${tierStyle.ring} transform-gpu transition-transform duration-300 ease-out hover:-translate-y-1 hover:shadow-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60 ${className}`}
     >
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         {/* Image */}
-  <div className="relative aspect-square overflow-hidden rounded-2xl bg-black/20 ring-1 ring-white/10">
+        <div className="relative aspect-square overflow-hidden rounded-xl sm:rounded-2xl bg-black/20 ring-1 ring-white/10">
           <img
             src={images[0]}
             alt={product.name}
-    className="w-full h-full object-cover transition-transform duration-500 ease-out transform-gpu group-hover:scale-[1.05]"
+            className="w-full h-full object-cover transition-transform duration-500 ease-out transform-gpu group-hover:scale-[1.05]"
           />
           
           {/* Flash Sale or Best Badge */}
           {showBest && (
-            <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-red-500/90 text-white text-xs font-bold px-3 py-1.5 backdrop-blur border border-red-400/50 shadow-lg animate-pulse">
-              <Zap size={12} />
-              <span>{isFlashSaleActive ? 'FLASH SALE' : 'TERLARIS'}</span>
+            <div className="absolute top-2 sm:top-3 left-2 sm:left-3 inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-red-500/90 text-white text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 backdrop-blur border border-red-400/50 shadow-lg animate-pulse">
+              <Zap size={10} className="sm:w-3 sm:h-3" />
+              <span className="text-xs sm:text-xs">{isFlashSaleActive ? 'FLASH SALE' : 'TERLARIS'}</span>
             </div>
           )}
 
           {/* Game Monogram */}
-          <div className="absolute top-3 right-3 w-9 h-9 rounded-xl bg-white/95 text-gray-900 text-xs font-bold flex items-center justify-center ring-2 ring-white/20 backdrop-blur">
+          <div className="absolute top-2 sm:top-3 right-2 sm:right-3 w-7 sm:w-9 h-7 sm:h-9 rounded-lg sm:rounded-xl bg-white/95 text-gray-900 text-xs font-bold flex items-center justify-center ring-2 ring-white/20 backdrop-blur">
             {getMonogram()}
           </div>
 
           {/* Stock Status */}
           {product.stock === 0 && (
-            <div className="absolute inset-0 bg-black/70 flex items-center justify-center rounded-2xl">
-              <span className="bg-red-500 text-white px-4 py-2 rounded-xl text-sm font-bold">STOK HABIS</span>
+            <div className="absolute inset-0 bg-black/70 flex items-center justify-center rounded-xl sm:rounded-2xl">
+              <span className="bg-red-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-xs sm:text-sm font-bold">STOK HABIS</span>
             </div>
           )}
 
-          {/* Low Stock Warning removed: qty is always 1 */}
-
           {/* Image Indicator */}
           {images.length > 1 && (
-            <div className="absolute bottom-3 right-3 flex items-center gap-1">
+            <div className="absolute bottom-2 sm:bottom-3 right-2 sm:right-3 flex items-center gap-1">
               {images.slice(0,3).map((_, i) => (
-                <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/60'}`}></span>
+                <span key={i} className={`h-1 sm:h-1.5 w-1 sm:w-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/60'}`}></span>
               ))}
               {images.length > 3 && (
                 <span className="text-white/80 text-xs ml-1">+{images.length - 3}</span>
@@ -184,25 +182,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
 
         {/* Content */}
-        <div className="mt-4 space-y-3">
+        <div className="mt-3 sm:mt-4 space-y-2 sm:space-y-3">
           {/* Title */}
-          <h3 className="text-lg font-bold leading-tight text-white line-clamp-2" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
+          <h3 className="text-sm sm:text-lg font-bold leading-tight text-white line-clamp-2" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>
             {product.name}
           </h3>
 
 
-          {/* Tags Row - hidden for flash sale cards */}
+          {/* Tags Row - Mobile Optimized, hidden for flash sale cards */}
           {!showFlashSaleTimer && (
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               {/* Game Title */}
-              <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-white/15 text-white border border-white/30 backdrop-blur-sm">
+              <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-xs font-semibold bg-white/15 text-white border border-white/30 backdrop-blur-sm">
                 {gameTitle}
               </span>
 
               {/* Tier Badge */}
               {(product.tierData || product.tier) && (
                 <span 
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border backdrop-blur-sm"
+                  className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-xs font-semibold border backdrop-blur-sm"
                   style={{
                     backgroundColor: tierStyle.badgeColor ? `${tierStyle.badgeColor}25` : 'rgba(255,255,255,0.15)',
                     borderColor: tierStyle.borderColor ? `${tierStyle.borderColor}80` : 'rgba(255,255,255,0.3)',
@@ -210,25 +208,25 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                   }}
                 >
-                  <TierIcon size={12} />
-                  {tierName}
+                  <TierIcon size={10} className="sm:w-3 sm:h-3" />
+                  <span className="text-xs">{tierName}</span>
                 </span>
               )}
 
-              {/* Account Level */}
+              {/* Account Level - Hide on very small screens */}
               {product.accountLevel && (
-                <span className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/25 text-white border border-purple-400/60 backdrop-blur-sm">
+                <span className="hidden sm:inline-flex items-center px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-xs font-semibold bg-purple-500/25 text-white border border-purple-400/60 backdrop-blur-sm">
                   {product.accountLevel}
                 </span>
               )}
             </div>
           )}
 
-          {/* Rental Tag - only on normal product cards, never on flash sale cards */}
+          {/* Rental Tag - Mobile Optimized, only on normal product cards */}
           {!showFlashSaleTimer && (product.hasRental || (product as any).rentalOptions?.length > 0) && (
-            <div className="mt-2">
+            <div className="mt-1.5 sm:mt-2">
               <span
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold border backdrop-blur-sm"
+                className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 sm:py-1.5 rounded-md sm:rounded-lg text-xs font-semibold border backdrop-blur-sm"
                 style={{
                   backgroundColor: 'rgba(16, 185, 129, 0.15)',
                   borderColor: 'rgba(52, 211, 153, 0.6)',
@@ -236,23 +234,23 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   textShadow: '0 1px 2px rgba(0,0,0,0.3)'
                 }}
               >
-                <Sparkles size={12} />
-                Tersedia untuk Rental
+                <Sparkles size={10} className="sm:w-3 sm:h-3" />
+                <span className="text-xs">Tersedia untuk Rental</span>
               </span>
             </div>
           )}
 
           {/* Flash Sale Timer moved under price */}
 
-          {/* Price Section */}
+          {/* Price Section - Mobile Optimized */}
           <div className="flex items-end justify-between pt-2">
-            <div className="flex flex-col">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center rounded-xl bg-white/95 backdrop-blur-sm px-4 py-2 text-base font-bold text-gray-900 shadow-lg border border-white/20">
+            <div className="flex flex-col min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="inline-flex items-center rounded-lg sm:rounded-xl bg-white/95 backdrop-blur-sm px-2 sm:px-4 py-1.5 sm:py-2 text-sm sm:text-base font-bold text-gray-900 shadow-lg border border-white/20">
                   {formatCurrency(displayPrice)}
                 </span>
                 {isFlashSaleActive && product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-xs font-semibold px-2 py-1 rounded-lg bg-red-500/30 text-white border border-red-400/60 backdrop-blur-sm shadow-sm">
+                  <span className="text-xs font-semibold px-1.5 sm:px-2 py-1 rounded-md sm:rounded-lg bg-red-500/30 text-white border border-red-400/60 backdrop-blur-sm shadow-sm">
                     -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                   </span>
                 )}
@@ -267,20 +265,20 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
               {/* Flash Sale Timer (under price) */}
               {showFlashSaleTimer && product.flashSaleEndTime && (
-                <div className="pt-3">
+                <div className="pt-2 sm:pt-3">
                   <FlashSaleTimer 
                     endTime={product.flashSaleEndTime} 
-                    compact={false}
-                    className="bg-white/95 text-red-600 font-bold"
+                    compact={true}
+                    className="bg-white/95 text-red-600 font-bold text-xs"
                   />
                 </div>
               )}
             </div>
 
-            {/* Action Button */}
-            <div className="flex-shrink-0">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 transition-all duration-200 group-hover:bg-white group-hover:text-gray-900 group-hover:shadow-lg">
-                <ArrowUpRight size={18} />
+            {/* Action Button - Mobile Optimized */}
+            <div className="flex-shrink-0 ml-2">
+              <div className="inline-flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg sm:rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 transition-all duration-200 group-hover:bg-white group-hover:text-gray-900 group-hover:shadow-lg">
+                <ArrowUpRight size={14} className="sm:w-[18px] sm:h-[18px]" />
               </div>
             </div>
           </div>
