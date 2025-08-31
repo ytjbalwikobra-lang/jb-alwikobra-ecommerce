@@ -151,13 +151,13 @@ const HomePage: React.FC = () => {
               </Link>
             </div>
 
-      <HorizontalScroller ariaLabel="Produk Flash Sale">
+      <HorizontalScroller ariaLabel="Produk Flash Sale" itemGapClass="gap-4">
               {flashSaleProducts.slice(0, 10).map((product) => (
-        <div key={product.id} className="min-w-[320px] snap-start">
+        <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start">
                   <ProductCard
                     product={product}
                     showFlashSaleTimer={true}
-          className="w-[320px] h-auto"
+          className="w-full h-auto"
                   />
                 </div>
               ))}
@@ -176,12 +176,12 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-      <HorizontalScroller ariaLabel="Game Populer">
+      <HorizontalScroller ariaLabel="Game Populer" itemGapClass="gap-4">
             {popularGames.map((game) => (
               <Link
                 key={game.id}
                 to={`/products?game=${encodeURIComponent(game.name)}`}
-        className="min-w-[200px] bg-black border border-pink-500/40 p-6 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group snap-start"
+        className="flex-shrink-0 w-[180px] sm:w-[200px] bg-black border border-pink-500/40 p-6 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group snap-start"
               >
                 <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mx-auto mb-4 flex items-center justify-center">
                   <TrendingUp className="text-white" size={24} />
@@ -213,10 +213,10 @@ const HomePage: React.FC = () => {
             </Link>
           </div>
 
-          <HorizontalScroller ariaLabel="Produk Terbaru">
+          <HorizontalScroller ariaLabel="Produk Terbaru" itemGapClass="gap-4">
             {products.map((product) => (
-              <div key={product.id} className="min-w-[300px] snap-start">
-                <ProductCard product={product} className="w-[300px]" />
+              <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[300px] snap-start">
+                <ProductCard product={product} className="w-full" />
               </div>
             ))}
           </HorizontalScroller>

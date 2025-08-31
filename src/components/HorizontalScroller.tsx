@@ -85,6 +85,7 @@ const HorizontalScroller: React.FC<HorizontalScrollerProps> = ({
       <div
         ref={containerRef}
         className={`no-scrollbar flex ${itemGapClass} overflow-x-auto pb-2 snap-x snap-mandatory`}
+        style={{ scrollPaddingLeft: '1rem' }}
       >
         {children}
       </div>

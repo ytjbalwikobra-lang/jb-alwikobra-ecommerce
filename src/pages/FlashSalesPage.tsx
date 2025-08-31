@@ -112,13 +112,13 @@ const FlashSalesPage: React.FC = () => {
                 </p>
               </div>
 
-        <HorizontalScroller ariaLabel="Produk Flash Sale">
+        <HorizontalScroller ariaLabel="Produk Flash Sale" itemGapClass="gap-4">
                 {flashSaleProducts.map((product) => (
-                  <div key={product.id} className="min-w-[320px] snap-start">
+                  <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start">
                     <ProductCard
                       product={product}
                       showFlashSaleTimer={true}
-                      className="w-[320px] h-auto"
+                      className="w-full h-auto"
                     />
                   </div>
                 ))}
