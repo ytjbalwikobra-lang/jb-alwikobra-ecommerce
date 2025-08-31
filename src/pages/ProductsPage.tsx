@@ -3,8 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
 import { Product, Tier, GameTitle } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
-import HorizontalScroller from '../components/HorizontalScroller.tsx';
-import { Search, SlidersHorizontal } from 'lucide-react';
+import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -17,8 +16,11 @@ const ProductsPage: React.FC = () => {
   const [selectedGame, setSelectedGame] = useState(searchParams.get('game') || '');
   const [selectedTier, setSelectedTier] = useState(searchParams.get('tier') || '');
   const [sortBy, setSortBy] = useState(searchParams.get('sortBy') || 'newest');
-  // Removed grid/list toggle; always use horizontal cards
   const [showFilters, setShowFilters] = useState(false);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const productsPerPage = 8; // 8 products per page (2 columns x 4 rows)
 
   const sortOptions = [
     { value: 'newest', label: 'Terbaru' },
@@ -103,6 +105,11 @@ const ProductsPage: React.FC = () => {
     setFilteredProducts(filtered);
   }, [products, searchTerm, selectedGame, selectedTier, sortBy]);
 
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedGame, selectedTier, sortBy]);
+
   useEffect(() => {
     // Update URL params
     const params = new URLSearchParams();
@@ -114,24 +121,36 @@ const ProductsPage: React.FC = () => {
     setSearchParams(params);
   }, [searchTerm, selectedGame, selectedTier, sortBy, setSearchParams]);
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredProducts.length / productsPerPage);
+  const startIndex = (currentPage - 1) * productsPerPage;
+  const endIndex = startIndex + productsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  const goToPage = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      goToPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      goToPage(currentPage - 1);
+    }
+  };
+
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedGame('');
     setSelectedTier('');
     setSortBy('newest');
+    setCurrentPage(1);
   };
-
-  // Group filtered products by game title for sectioned display
-  const gamesMap: Record<string, Product[]> = React.useMemo(() => {
-    const map: Record<string, Product[]> = {};
-    filteredProducts.forEach((p) => {
-      const name = p.gameTitleData?.name || p.gameTitle || 'Lainnya';
-      if (!map[name]) map[name] = [];
-      map[name].push(p);
-    });
-    // If selectedGame is set but yields no results, map will be empty
-    return map;
-  }, [filteredProducts]);
 
   if (loading) {
     return (
@@ -322,7 +341,12 @@ const ProductsPage: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-black rounded-xl border border-pink-500/40 p-4 mb-4">
               <div className="flex items-center space-x-4 mb-4 sm:mb-0">
         <span className="text-sm text-gray-300">
-                  Menampilkan {filteredProducts.length} dari {products.length} produk
+                  Menampilkan {startIndex + 1}-{Math.min(endIndex, filteredProducts.length)} dari {filteredProducts.length} produk
+                  {totalPages > 1 && (
+                    <span className="ml-2 text-pink-300">
+                      (Halaman {currentPage} dari {totalPages})
+                    </span>
+                  )}
                 </span>
               </div>
 
@@ -343,29 +367,88 @@ const ProductsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Game Sections with Horizontal Product Lists */}
-            {Object.keys(gamesMap).length > 0 ? (
-              Object.entries(gamesMap).map(([gameName, prods]) => (
-                <section key={gameName} className="mb-10">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-2xl font-bold text-white">{gameName}</h2>
-                    {/* Quick filter to only this game */}
+            {/* Grid Layout dengan Pagination */}
+            {filteredProducts.length > 0 ? (
+              <>
+                {/* Products Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-8">
+                  {currentProducts.map((product) => (
+                    <div key={product.id} className="w-full">
+                      <ProductCard product={product} className="w-full h-full" />
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-center space-x-2 mt-8">
+                    {/* Previous Button */}
                     <button
-                      onClick={() => setSelectedGame(gameName)}
-                      className="text-sm text-pink-300 hover:text-pink-200"
+                      onClick={prevPage}
+                      disabled={currentPage === 1}
+                      className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+                        currentPage === 1
+                          ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          : 'bg-black border border-pink-500/40 text-gray-200 hover:bg-pink-600 hover:text-white'
+                      }`}
                     >
-                      Lihat {gameName} saja
+                      <ChevronLeft size={16} className="mr-1" />
+                      Sebelumnya
+                    </button>
+
+                    {/* Page Numbers */}
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                        // Show first page, last page, current page, and pages around current
+                        const showPage = 
+                          page === 1 || 
+                          page === totalPages || 
+                          (page >= currentPage - 1 && page <= currentPage + 1);
+                        
+                        if (!showPage) {
+                          // Show ellipsis for gaps
+                          if (page === currentPage - 2 || page === currentPage + 2) {
+                            return (
+                              <span key={page} className="px-2 py-1 text-gray-500">
+                                ...
+                              </span>
+                            );
+                          }
+                          return null;
+                        }
+
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => goToPage(page)}
+                            className={`px-3 py-2 rounded-lg transition-colors ${
+                              currentPage === page
+                                ? 'bg-pink-600 text-white'
+                                : 'bg-black border border-pink-500/40 text-gray-200 hover:bg-pink-600 hover:text-white'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Next Button */}
+                    <button
+                      onClick={nextPage}
+                      disabled={currentPage === totalPages}
+                      className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+                        currentPage === totalPages
+                          ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                          : 'bg-black border border-pink-500/40 text-gray-200 hover:bg-pink-600 hover:text-white'
+                      }`}
+                    >
+                      Selanjutnya
+                      <ChevronRight size={16} className="ml-1" />
                     </button>
                   </div>
-                  <HorizontalScroller ariaLabel={`Produk ${gameName}`}>
-                    {prods.map((product) => (
-                      <div key={product.id} className="min-w-[320px] snap-start">
-                        <ProductCard product={product} className="w-[320px]" />
-                      </div>
-                    ))}
-                  </HorizontalScroller>
-                </section>
-              ))
+                )}
+              </>
             ) : (
               <div className="text-center py-12 bg-black/60 rounded-xl border border-pink-500/30">
                 <div className="w-24 h-24 bg-black border border-pink-500/40 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -385,8 +468,6 @@ const ProductsPage: React.FC = () => {
                 </button>
               </div>
             )}
-
-            {/* Sections rendered above */}
           </div>
         </div>
       </div>
