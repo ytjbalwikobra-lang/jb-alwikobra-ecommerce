@@ -219,21 +219,6 @@ const ProductsPage: React.FC = () => {
         {/* Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">Katalog Produk</h1>
-          <div className="mt-2 sm:mt-3 flex items-center gap-2 text-xs overflow-x-auto scrollbar-hide pb-2">
-            {tiers.map(tier => (
-              <span 
-                key={tier.slug} 
-                className="flex-shrink-0 px-2 py-1 rounded border whitespace-nowrap"
-                style={{ 
-                  borderColor: tier.borderColor + '30', 
-                  backgroundColor: tier.color + '10', 
-                  color: tier.color 
-                }}
-              >
-                {tier.name}
-              </span>
-            ))}
-          </div>
         </div>
 
         <div className="lg:grid lg:grid-cols-4 lg:gap-8">
