@@ -56,3 +56,108 @@ export async function deletePublicUrls(urls: string[]): Promise<void> {
   const { error } = await (supabase as any).storage.from(BUCKET).remove(paths);
   if (error) console.warn('Storage delete warning:', error);
 }
+
+// Game Logo Storage Functions
+export class GameLogoStorage {
+  private static readonly BUCKET = 'game-logos';
+  private static readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+  private static readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+
+  /**
+   * Upload game logo to Supabase Storage
+   */
+  static async uploadGameLogo(file: File, gameSlug: string): Promise<string> {
+    try {
+      // Validate file
+      this.validateFile(file);
+
+      // Generate unique filename
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${gameSlug}-${Date.now()}.${fileExt}`;
+      const filePath = `logos/${fileName}`;
+
+      // Upload file to storage
+      const { data, error } = await (supabase as any).storage
+        .from(this.BUCKET)
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
+
+      if (error) {
+        throw new Error(`Upload failed: ${error.message}`);
+      }
+
+      return data.path;
+    } catch (error) {
+      console.error('Error uploading game logo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update existing game logo
+   */
+  static async updateGameLogo(file: File, gameSlug: string, oldPath?: string): Promise<string> {
+    try {
+      // Delete old file if exists
+      if (oldPath) {
+        await this.deleteGameLogo(oldPath);
+      }
+
+      // Upload new file
+      return await this.uploadGameLogo(file, gameSlug);
+    } catch (error) {
+      console.error('Error updating game logo:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete game logo from storage
+   */
+  static async deleteGameLogo(filePath: string): Promise<void> {
+    try {
+      const { error } = await (supabase as any).storage
+        .from(this.BUCKET)
+        .remove([filePath]);
+
+      if (error) {
+        console.error('Error deleting file:', error);
+        // Don't throw error for delete failures to avoid blocking updates
+      }
+    } catch (error) {
+      console.error('Error deleting game logo:', error);
+      // Don't throw error for delete failures
+    }
+  }
+
+  /**
+   * Get public URL for uploaded game logo
+   */
+  static getGameLogoUrl(filePath: string): string {
+    const { data } = (supabase as any).storage
+      .from(this.BUCKET)
+      .getPublicUrl(filePath);
+
+    return data.publicUrl;
+  }
+
+  /**
+   * Validate uploaded file
+   */
+  private static validateFile(file: File): void {
+    // Check file size
+    if (file.size > this.MAX_FILE_SIZE) {
+      throw new Error(`File size too large. Maximum size is ${this.MAX_FILE_SIZE / 1024 / 1024}MB`);
+    }
+
+    // Check file type
+    if (!this.ALLOWED_TYPES.includes(file.type)) {
+      throw new Error(`Invalid file type. Allowed types: ${this.ALLOWED_TYPES.join(', ')}`);
+    }
+  }
+}
+
+// Export instance for easy use
+export const gameLogoStorage = GameLogoStorage;

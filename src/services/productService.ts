@@ -999,15 +999,33 @@ export class ProductService {
         return sampleGameTitles;
       }
 
-      return data?.map(gameTitle => ({
-        ...gameTitle,
-        isPopular: gameTitle.is_popular,
-        isActive: gameTitle.is_active,
-        sortOrder: gameTitle.sort_order,
-        logoUrl: gameTitle.logo_url,
-        createdAt: gameTitle.created_at,
-        updatedAt: gameTitle.updated_at
-      })) || sampleGameTitles;
+      return data?.map(gameTitle => {
+        // Get logo URL - prefer new logo_path with public URL, fallback to legacy logo_url
+        let logoUrl = gameTitle.logo_url; // Legacy URL fallback
+        
+        if (gameTitle.logo_path) {
+          // Convert storage path to public URL
+          try {
+            const { data: urlData } = (supabase as any).storage
+              .from('game-logos')
+              .getPublicUrl(gameTitle.logo_path);
+            logoUrl = urlData.publicUrl;
+          } catch (error) {
+            console.warn('Failed to get public URL for logo_path:', gameTitle.logo_path);
+            // Keep legacy logo_url as fallback
+          }
+        }
+
+        return {
+          ...gameTitle,
+          isPopular: gameTitle.is_popular,
+          isActive: gameTitle.is_active,
+          sortOrder: gameTitle.sort_order,
+          logoUrl,
+          createdAt: gameTitle.created_at,
+          updatedAt: gameTitle.updated_at
+        };
+      }) || sampleGameTitles;
     } catch (error) {
       console.error('Error fetching game titles:', error);
       return sampleGameTitles;
