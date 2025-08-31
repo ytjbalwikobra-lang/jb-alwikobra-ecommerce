@@ -21,17 +21,17 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
       setTimeRemaining(remaining);
       
       if (remaining.isExpired) {
-        clearInterval(timer);
+        clearInterval(timer as any);
       }
     }, 1000);
 
-    return () => clearInterval(timer);
+    return () => clearInterval(timer as any);
   }, [endTime]);
 
   if (timeRemaining.isExpired) {
     return (
-      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-500/30 text-gray-400 text-xs font-semibold border border-gray-500/60 backdrop-blur-sm ${className}`}>
-        <Clock size={12} />
+      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-black text-pink-400 text-xs font-semibold border border-pink-400/60 backdrop-blur-sm ${className}`}>
+        <Clock size={12} className="text-pink-400" />
         <span>BERAKHIR</span>
       </div>
     );
@@ -39,27 +39,33 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
 
   if (compact) {
     return (
-      <div className={`inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-red-500/30 text-white text-xs font-semibold border border-red-400/60 backdrop-blur-sm ${className}`}>
-        <Clock size={12} />
-        <span>{timeRemaining.hours.toString().padStart(2, '0')}:{timeRemaining.minutes.toString().padStart(2, '0')}:{timeRemaining.seconds.toString().padStart(2, '0')}</span>
+      <div className={`inline-flex items-center gap-1 px-2 py-1 rounded-md bg-black text-pink-400 text-xs font-bold border border-pink-400/60 backdrop-blur-sm shadow-lg ${className}`}>
+        <Clock size={10} className="text-pink-400" />
+        <span className="text-pink-400">
+          {timeRemaining.days > 0 ? (
+            `${timeRemaining.days}d ${timeRemaining.hours.toString().padStart(2, '0')}:${timeRemaining.minutes.toString().padStart(2, '0')}`
+          ) : (
+            `${timeRemaining.hours.toString().padStart(2, '0')}:${timeRemaining.minutes.toString().padStart(2, '0')}:${timeRemaining.seconds.toString().padStart(2, '0')}`
+          )}
+        </span>
       </div>
     );
   }
 
   return (
-    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white/95 text-red-600 border border-red-200 backdrop-blur-sm shadow-lg ${className}`}>
-      <Clock size={14} />
+    <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-black text-pink-400 border border-pink-400/60 backdrop-blur-sm shadow-lg ${className}`}>
+      <Clock size={14} className="text-pink-400" />
       <div className="flex items-center gap-1 text-sm font-bold">
         {timeRemaining.days > 0 && (
           <>
             <span className="tabular-nums">{timeRemaining.days}</span>
-            <span className="text-red-400 text-xs">d</span>
+            <span className="text-pink-300 text-xs">d</span>
           </>
         )}
         <span className="tabular-nums">{timeRemaining.hours.toString().padStart(2, '0')}</span>
-        <span className="text-red-400">:</span>
+        <span className="text-pink-300">:</span>
         <span className="tabular-nums">{timeRemaining.minutes.toString().padStart(2, '0')}</span>
-        <span className="text-red-400">:</span>
+        <span className="text-pink-300">:</span>
         <span className="tabular-nums">{timeRemaining.seconds.toString().padStart(2, '0')}</span>
       </div>
     </div>

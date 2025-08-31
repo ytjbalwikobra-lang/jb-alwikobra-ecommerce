@@ -57,6 +57,37 @@ const ProductDetailPage: React.FC = () => {
   }, []);
   const currentUrl = window.location.href;
 
+  // Handle share functionality
+  const handleShare = async () => {
+    if (!product) return;
+    
+    const shareData = {
+      title: product.name,
+      text: `Lihat ${product.name} di JB Alwikobra - ${formatCurrency(effectivePrice)}`,
+      url: currentUrl
+    };
+
+    try {
+      if (navigator.share && navigator.canShare && navigator.canShare(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback: Copy to clipboard
+        await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+        alert('Link produk telah disalin ke clipboard!');
+      }
+    } catch (error) {
+      // Additional fallback: Manual copy
+      const textToCopy = `${shareData.title}\n${shareData.text}\n${shareData.url}`;
+      const textArea = document.createElement('textarea');
+      textArea.value = textToCopy;
+      document.body.appendChild(textArea);
+      textArea.select();
+      document.execCommand('copy');
+      document.body.removeChild(textArea);
+      alert('Link produk telah disalin ke clipboard!');
+    }
+  };
+
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
@@ -121,7 +152,7 @@ const ProductDetailPage: React.FC = () => {
     const timer = setInterval(() => {
       setTimeRemaining(calculateTimeRemaining(product.flashSaleEndTime!));
     }, 1000);
-    return () => clearInterval(timer);
+    return () => clearInterval(timer as any);
   }, [cameFromFlashSaleCard, product?.flashSaleEndTime]);
 
   // Show flash sale price/timer only when user arrives from flash sale card AND sale is active
@@ -356,34 +387,18 @@ const ProductDetailPage: React.FC = () => {
           </div>
 
           {/* Product Info */}
-          <div>
-            {/* Tags: Game Title, Tier, Account Level (+ Rental availability when applicable) */}
-            <div className="flex flex-wrap items-center gap-2 mb-4">
-              {/* Game Title */}
-              <span className="bg-pink-500/10 text-pink-400 px-3 py-1 rounded-full text-sm font-medium">
-                {product.gameTitle}
+          <div className="mt-6">
+            {/* Tags: Game Title and Tier only */}
+            <div className="flex flex-wrap items-center gap-3 mb-6">
+              {/* Game Title - with fallback */}
+              <span className="bg-pink-500/10 text-pink-400 px-3 py-1 rounded-full text-sm font-medium border border-pink-500/30">
+                {product.gameTitle || 'FREE FIRE'}
               </span>
 
-              {/* Tier (fallback to legacy tier name) */}
-              {(product.tierData || product.tier) && (
-                <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium border border-white/20">
-                  {product.tierData?.name || (product.tier === 'premium' ? 'Premium' : product.tier === 'pelajar' ? 'Pelajar' : 'Reguler')}
-                </span>
-              )}
-
-              {/* Account Level tag if available */}
-              {product.accountLevel && (
-                <span className="bg-purple-500/15 text-purple-300 px-3 py-1 rounded-full text-sm font-medium border border-purple-400/30">
-                  {product.accountLevel}
-                </span>
-              )}
-
-              {/* Rental availability (hidden when coming from flash sale flow) */}
-              {(!cameFromFlashSaleCard) && product.hasRental && (
-                <span className="bg-green-500/10 text-green-400 px-3 py-1 rounded-full text-sm font-medium">
-                  Tersedia Rental
-                </span>
-              )}
+              {/* Tier (fallback to legacy tier name) - always show */}
+              <span className="bg-white/10 text-white px-3 py-1 rounded-full text-sm font-medium border border-white/20">
+                {product.tierData?.name || (product.tier === 'premium' ? 'Premium' : product.tier === 'pelajar' ? 'Pelajar' : product.tier === 'reguler' ? 'Reguler' : 'Reguler')}
+              </span>
             </div>
 
             {/* Product Name */}
@@ -543,7 +558,10 @@ const ProductDetailPage: React.FC = () => {
                 <Heart size={16} />
                 <span>Favorit</span>
               </button>
-              <button className="flex items-center space-x-1 hover:text-pink-400 transition-colors">
+              <button 
+                onClick={handleShare}
+                className="flex items-center space-x-1 hover:text-pink-400 transition-colors"
+              >
                 <Share2 size={16} />
                 <span>Bagikan</span>
               </button>
