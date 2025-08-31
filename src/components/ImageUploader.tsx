@@ -93,7 +93,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({ images, onChange, onUploa
           {images.map((src, idx) => (
             <div
               key={src + idx}
-              className="relative aspect-square rounded-lg overflow-hidden bg-black border border-pink-500/30"
+              className="relative aspect-[4/5] rounded-lg overflow-hidden bg-black border border-pink-500/30"
               draggable
               onDragStart={onDragStart(idx)}
               onDragOver={onDragOver(idx)}

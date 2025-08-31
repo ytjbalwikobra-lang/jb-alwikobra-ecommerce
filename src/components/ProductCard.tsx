@@ -146,7 +146,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
     >
       <div className="p-3 sm:p-4">
         {/* Image */}
-        <div className="relative aspect-square overflow-hidden rounded-xl sm:rounded-2xl bg-black/20 ring-1 ring-white/10">
+        <div className="relative aspect-[4/5] overflow-hidden rounded-xl sm:rounded-2xl bg-black/20 ring-1 ring-white/10">
           <img
             src={images[0]}
             alt={product.name}

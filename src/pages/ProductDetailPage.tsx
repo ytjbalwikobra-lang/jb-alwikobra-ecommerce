@@ -358,7 +358,7 @@ const ProductDetailPage: React.FC = () => {
         <div className="lg:grid lg:grid-cols-2 lg:gap-12">
           {/* Image Gallery */}
           <div>
-            <div className="relative aspect-square mb-4 bg-gray-900 rounded-xl overflow-hidden">
+                        <div className="relative aspect-[4/5] mb-4 bg-gray-900 rounded-xl overflow-hidden">
               <img
                 src={images[selectedImage]}
                 alt={product.name}
@@ -383,7 +383,7 @@ const ProductDetailPage: React.FC = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImage(index)}
-                    className={`flex-shrink-0 w-20 h-20 aspect-square rounded-lg overflow-hidden border-2 ${
+                    className={`flex-shrink-0 w-20 aspect-[4/5] rounded-lg overflow-hidden border-2 ${
                       selectedImage === index ? 'border-pink-500' : 'border-pink-500/30'
                     }`}
                   >
