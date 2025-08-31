@@ -17,7 +17,6 @@ import {
 import BannerCarousel from '../components/BannerCarousel.tsx';
 
 const HomePage: React.FC = () => {
-  const [products, setProducts] = useState<Product[]>([]);
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [popularGames, setPopularGames] = useState<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>>([]);
@@ -25,13 +24,11 @@ const HomePage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [allProducts, flashSales, popular] = await Promise.all([
-          ProductService.getAllProducts(),
+        const [flashSales, popular] = await Promise.all([
           ProductService.getFlashSales(),
           ProductService.getPopularGames(20)
         ]);
 
-        setProducts(allProducts.slice(0, 8)); // Show only 8 products
         setFlashSaleProducts(flashSales.map(sale => sale.product));
         setPopularGames(popular);
       } catch (error) {
@@ -176,50 +173,31 @@ const HomePage: React.FC = () => {
             </p>
           </div>
 
-      <HorizontalScroller ariaLabel="Game Populer" itemGapClass="gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
             {popularGames.map((game) => (
               <Link
                 key={game.id}
                 to={`/products?game=${encodeURIComponent(game.name)}`}
-        className="flex-shrink-0 w-[180px] sm:w-[200px] bg-black border border-pink-500/40 p-6 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group snap-start"
+                className="bg-black border border-pink-500/40 p-4 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group"
               >
-                <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mx-auto mb-4 flex items-center justify-center">
-                  <TrendingUp className="text-white" size={24} />
+                <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mx-auto mb-3 flex items-center justify-center overflow-hidden">
+                  {game.logoUrl ? (
+                    <img 
+                      src={game.logoUrl} 
+                      alt={game.name}
+                      className="w-full h-full object-cover rounded-xl"
+                    />
+                  ) : (
+                    <TrendingUp className="text-white" size={24} />
+                  )}
                 </div>
-                <h3 className="font-semibold text-white mb-1 group-hover:text-pink-400 transition-colors">
+                <h3 className="font-semibold text-white mb-1 group-hover:text-pink-400 transition-colors text-sm">
                   {game.name}
                 </h3>
-                <p className="text-sm text-gray-400">{game.count} akun</p>
+                <p className="text-xs text-gray-400">{game.count} akun</p>
               </Link>
             ))}
-          </HorizontalScroller>
-        </div>
-      </section>
-
-      {/* Featured Products */}
-  <section className="py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-        <h2 className="text-3xl font-bold text-white mb-2">Produk Terbaru</h2>
-        <p className="text-gray-300">Akun game berkualitas tinggi yang baru saja masuk</p>
-            </div>
-            <Link 
-              to="/products"
-        className="text-pink-300 hover:text-pink-200 font-medium flex items-center space-x-1"
-            >
-              <span>Lihat Semua</span>
-              <ChevronRight size={20} />
-            </Link>
           </div>
-
-          <HorizontalScroller ariaLabel="Produk Terbaru" itemGapClass="gap-4">
-            {products.map((product) => (
-              <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[300px] snap-start">
-                <ProductCard product={product} className="w-full" />
-              </div>
-            ))}
-          </HorizontalScroller>
         </div>
       </section>
 
