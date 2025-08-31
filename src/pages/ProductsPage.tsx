@@ -40,7 +40,16 @@ const ProductsPage: React.FC = () => {
           ProductService.getGameTitles()
         ]);
         setProducts(productsData);
-        setTiers(tiersData);
+        
+        // Sort tiers: Pelajar → General → Premium
+        const sortedTiers = [...tiersData].sort((a, b) => {
+          const order = { 'pelajar': 1, 'general': 2, 'premium': 3 };
+          const aOrder = order[a.slug] || 999;
+          const bOrder = order[b.slug] || 999;
+          return aOrder - bOrder;
+        });
+        setTiers(sortedTiers);
+        
         setGameTitles(gameTitlesData);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -393,7 +402,7 @@ const ProductsPage: React.FC = () => {
             {filteredProducts.length > 0 ? (
               <>
                 {/* Products Grid - Responsive: 2 cols mobile, 3 cols tablet, 4 cols desktop */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
                   {currentProducts.map((product) => (
                     <div key={product.id} className="w-full">
                       <ProductCard product={product} className="w-full h-full" />
