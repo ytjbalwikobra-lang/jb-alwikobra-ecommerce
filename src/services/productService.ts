@@ -1067,12 +1067,35 @@ export class ProductService {
       // Load active game titles
       const { data: games, error: gErr } = await supabase
         .from('game_titles')
-        .select('id, name, slug, logo_url, is_active')
+        .select('id, name, slug, logo_url, logo_path, is_active')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
       if (gErr) throw gErr;
 
-      const list = (games || []).map(g => ({ id: g.id as string, name: g.name as string, slug: g.slug as string, logoUrl: (g as any).logo_url as string | null }));
+      const list = (games || []).map(g => {
+        // Get logo URL - prefer new logo_path with public URL, fallback to legacy logo_url
+        let logoUrl = g.logo_url; // Legacy URL fallback
+        
+        if (g.logo_path) {
+          // Convert storage path to public URL
+          try {
+            const { data: urlData } = (supabase as any).storage
+              .from('game-logos')
+              .getPublicUrl(g.logo_path);
+            logoUrl = urlData.publicUrl;
+          } catch (error) {
+            console.warn('Failed to get public URL for logo_path:', g.logo_path);
+            // Keep legacy logo_url as fallback
+          }
+        }
+
+        return { 
+          id: g.id as string, 
+          name: g.name as string, 
+          slug: g.slug as string, 
+          logoUrl 
+        };
+      });
       if (list.length === 0) return [];
 
       // Capability check: if relational schema is unknown, try detect quickly
