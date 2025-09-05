@@ -102,7 +102,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <AuthRequired>
-      <div className="min-h-screen bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900">
+      <div className="min-h-screen bg-app-dark">
         <Header />
         
         <div className="pt-20 pb-20 px-4">
@@ -110,9 +110,7 @@ const ProfilePage: React.FC = () => {
             {/* Profile Hero Section */}
             <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-indigo-500/20 border border-pink-500/30 backdrop-blur-sm mb-8">
               {/* Background Pattern */}
-              <div className="absolute inset-0 opacity-30" style={{
-                backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`
-              }}></div>
+              <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\"20\" height=\"20\" viewBox=\"0 0 20 20\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cg fill=\"%23ffffff\" fill-opacity=\"0.03\" fill-rule=\"evenodd\"%3E%3Ccircle cx=\"3\" cy=\"3\" r=\"3\"/%3E%3Ccircle cx=\"13\" cy=\"13\" r=\"3\"/%3E%3C/g%3E%3C/svg%3E')] opacity-30"></div>
               
               <div className="relative p-8">
                 <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">

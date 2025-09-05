@@ -43,7 +43,7 @@ const WishlistPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-app-dark">
+    <div className="min-h-screen bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900">
       <Header />
       
       <div className="pt-20 pb-20 px-4">
