@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase.ts';
-import { useAuth } from '../contexts/AuthContext.tsx';
+import { useWhatsAppAuth } from '../contexts/WhatsAppAuthContext.tsx';
 import Footer from '../components/Footer.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
 
@@ -16,7 +16,7 @@ type Order = {
 const OrderHistoryPage: React.FC = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
+  const { user } = useWhatsAppAuth();
 
   useEffect(() => {
     const fetchOrders = async () => {

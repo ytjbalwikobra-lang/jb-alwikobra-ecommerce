@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import PhoneInput from '../components/PhoneInput.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
-import { useAuth } from '../contexts/AuthContext.tsx';
+import { useWhatsAppAuth } from '../contexts/WhatsAppAuthContext.tsx';
 import { useWishlist } from '../contexts/WishlistContext.tsx';
 import { supabase } from '../services/supabase.ts';
 
@@ -35,14 +35,14 @@ interface UserProfile {
 }
 
 const ProfilePage: React.FC = () => {
-  const { user, signOut } = useAuth();
+  const { user, logout } = useWhatsAppAuth();
   const navigate = useNavigate();
   const { wishlistItems } = useWishlist();
   const [profile, setProfile] = useState<UserProfile>({
-    name: user?.user_metadata?.name || user?.email?.split('@')[0] || '',
-    email: user?.email || '',
-    whatsapp: user?.user_metadata?.whatsapp || '',
-    joinDate: user?.created_at ? new Date(user.created_at).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID'),
+    name: user?.name || '',
+    email: '', // No email in WhatsApp auth
+    whatsapp: user?.whatsapp || '',
+    joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID'),
     totalOrders: 0,
     wishlistCount: wishlistItems.length
   });
@@ -51,7 +51,7 @@ const ProfilePage: React.FC = () => {
 
   const handleLogout = async () => {
     if (confirm('Yakin ingin keluar dari akun?')) {
-      await signOut();
+      await logout();
       navigate('/');
     }
   };

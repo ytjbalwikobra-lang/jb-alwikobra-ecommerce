@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext.tsx';
+import { useWhatsAppAuth } from '../contexts/WhatsAppAuthContext.tsx';
 import { Loader2, Lock } from 'lucide-react';
 
 interface ProtectedRouteProps {
@@ -12,7 +12,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   fallback 
 }) => {
-  const { user, loading } = useAuth();
+  const { user, loading } = useWhatsAppAuth();
   const location = useLocation();
 
   if (loading) {

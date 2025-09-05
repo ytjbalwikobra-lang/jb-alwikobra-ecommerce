@@ -9,7 +9,7 @@ import Footer from './components/Footer.tsx';
 import './App.css';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
-import { AuthProvider } from './contexts/AuthContext.tsx';
+import { WhatsAppAuthProvider } from './contexts/WhatsAppAuthContext.tsx';
 import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import { FaviconService } from './services/faviconService.ts';
 
@@ -105,7 +105,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <AuthProvider>
+      <WhatsAppAuthProvider>
         <WishlistProvider>
           <ToastProvider>
             <Router>
@@ -222,7 +222,7 @@ function App() {
             </Router>
           </ToastProvider>
         </WishlistProvider>
-      </AuthProvider>
+      </WhatsAppAuthProvider>
     </ErrorBoundary>
   );
 }
