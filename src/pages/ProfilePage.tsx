@@ -24,6 +24,7 @@ import PhoneInput from '../components/PhoneInput.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
 import { useAuth } from '../contexts/AuthContext.tsx';
 import { useWishlist } from '../contexts/WishlistContext.tsx';
+import { supabase } from '../services/supabase.ts';
 
 interface UserProfile {
   name: string;
@@ -67,6 +68,31 @@ const ProfilePage: React.FC = () => {
       wishlistCount: wishlistItems.length
     }));
   }, [wishlistItems]);
+
+  // Fetch real order count when user is available
+  useEffect(() => {
+    const fetchOrderCount = async () => {
+      if (!user || !supabase) return;
+      
+      try {
+        const { count, error } = await supabase
+          .from('orders')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+          
+        if (!error && count !== null) {
+          setProfile(prev => ({
+            ...prev,
+            totalOrders: count
+          }));
+        }
+      } catch (error) {
+        console.error('Error fetching order count:', error);
+      }
+    };
+
+    fetchOrderCount();
+  }, [user]);
 
   const loadProfile = () => {
     // Load from localStorage or API
