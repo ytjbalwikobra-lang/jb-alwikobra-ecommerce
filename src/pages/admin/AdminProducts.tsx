@@ -47,6 +47,62 @@ const AdminProducts: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [games, setGames] = useState<GameTitle[]>([]);
+  
+  // Filter and pagination states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedGame, setSelectedGame] = useState('');
+  const [selectedTier, setSelectedTier] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all'); // all, active, archived
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Filtered and paginated products
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      // Search filter
+      if (searchTerm) {
+        const searchLower = searchTerm.toLowerCase();
+        const matchesSearch = 
+          product.name.toLowerCase().includes(searchLower) ||
+          product.description.toLowerCase().includes(searchLower) ||
+          (product.accountLevel && product.accountLevel.toLowerCase().includes(searchLower)) ||
+          (product.gameTitle && product.gameTitle.toLowerCase().includes(searchLower)) ||
+          (product.gameTitleData?.name && product.gameTitleData.name.toLowerCase().includes(searchLower));
+        
+        if (!matchesSearch) return false;
+      }
+      
+      // Game filter
+      if (selectedGame) {
+        const productGameId = product.gameTitleData?.id || product.gameTitleId;
+        if (productGameId !== selectedGame) return false;
+      }
+      
+      // Tier filter
+      if (selectedTier) {
+        const productTierId = product.tierData?.id || product.tierId;
+        if (productTierId !== selectedTier) return false;
+      }
+      
+      // Status filter
+      if (statusFilter === 'active') {
+        if ((product as any).isActive === false || (product as any).archivedAt) return false;
+      } else if (statusFilter === 'archived') {
+        if (!((product as any).isActive === false || (product as any).archivedAt)) return false;
+      }
+      
+      return true;
+    });
+  }, [products, searchTerm, selectedGame, selectedTier, statusFilter]);
+
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedGame, selectedTier, statusFilter, itemsPerPage]);
 
   useEffect(() => {
     (async () => {
@@ -246,19 +302,109 @@ const AdminProducts: React.FC = () => {
       </div>
 
       {!showForm && (
-        <div className="bg-black/60 border border-pink-500/30 rounded-xl overflow-hidden">
-          <div className="grid grid-cols-12 text-xs uppercase text-gray-400 px-4 py-2 border-b border-pink-500/20">
-            <div className="col-span-5">Nama</div>
-            <div className="col-span-2">Game</div>
-            <div className="col-span-2">Harga</div>
-            <div className="col-span-3 text-right">Aksi</div>
+        <>
+          {/* Filters and Search */}
+          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-6 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Search */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Cari Produk</label>
+                <input
+                  type="text"
+                  placeholder="Nama, deskripsi, level..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                />
+              </div>
+              
+              {/* Game Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Filter Game</label>
+                <select
+                  value={selectedGame}
+                  onChange={(e) => setSelectedGame(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                >
+                  <option value="">Semua Game</option>
+                  {games.map(game => (
+                    <option key={game.id} value={game.id}>{game.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Tier Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Filter Tier</label>
+                <select
+                  value={selectedTier}
+                  onChange={(e) => setSelectedTier(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                >
+                  <option value="">Semua Tier</option>
+                  {tiers.map(tier => (
+                    <option key={tier.id} value={tier.id}>{tier.name}</option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Status Filter */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                >
+                  <option value="all">Semua</option>
+                  <option value="active">Aktif</option>
+                  <option value="archived">Diarsipkan</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* Results Info and Items Per Page */}
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-pink-500/20">
+              <div className="text-sm text-gray-400">
+                Menampilkan {paginatedProducts.length} dari {filteredProducts.length} produk
+                {filteredProducts.length !== products.length && ` (difilter dari ${products.length} total)`}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <label className="text-sm text-gray-400">Tampilkan:</label>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                  className="px-2 py-1 bg-black border border-pink-500/40 rounded text-white text-sm"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+                <span className="text-sm text-gray-400">per halaman</span>
+              </div>
+            </div>
           </div>
-          {loading ? (
-            <div className="p-4 text-gray-400">Memuat...</div>
-          ) : products.length === 0 ? (
-            <div className="p-4 text-gray-400">Belum ada produk.</div>
-          ) : (
-            products.map(p => (
+
+          {/* Product List */}
+          <div className="bg-black/60 border border-pink-500/30 rounded-xl overflow-hidden">
+            <div className="grid grid-cols-12 text-xs uppercase text-gray-400 px-4 py-2 border-b border-pink-500/20">
+              <div className="col-span-5">Nama</div>
+              <div className="col-span-2">Game</div>
+              <div className="col-span-2">Harga</div>
+              <div className="col-span-3 text-right">Aksi</div>
+            </div>
+            {loading ? (
+              <div className="p-4 text-gray-400">Memuat...</div>
+            ) : paginatedProducts.length === 0 ? (
+              <div className="p-4 text-gray-400">
+                {filteredProducts.length === 0 && products.length > 0 
+                  ? 'Tidak ada produk yang sesuai dengan filter.'
+                  : 'Belum ada produk.'
+                }
+              </div>
+            ) : (
+              paginatedProducts.map(p => (
               <div key={p.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-pink-500/10">
                 <div className="col-span-5 flex items-center gap-3">
                   <img src={p.image} alt={p.name} className="w-10 h-10 rounded object-cover" />
@@ -296,6 +442,63 @@ const AdminProducts: React.FC = () => {
             ))
           )}
         </div>
+        
+        {/* Pagination */}
+        {filteredProducts.length > itemsPerPage && (
+          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+              <div className="text-sm text-gray-400">
+                Halaman {currentPage} dari {totalPages}
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1 rounded border border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ← Sebelumnya
+                </button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter(page => {
+                      if (totalPages <= 7) return true;
+                      if (page === 1 || page === totalPages) return true;
+                      if (page >= currentPage - 2 && page <= currentPage + 2) return true;
+                      return false;
+                    })
+                    .map((page, index, array) => (
+                      <React.Fragment key={page}>
+                        {index > 0 && array[index - 1] !== page - 1 && (
+                          <span className="px-2 text-gray-400">...</span>
+                        )}
+                        <button
+                          onClick={() => setCurrentPage(page)}
+                          className={`px-3 py-1 rounded text-sm ${
+                            page === currentPage
+                              ? 'bg-pink-600 text-white'
+                              : 'border border-white/20 text-white hover:bg-white/10'
+                          }`}
+                        >
+                          {page}
+                        </button>
+                      </React.Fragment>
+                    ))}
+                </div>
+                
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1 rounded border border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Selanjutnya →
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+        </>
       )}
 
       {showForm && (

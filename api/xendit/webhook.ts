@@ -9,6 +9,99 @@ function mapStatus(x: string | undefined): 'pending'|'paid'|'completed'|'cancell
   return 'pending';
 }
 
+async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
+  try {
+    // Get order details with product information
+    let q = sb.from('orders')
+      .select(`
+        id,
+        customer_name,
+        customer_email,
+        customer_phone,
+        amount,
+        status,
+        created_at,
+        paid_at,
+        products (
+          id,
+          name,
+          price,
+          link
+        )
+      `)
+      .eq('status', 'paid')
+      .limit(1);
+    
+    if (invoiceId) q = q.eq('xendit_invoice_id', invoiceId);
+    else if (externalId) q = q.eq('client_external_id', externalId);
+    
+    const { data: orders } = await q;
+    const order = orders?.[0];
+    
+    if (!order) {
+      console.log('[WhatsApp] No paid order found for notification');
+      return;
+    }
+
+    const product = order.products;
+    const productName = product?.name || 'Unknown Product';
+    const productLink = product?.link || 'No link provided';
+    
+    // Generate notification message
+    const message = `🎮 **ORDERAN BARU - PAID** 
+
+👤 **Customer:** ${order.customer_name || 'Guest'}
+📧 **Email:** ${order.customer_email || 'Not provided'}
+📱 **Phone:** ${order.customer_phone || 'Not provided'}
+📋 **Order ID:** ${order.id}
+
+🎯 **Product:** ${productName}
+🔗 **Link:** ${productLink}
+💰 **Amount:** Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
+✅ **Status:** PAID
+
+📅 **Paid at:** ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Just now'}
+
+---
+🚀 **ACTION REQUIRED:**
+• Tim processing segera handle order ini
+• Kirim akun ke customer via WhatsApp/Email
+• Update status ke completed setelah delivered
+
+📊 **Admin:** https://jbalwikobra.com/admin
+💬 **Support:** wa.me/6289653510125
+
+#OrderPaid #${order.id}`;
+
+    // Send to WhatsApp group
+    const API_BASE_URL = 'https://notifapi.com';
+    const API_KEY = 'f104a4c19ea118dd464e9de20605c4e5';
+    const GROUP_ID = '120363421819020887@g.us'; // ORDERAN WEBSITE group
+
+    const response = await fetch(`${API_BASE_URL}/send_message_group_id`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        group_id: GROUP_ID,
+        key: API_KEY,
+        message: message
+      })
+    });
+
+    const result = await response.json();
+    
+    if (response.ok && result.code === 200) {
+      console.log(`[WhatsApp] Order paid notification sent successfully: ${result.results?.id_message}`);
+    } else {
+      console.error('[WhatsApp] Failed to send order paid notification:', result);
+    }
+  } catch (error) {
+    console.error('[WhatsApp] Error sending order paid notification:', error);
+  }
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -130,12 +223,17 @@ export default async function handler(req: any, res: any) {
       if (updated > 0 && (status === 'paid' || status === 'completed')) {
         // Find related product id(s) for the updated orders and archive them
         let q = sb.from('orders').select('product_id').limit(50);
-  if (invoiceId) q = q.eq('xendit_invoice_id', invoiceId);
-  else if (externalId) q = q.eq('client_external_id', externalId);
+        if (invoiceId) q = q.eq('xendit_invoice_id', invoiceId);
+        else if (externalId) q = q.eq('client_external_id', externalId);
         const { data: ordersToArchive } = await q;
         const productIds = (ordersToArchive || []).map((o: any) => o.product_id).filter(Boolean);
         if (productIds.length) {
           await sb.from('products').update({ is_active: false, archived_at: new Date().toISOString() }).in('id', productIds);
+        }
+
+        // Send WhatsApp group notification for paid orders
+        if (status === 'paid') {
+          await sendOrderPaidNotification(sb, invoiceId, externalId);
         }
       }
     } catch (e) {

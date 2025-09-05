@@ -4,6 +4,7 @@ import {
   generateSellAccountMessage
 } from '../utils/helpers.ts';
 import { SettingsService } from '../services/settingsService.ts';
+import { ProductService } from '../services/productService.ts';
 import {
   MessageCircle,
   DollarSign,
@@ -26,29 +27,95 @@ const SellPage: React.FC = () => {
   const [gameOptions, setGameOptions] = useState<string[]>([
     'Mobile Legends','PUBG Mobile','Free Fire','Genshin Impact','Call of Duty Mobile','Valorant','Arena of Valor','Clash of Clans','Clash Royale','Honkai Impact','Lainnya'
   ]);
+  const [popularGames, setPopularGames] = useState<Array<{name: string, count: string, icon: any}>>([
+    { name: 'Mobile Legends', count: '500+', icon: Gamepad2 },
+    { name: 'PUBG Mobile', count: '350+', icon: Smartphone },
+    { name: 'Free Fire', count: '300+', icon: Trophy },
+    { name: 'Genshin Impact', count: '200+', icon: Star },
+  ]);
   const [loadingGames, setLoadingGames] = useState(false);
 
   const [whatsappNumber, setWhatsappNumber] = useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
   useEffect(()=>{ (async ()=>{ try { const s = await SettingsService.get(); if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber); } catch {} })(); }, []);
 
+  // Format price with thousand separator
+  const formatPrice = (value: string) => {
+    // Remove non-numeric characters except Rp
+    const numericValue = value.replace(/[^0-9]/g, '');
+    if (!numericValue) return '';
+    
+    // Add thousand separators
+    const formatted = parseInt(numericValue).toLocaleString('id-ID');
+    return `Rp ${formatted}`;
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const formatted = formatPrice(e.target.value);
+    setEstimatedPrice(formatted);
+  };
+
   useEffect(() => {
     (async () => {
       try {
         setLoadingGames(true);
-        const { ProductService } = await import('../services/productService.ts');
         const list = await ProductService.getGameTitles();
         const names = list.filter(g=>g.isActive!==false).map(g=>g.name);
         if (names.length) setGameOptions([...names, 'Lainnya']);
+        
+        // Get popular games from database based on sold products
+        const products = await ProductService.list();
+        const gameStats = names.map(gameName => {
+          const gameProducts = products.filter(p => p.gameTitle === gameName && p.isSold);
+          return {
+            name: gameName,
+            count: gameProducts.length > 0 ? `${gameProducts.length}+` : '0',
+            icon: getGameIcon(gameName)
+          };
+        });
+        
+        // Sort by count and take top 4
+        const sortedGames = gameStats
+          .filter(g => parseInt(g.count) > 0)
+          .sort((a, b) => parseInt(b.count) - parseInt(a.count))
+          .slice(0, 4);
+          
+        if (sortedGames.length >= 4) {
+          setPopularGames(sortedGames);
+        }
+        
       } catch (e) {
+        console.error('Failed to load games:', e);
         // keep defaults
       } finally { setLoadingGames(false); }
     })();
   }, []);
 
+  const getGameIcon = (gameName: string) => {
+    const iconMap: {[key: string]: any} = {
+      'Mobile Legends': Gamepad2,
+      'PUBG Mobile': Smartphone,
+      'Free Fire': Trophy,
+      'Genshin Impact': Star,
+      'Call of Duty Mobile': Users,
+      'Valorant': Gamepad2,
+      'Arena of Valor': Trophy,
+      'Clash of Clans': Shield,
+      'Clash Royale': Trophy,
+      'Honkai Impact': Star
+    };
+    return iconMap[gameName] || Gamepad2;
+  };
+
   const handleSellAccount = () => {
+    // Generate detailed message using form data
     const gameInfo = selectedGame || 'Game yang ingin dijual';
-    const message = generateSellAccountMessage(gameInfo);
-    const whatsappUrl = generateWhatsAppUrl(whatsappNumber, message);
+    const levelInfo = accountLevel ? ` (Level/Rank: ${accountLevel})` : '';
+    const priceInfo = estimatedPrice ? ` dengan estimasi harga ${estimatedPrice}` : '';
+    const detailsInfo = accountDetails ? `\n\nDetail akun:\n${accountDetails}` : '';
+    
+    const customMessage = `Halo admin JB Alwikobra! 👋\n\nSaya ingin menjual akun ${gameInfo}${levelInfo}${priceInfo}.${detailsInfo}\n\nMohon bantuan untuk evaluasi dan proses penjualan akun saya. Terima kasih!`;
+    
+    const whatsappUrl = generateWhatsAppUrl(whatsappNumber, customMessage);
     window.open(whatsappUrl, '_blank');
   };
 
@@ -96,13 +163,6 @@ const SellPage: React.FC = () => {
       title: 'Terima Pembayaran',
       description: 'Dapatkan pembayaran langsung setelah akun berhasil terjual ke pembeli.'
     }
-  ];
-
-  const popularGames = [
-    { name: 'Mobile Legends', count: '500+', icon: Gamepad2 },
-    { name: 'PUBG Mobile', count: '350+', icon: Smartphone },
-    { name: 'Free Fire', count: '300+', icon: Trophy },
-    { name: 'Genshin Impact', count: '200+', icon: Star },
   ];
 
   return (
@@ -188,9 +248,9 @@ const SellPage: React.FC = () => {
                 <input
                   type="text"
                   value={estimatedPrice}
-                  onChange={(e) => setEstimatedPrice(e.target.value)}
+                  onChange={handlePriceChange}
                   className="w-full px-4 py-3 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  placeholder="Contoh: Rp 2.000.000"
+                  placeholder="Contoh: Rp 2,000,000"
                 />
               </div>
 

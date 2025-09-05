@@ -1,5 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import Header from './components/Header.tsx';
 import MobileBottomNav from './components/MobileBottomNav.tsx';
 import ScrollToTop from './components/ScrollToTop.tsx';
@@ -23,9 +25,11 @@ import AdminBanners from './pages/admin/AdminBanners.tsx';
 import AdminSettings from './pages/admin/AdminSettings.tsx';
 import AdminOrders from './pages/admin/AdminOrders.tsx';
 import AdminGameTitles from './pages/admin/AdminGameTitles.tsx';
+import WhatsAppTestPage from './pages/admin/WhatsAppTestPage.tsx';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 import TermsPage from './pages/TermsPage.tsx';
+import { FaviconService } from './services/faviconService.ts';
 
 // Error Boundary Component
 class ErrorBoundary extends React.Component<{children: React.ReactNode}, {hasError: boolean, error?: Error}> {
@@ -71,6 +75,12 @@ function App() {
     hasSupabaseKey: !!process.env.REACT_APP_SUPABASE_ANON_KEY
   });
 
+  // Initialize favicon and page title
+  React.useEffect(() => {
+    FaviconService.updateFavicon();
+    FaviconService.updatePageTitle();
+  }, []);
+
   return (
     <ErrorBoundary>
       <ToastProvider>
@@ -88,6 +98,7 @@ function App() {
               <Route path="users" element={<AdminUsers />} />
               <Route path="orders" element={<AdminOrders />} />
               <Route path="banners" element={<AdminBanners />} />
+              <Route path="whatsapp-test" element={<WhatsAppTestPage />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
           </Route>
@@ -127,6 +138,8 @@ function App() {
         </Routes>
       </Router>
       </ToastProvider>
+      <Analytics />
+      <SpeedInsights />
     </ErrorBoundary>
   );
 }

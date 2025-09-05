@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
-import { LayoutDashboard, Package, Users, Zap, ListOrdered, Image as ImageIcon, Settings as SettingsIcon, Gamepad2 } from 'lucide-react';
+import { LayoutDashboard, Package, Users, Zap, ListOrdered, Image as ImageIcon, Settings as SettingsIcon, Gamepad2, MessageCircle } from 'lucide-react';
 import { getUserRole, logout } from '../services/authService.ts';
 
 const AdminLayout: React.FC = () => {
@@ -62,6 +62,12 @@ const AdminLayout: React.FC = () => {
               className={({ isActive }) => `inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${isActive ? 'bg-pink-600/20 text-pink-300' : 'hover:bg-white/5'}`}
             >
               <SettingsIcon size={16} /> Settings
+            </NavLink>
+            <NavLink
+              to="/admin/whatsapp-test"
+              className={({ isActive }) => `inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${isActive ? 'bg-pink-600/20 text-pink-300' : 'hover:bg-white/5'}`}
+            >
+              <MessageCircle size={16} /> WhatsApp Test
             </NavLink>
             {isSuper && (
               <NavLink

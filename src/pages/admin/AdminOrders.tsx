@@ -22,6 +22,11 @@ const AdminOrders: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<'all'|'pending'|'paid'|'completed'|'cancelled'>('all');
+  const [orderTypeFilter, setOrderTypeFilter] = useState<'all'|'purchase'|'rental'>('all');
+  const [paymentMethodFilter, setPaymentMethodFilter] = useState<'all'|'xendit'|'whatsapp'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateRange, setDateRange] = useState<{start: string, end: string}>({start: '', end: ''});
+  const [amountRange, setAmountRange] = useState<{min: string, max: string}>({min: '', max: ''});
   const { push } = useToast();
 
   const mapRow = (r: any): OrderRow => ({
@@ -89,9 +94,56 @@ const AdminOrders: React.FC = () => {
   }, []);
 
   const filtered = useMemo(() => {
-    if (statusFilter === 'all') return rows as OrderRow[];
-    return (rows as OrderRow[]).filter(r => r.status === statusFilter);
-  }, [rows, statusFilter]);
+    let result = rows as OrderRow[];
+    
+    // Status filter
+    if (statusFilter !== 'all') {
+      result = result.filter(r => r.status === statusFilter);
+    }
+    
+    // Order type filter
+    if (orderTypeFilter !== 'all') {
+      result = result.filter(r => r.order_type === orderTypeFilter);
+    }
+    
+    // Payment method filter
+    if (paymentMethodFilter !== 'all') {
+      result = result.filter(r => r.payment_method === paymentMethodFilter);
+    }
+    
+    // Search filter
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
+      result = result.filter(r => 
+        r.id.toLowerCase().includes(searchLower) ||
+        r.customer_name.toLowerCase().includes(searchLower) ||
+        r.customer_email.toLowerCase().includes(searchLower) ||
+        r.customer_phone.includes(searchTerm)
+      );
+    }
+    
+    // Date range filter
+    if (dateRange.start || dateRange.end) {
+      result = result.filter(r => {
+        const orderDate = new Date(r.created_at).toISOString().split('T')[0];
+        if (dateRange.start && orderDate < dateRange.start) return false;
+        if (dateRange.end && orderDate > dateRange.end) return false;
+        return true;
+      });
+    }
+    
+    // Amount range filter
+    if (amountRange.min || amountRange.max) {
+      result = result.filter(r => {
+        const amount = r.amount;
+        if (amountRange.min && amount < parseFloat(amountRange.min)) return false;
+        if (amountRange.max && amount > parseFloat(amountRange.max)) return false;
+        return true;
+      });
+    }
+    
+    return result;
+  }, [rows, statusFilter, orderTypeFilter, paymentMethodFilter, searchTerm, dateRange, amountRange]);
 
   const updateStatus = async (id: string, status: OrderRow['status']) => {
     if (!supabase) return;
@@ -108,20 +160,142 @@ const AdminOrders: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-sm">
-          <Filter size={16} className="text-gray-400" />
-          <select value={statusFilter} onChange={e=>setStatusFilter(e.target.value as any)} className="bg-black/60 border border-white/10 rounded px-2 py-1">
-            <option value="all">Semua</option>
-            <option value="pending">Pending</option>
-            <option value="paid">Paid</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
+      {/* Advanced Filters */}
+      <div className="bg-black/60 border border-pink-500/30 rounded-xl p-6 space-y-4">
+        <div className="flex items-center gap-2 mb-4">
+          <Filter size={20} className="text-pink-400" />
+          <h3 className="text-lg font-semibold text-white">Filter Pesanan</h3>
         </div>
-        <button onClick={load} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm">
-          <RefreshCw size={16} /> Refresh
-        </button>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {/* Search */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Cari</label>
+            <input
+              type="text"
+              placeholder="ID, nama, email, telepon..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+            />
+          </div>
+          
+          {/* Status Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+            <select 
+              value={statusFilter} 
+              onChange={e=>setStatusFilter(e.target.value as any)} 
+              className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+            >
+              <option value="all">Semua Status</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="completed">Completed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+          
+          {/* Order Type Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Jenis Order</label>
+            <select 
+              value={orderTypeFilter} 
+              onChange={e=>setOrderTypeFilter(e.target.value as any)} 
+              className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+            >
+              <option value="all">Semua Jenis</option>
+              <option value="purchase">Pembelian</option>
+              <option value="rental">Rental</option>
+            </select>
+          </div>
+          
+          {/* Payment Method Filter */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Metode Pembayaran</label>
+            <select 
+              value={paymentMethodFilter} 
+              onChange={e=>setPaymentMethodFilter(e.target.value as any)} 
+              className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+            >
+              <option value="all">Semua Metode</option>
+              <option value="xendit">Xendit</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select>
+          </div>
+        </div>
+        
+        {/* Date and Amount Filters */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-pink-500/20">
+          {/* Date Range */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Rentang Tanggal</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
+                className="px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+              />
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
+                className="px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+              />
+            </div>
+          </div>
+          
+          {/* Amount Range */}
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Rentang Jumlah (Rp)</label>
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="number"
+                placeholder="Min"
+                value={amountRange.min}
+                onChange={(e) => setAmountRange(prev => ({...prev, min: e.target.value}))}
+                className="px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+              />
+              <input
+                type="number"
+                placeholder="Max"
+                value={amountRange.max}
+                onChange={(e) => setAmountRange(prev => ({...prev, max: e.target.value}))}
+                className="px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+              />
+            </div>
+          </div>
+        </div>
+        
+        {/* Filter Summary and Actions */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-pink-500/20">
+          <div className="text-sm text-gray-400">
+            Menampilkan {filtered.length} dari {rows.length} pesanan
+          </div>
+          
+          <div className="flex gap-2">
+            <button 
+              onClick={() => {
+                setSearchTerm('');
+                setStatusFilter('all');
+                setOrderTypeFilter('all');
+                setPaymentMethodFilter('all');
+                setDateRange({start: '', end: ''});
+                setAmountRange({min: '', max: ''});
+              }}
+              className="px-3 py-2 rounded-lg border border-white/20 text-white hover:bg-white/10 text-sm"
+            >
+              Reset Filter
+            </button>
+            <button 
+              onClick={load} 
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm"
+            >
+              <RefreshCw size={16} /> Refresh
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="bg-black/60 border border-pink-500/30 rounded-xl overflow-hidden mt-3">
