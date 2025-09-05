@@ -43,21 +43,26 @@ const WishlistPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900">
+    <div className="min-h-screen bg-app-dark">
       <Header />
       
       <div className="pt-20 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center space-x-3">
-              <Heart size={28} className="text-pink-400" />
-              <h1 className="text-2xl font-bold text-white">Wishlist Saya</h1>
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center space-x-4">
+              <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl flex items-center justify-center">
+                <Heart size={24} className="text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-white">Wishlist Saya</h1>
+                <p className="text-gray-400">Produk yang Anda sukai</p>
+              </div>
             </div>
             {wishlistItems.length > 0 && (
               <button
                 onClick={clearWishlist}
-                className="text-red-400 hover:text-red-300 text-sm underline"
+                className="text-red-400 hover:text-red-300 text-sm underline transition-colors"
               >
                 Kosongkan Semua
               </button>
@@ -65,16 +70,18 @@ const WishlistPage: React.FC = () => {
           </div>
 
           {wishlistItems.length === 0 ? (
-            <div className="bg-black/40 backdrop-blur rounded-xl p-8 text-center border border-pink-500/30">
-              <Heart size={64} className="text-gray-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-white mb-2">Wishlist Kosong</h2>
-              <p className="text-gray-400 mb-6">
+            <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-12 text-center border border-gray-700/50">
+              <div className="w-20 h-20 bg-pink-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <Heart size={40} className="text-pink-400" />
+              </div>
+              <h2 className="text-2xl font-semibold text-white mb-4">Wishlist Kosong</h2>
+              <p className="text-gray-400 mb-8 max-w-md mx-auto">
                 Belum ada produk yang ditambahkan ke wishlist. 
                 Jelajahi katalog dan tambahkan produk favorit Anda!
               </p>
               <Link
                 to="/products"
-                className="inline-flex items-center space-x-2 bg-pink-500 hover:bg-pink-600 text-white px-6 py-3 rounded-lg transition-colors"
+                className="inline-flex items-center space-x-2 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white px-8 py-4 rounded-xl transition-all transform hover:scale-105"
               >
                 <ShoppingCart size={20} />
                 <span>Jelajahi Produk</span>

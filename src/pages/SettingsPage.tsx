@@ -81,22 +81,27 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900">
+    <div className="min-h-screen bg-app-dark">
       <Header />
       
       <div className="pt-20 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
-          <div className="flex items-center space-x-3 mb-6">
-            <SettingsIcon size={28} className="text-pink-400" />
-            <h1 className="text-2xl font-bold text-white">Pengaturan</h1>
+          <div className="flex items-center space-x-4 mb-8">
+            <div className="w-12 h-12 bg-gradient-to-br from-pink-400 to-purple-500 rounded-xl flex items-center justify-center">
+              <SettingsIcon size={24} className="text-white" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold text-white">Pengaturan</h1>
+              <p className="text-gray-400">Kelola preferensi aplikasi Anda</p>
+            </div>
           </div>
 
           <div className="space-y-6">
             {/* Theme Settings */}
-            <div className="bg-black/40 backdrop-blur rounded-xl p-6 border border-pink-500/30">
-              <h2 className="text-lg font-semibold text-white mb-4 flex items-center">
-                <Moon size={20} className="mr-2" />
+            <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-6 border border-gray-700/50">
+              <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
+                <Moon size={20} className="mr-3 text-blue-400" />
                 Tampilan
               </h2>
               
