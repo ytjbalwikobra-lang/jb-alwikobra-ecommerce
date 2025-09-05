@@ -6,3 +6,9 @@ ADD COLUMN IF NOT EXISTS user_id UUID NULL;
 -- You may track user_id without FK
 
 CREATE INDEX IF NOT EXISTS idx_orders_user_id ON orders(user_id);
+
+-- Update RLS policy now that user_id column exists
+DROP POLICY IF EXISTS "Users can view only their orders" ON orders;
+CREATE POLICY "Users can view only their orders" 
+ON orders FOR SELECT 
+USING (auth.uid() IS NOT NULL AND user_id IS NOT NULL AND user_id = auth.uid());

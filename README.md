@@ -1,278 +1,182 @@
-# JB Alwikobra E-commerce
+# Supabase CLI (v1)
 
-Platform e-commerce untuk jual, beli, dan rental akun game di Indonesia dengan fokus pada kemudahan dan keamanan transaksi.
+[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main)
 
-## 🚀 Fitur Utama
+[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
 
-### ✨ Flash Sales
-- Sistem flash sale dengan countdown timer real-time
-- Diskon hingga 70% untuk produk terpilih
-- Integrasi payment gateway Xendit untuk transaksi flash sale
-- Form checkout yang wajib diisi: Nama, Email, No. Telepon
+This repository contains all the functionality for Supabase CLI.
 
-### 🎮 Katalog Produk
-- Tampilan produk dengan horizontal scroll yang responsif
-- Filter berdasarkan game, harga, dan kategori
-- Search functionality yang powerful
-- Kartu produk yang clean tanpa CTA (CTA hanya di detail page)
+- [x] Running Supabase locally
+- [x] Managing database migrations
+- [x] Creating and deploying Supabase Functions
+- [x] Generating types directly from your database schema
+- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
 
-### 📱 Halaman Detail Produk
-- Informasi lengkap tentang akun game
-- CTA untuk pembelian via Xendit payment gateway
-- Opsi rental akun dengan varian harga dan durasi
-- WhatsApp integration untuk rental dan konsultasi
-- Gallery gambar dengan thumbnail navigation
-- Trust badges dan review system
+## Getting started
 
-### 🏠 Jual Akun
-- CTA langsung ke WhatsApp Admin
-- Form pre-filled dengan informasi produk
-- Link tracking untuk follow-up
+### Install the CLI
 
-### ⚙️ Admin Panel (Coming Soon)
-- CRUD operasi untuk produk
-- Manajemen flash sales
-- Pengaturan opsi rental
-- Dashboard analytics
+Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
 
-## 🎨 Desain
-
-### Color Scheme
-- **Primary**: Pink (#ec4899, #f472b6)
-- **Accent**: Hitam (#000000) & Putih (#ffffff)
-- **Secondary**: Abu-abu untuk teks dan background
-
-### Style Guidelines
-- Clean dan modern design
-- Mobile-first responsive approach
-- Fokus pada user experience dan kemudahan navigasi
-- Consistent spacing dan typography
-- Smooth animations dan transitions
-
-## 🛠 Tech Stack
-
-### Frontend
-- **React 18** dengan TypeScript
-- **Tailwind CSS** untuk styling
-- **React Router** untuk navigation
-- **Lucide React** untuk icons
-- **Axios** untuk HTTP requests
-
-### Backend & Database
-- **Supabase** (PostgreSQL) sebagai backend
-- **Real-time subscriptions** untuk live updates
-- **Row Level Security** untuk data protection
-
-### Payment & Communication
-- **Xendit** untuk payment gateway
-- **WhatsApp API** untuk komunikasi dan rental booking
-
-### Deployment
-- **Vercel** untuk hosting dan continuous deployment
-- **GitHub** untuk version control
-
-## 🏃‍♂️ Quick Start
-
-### Prerequisites
-- Node.js 16+ dan npm
-- Account Supabase
-- Account Xendit (untuk payment)
-- WhatsApp Business account
-
-### 1. Clone Repository
 ```bash
-git clone https://github.com/your-username/jb-alwikobra-ecommerce.git
-cd jb-alwikobra-ecommerce
+npm i supabase --save-dev
 ```
 
-### 2. Install Dependencies
+To install the beta release channel:
+
 ```bash
-npm install
+npm i supabase@beta --save-dev
 ```
 
-### 3. Setup Supabase
-1. Buat project baru di [Supabase](https://supabase.com)
-2. Copy URL dan anon key dari Settings > API
-3. Jalankan SQL migration di SQL Editor:
-   ```sql
-   -- Copy dan paste content dari supabase/migrations/001_initial_schema.sql
-   ```
-4. Jalankan juga file berikut di SQL Editor untuk RLS & kolom user_id:
-   ```sql
-   -- Copy dari supabase/migrations/002_enable_rls.sql
-   -- Copy dari supabase/migrations/003_add_user_id_to_orders.sql
-   ```
-
-### 4. Environment Variables
-Buat file `.env.local` di root directory:
-```env
-REACT_APP_SUPABASE_URL=your_supabase_project_url
-REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
-REACT_APP_XENDIT_PUBLIC_KEY=your_xendit_public_key
-REACT_APP_WHATSAPP_NUMBER=6281234567890
-REACT_APP_SITE_NAME=JB Alwikobra
-REACT_APP_SITE_URL=http://localhost:3000
-```
-
-Tambahkan environment server (di Vercel Project Settings):
+When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
 
 ```
-SUPABASE_URL=your_supabase_project_url
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-XENDIT_SECRET_KEY=your_xendit_secret_key
-XENDIT_CALLBACK_TOKEN=your_shared_webhook_token
+NODE_OPTIONS=--no-experimental-fetch yarn add supabase
 ```
 
-Set Xendit Invoice Webhook URL ke:
+> **Note**
+For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
 
-```
-https://<domain-anda>/api/xendit/webhook
-```
-Tambahkan header opsional `X-Callback-Token` di dashboard Xendit yang sama dengan `XENDIT_CALLBACK_TOKEN` untuk memverifikasi request.
+<details>
+  <summary><b>macOS</b></summary>
 
-### Idempotensi Pembayaran
+  Available via [Homebrew](https://brew.sh). To install:
 
-Untuk mencegah duplikasi order saat pengguna mengklik tombol bayar berulang kali atau saat terjadi retry jaringan:
-- Frontend mengirim `external_id` yang stabil per percobaan pembayaran.
-- Server menyimpan nilai ini sebagai `orders.client_external_id` dan akan menggunakan baris order yang sama jika `external_id` yang sama diterima kembali (idempotent).
-- Webhook Xendit akan mencocokkan order berdasarkan `xendit_invoice_id` terlebih dahulu, lalu `client_external_id` sebagai cadangan.
+  ```sh
+  brew install supabase/tap/supabase
+  ```
 
-### 5. Start Development Server
+  To install the beta release channel:
+  
+  ```sh
+  brew install supabase/tap/supabase-beta
+  brew link --overwrite supabase-beta
+  ```
+  
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Windows</b></summary>
+
+  Available via [Scoop](https://scoop.sh). To install:
+
+  ```powershell
+  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
+  scoop install supabase
+  ```
+
+  To upgrade:
+
+  ```powershell
+  scoop update supabase
+  ```
+</details>
+
+<details>
+  <summary><b>Linux</b></summary>
+
+  Available via [Homebrew](https://brew.sh) and Linux packages.
+
+  #### via Homebrew
+
+  To install:
+
+  ```sh
+  brew install supabase/tap/supabase
+  ```
+
+  To upgrade:
+
+  ```sh
+  brew upgrade supabase
+  ```
+
+  #### via Linux packages
+
+  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
+
+  ```sh
+  sudo apk add --allow-untrusted <...>.apk
+  ```
+
+  ```sh
+  sudo dpkg -i <...>.deb
+  ```
+
+  ```sh
+  sudo rpm -i <...>.rpm
+  ```
+
+  ```sh
+  sudo pacman -U <...>.pkg.tar.zst
+  ```
+</details>
+
+<details>
+  <summary><b>Other Platforms</b></summary>
+
+  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
+
+  ```sh
+  go install github.com/supabase/cli@latest
+  ```
+
+  Add a symlink to the binary in `$PATH` for easier access:
+
+  ```sh
+  ln -s "$(go env GOPATH)/cli" /usr/bin/supabase
+  ```
+
+  This works on other non-standard Linux distros.
+</details>
+
+<details>
+  <summary><b>Community Maintained Packages</b></summary>
+
+  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
+  To install in your working directory:
+
+  ```bash
+  pkgx install supabase
+  ```
+
+  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
+</details>
+
+### Run the CLI
+
 ```bash
-npm start
+supabase bootstrap
 ```
 
-Aplikasi akan berjalan di `http://localhost:3000`
+Or using npx:
 
-### 6. Build untuk Production
 ```bash
-npm run build
+npx supabase bootstrap
 ```
 
-## 📦 Project Structure
+The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
 
+## Docs
+
+Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+
+## Breaking changes
+
+We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
+
+However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
+
+## Developing
+
+To run from source:
+
+```sh
+# Go >= 1.22
+go run . help
 ```
-src/
-├── components/          # Reusable UI components
-│   ├── Header.tsx      # Navigation header
-│   ├── Footer.tsx      # Site footer
-│   └── ProductCard.tsx # Product display card
-├── pages/              # Page components
-│   ├── HomePage.tsx    # Landing page
-│   ├── ProductsPage.tsx # Product catalog
-│   ├── ProductDetailPage.tsx # Product detail
-│   └── OrderHistoryPage.tsx # Order history (login only)
-├── services/           # API services
-│   ├── supabase.ts     # Supabase client
-│   ├── productService.ts # Product API calls
-│   ├── paymentService.ts # Xendit invoice client
-│   └── authService.ts    # Auth helpers (profile auto-fill)
-├── types/              # TypeScript type definitions
-│   └── index.ts        # All type definitions
-├── utils/              # Utility functions
-│   └── helpers.ts      # Helper functions
-└── App.tsx            # Main app component
-```
-
-## 🚀 Deployment ke Vercel
-
-### 1. Persiapan
-1. Push code ke GitHub repository
-2. Connect Vercel ke GitHub account
-
-### 2. Deploy
-1. Buka [Vercel Dashboard](https://vercel.com/dashboard)
-2. Click "New Project"
-3. Import GitHub repository
-4. Set environment variables di Vercel settings
-5. Deploy!
-
-### 3. Environment Variables di Vercel
-Tambahkan semua environment variables yang sama seperti di `.env.local`:
-- `REACT_APP_SUPABASE_URL`
-- `REACT_APP_SUPABASE_ANON_KEY`
-- `REACT_APP_XENDIT_PUBLIC_KEY`
-- `REACT_APP_WHATSAPP_NUMBER`
-- `REACT_APP_SITE_NAME`
-- `REACT_APP_SITE_URL` (ganti dengan domain Vercel)
-Dan untuk server-side:
-- `SUPABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
-- `XENDIT_SECRET_KEY`
-- `XENDIT_CALLBACK_TOKEN`
-
-Catatan penting:
-- Jangan commit secret produksi ke repository. Isi nilai-nilai produksi hanya di Project Settings Vercel.
-- Pastikan webhook Xendit diarahkan ke: `https://<domain-anda>/api/xendit/webhook` dan gunakan token yang sama dengan `XENDIT_CALLBACK_TOKEN`.
-
-## 🔧 Development
-
-### Database Schema
-Database schema lengkap tersedia di `supabase/migrations/001_initial_schema.sql` yang mencakup:
-- **products**: Data produk dan akun game
-- **rental_options**: Opsi rental untuk setiap produk
-- **flash_sales**: Data flash sale dan harga khusus
-- **orders**: Riwayat transaksi dan pemesanan
-
-### API Integration
-
-#### Supabase
-- Real-time data fetching
-- Automatic subscription untuk live updates
-- Optimized queries dengan proper indexing
-
-#### Xendit Payment
-- Secure payment processing
-- Multiple payment methods
-- Automatic confirmation handling
-
-#### WhatsApp Integration
-- Pre-filled message templates
-- Deep linking untuk langsung ke chat
-- Product information auto-populated
-
-## 🎯 Roadmap
-
-### Phase 1 (Current)
-- [x] Basic e-commerce functionality
-- [x] Product catalog dan detail pages
-- [x] Flash sales dengan countdown timer
-- [x] WhatsApp integration
-- [x] Responsive design
-
-### Phase 2
-- [ ] Admin dashboard dan CMS
-- [ ] User authentication dan profiles
-- [ ] Wishlist dan favorites
-- [ ] Review dan rating system
-- [ ] Advanced search dan filters
-
-### Phase 3
-- [ ] Mobile app (React Native)
-- [ ] Push notifications
-- [ ] Loyalty program
-- [ ] Multi-vendor support
-- [ ] Advanced analytics
-
-## 🤝 Contributing
-
-1. Fork repository
-2. Buat feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push ke branch (`git push origin feature/amazing-feature`)
-5. Buka Pull Request
-
-## 📄 License
-
-Distributed under the MIT License. See `LICENSE` file for more information.
-
-## 📞 Contact
-
-**JB Alwikobra Team**
-- Email: admin@jbalwikobra.com
-- WhatsApp: +62 812-3456-7890
-- Website: [https://jbalwikobra.com](https://jbalwikobra.com)
-
----
-
-**Made with ❤️ for Indonesian Gamers**

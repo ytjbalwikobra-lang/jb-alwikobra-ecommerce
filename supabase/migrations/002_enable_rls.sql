@@ -33,10 +33,26 @@ CREATE POLICY "Anyone can create orders"
 ON orders FOR INSERT 
 WITH CHECK (true);
 
--- Only authenticated users can see orders that belong to them (by user_id)
-CREATE POLICY "Users can view only their orders" 
-ON orders FOR SELECT 
-USING (auth.uid() IS NOT NULL AND user_id IS NOT NULL AND user_id = auth.uid());
+-- Check if user_id column exists before creating the policy
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns 
+        WHERE table_name = 'orders' AND column_name = 'user_id'
+    ) THEN
+        -- Only authenticated users can see orders that belong to them (by user_id)
+        DROP POLICY IF EXISTS "Users can view only their orders" ON orders;
+        CREATE POLICY "Users can view only their orders" 
+        ON orders FOR SELECT 
+        USING (auth.uid() IS NOT NULL AND user_id IS NOT NULL AND user_id = auth.uid());
+    ELSE
+        -- If user_id doesn't exist yet, create a basic policy
+        DROP POLICY IF EXISTS "Users can view only their orders" ON orders;
+        CREATE POLICY "Users can view only their orders" 
+        ON orders FOR SELECT 
+        USING (true); -- Allow all for now, will be updated when user_id is added
+    END IF;
+END $$;
 
 -- Optional: Create policies untuk admin access (uncomment when implementing auth)
 -- CREATE POLICY "Admins can manage products" 

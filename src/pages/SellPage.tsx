@@ -63,9 +63,9 @@ const SellPage: React.FC = () => {
         if (names.length) setGameOptions([...names, 'Lainnya']);
         
         // Get popular games from database based on sold products
-        const products = await ProductService.list();
+        const products = await ProductService.getAllProducts();
         const gameStats = names.map(gameName => {
-          const gameProducts = products.filter(p => p.gameTitle === gameName && p.isSold);
+          const gameProducts = products.filter(p => p.gameTitle === gameName && p.isActive === false);
           return {
             name: gameName,
             count: gameProducts.length > 0 ? `${gameProducts.length}+` : '0',

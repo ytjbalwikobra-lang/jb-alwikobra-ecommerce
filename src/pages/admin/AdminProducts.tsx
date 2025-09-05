@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Product, Tier, GameTitle } from '../../types/index.ts';
+import { Product, Tier, GameTitle, ProductTier } from '../../types/index.ts';
 import { ProductService } from '../../services/productService.ts';
 import { supabase } from '../../services/supabase.ts';
 import ImageUploader from '../../components/ImageUploader.tsx';
@@ -54,62 +54,37 @@ const AdminProducts: React.FC = () => {
   const [selectedTier, setSelectedTier] = useState('');
   const [statusFilter, setStatusFilter] = useState('all'); // all, active, archived
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(20); // Increased default to 20
+  const [totalProducts, setTotalProducts] = useState(0); // Track total for pagination
+  const [debouncedSearch, setDebouncedSearch] = useState(''); // Debounced search
 
-  // Filtered and paginated products
-  const filteredProducts = useMemo(() => {
-    return products.filter(product => {
-      // Search filter
-      if (searchTerm) {
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = 
-          product.name.toLowerCase().includes(searchLower) ||
-          product.description.toLowerCase().includes(searchLower) ||
-          (product.accountLevel && product.accountLevel.toLowerCase().includes(searchLower)) ||
-          (product.gameTitle && product.gameTitle.toLowerCase().includes(searchLower)) ||
-          (product.gameTitleData?.name && product.gameTitleData.name.toLowerCase().includes(searchLower));
-        
-        if (!matchesSearch) return false;
-      }
-      
-      // Game filter
-      if (selectedGame) {
-        const productGameId = product.gameTitleData?.id || product.gameTitleId;
-        if (productGameId !== selectedGame) return false;
-      }
-      
-      // Tier filter
-      if (selectedTier) {
-        const productTierId = product.tierData?.id || product.tierId;
-        if (productTierId !== selectedTier) return false;
-      }
-      
-      // Status filter
-      if (statusFilter === 'active') {
-        if ((product as any).isActive === false || (product as any).archivedAt) return false;
-      } else if (statusFilter === 'archived') {
-        if (!((product as any).isActive === false || (product as any).archivedAt)) return false;
-      }
-      
-      return true;
-    });
-  }, [products, searchTerm, selectedGame, selectedTier, statusFilter]);
+  // Debounced search effect
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearch(searchTerm), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedProducts = filteredProducts.slice(startIndex, startIndex + itemsPerPage);
+  // Products are now filtered at database level, so this is simplified
+  const filteredProducts = products; // Already filtered by database
+  const totalPages = Math.ceil(totalProducts / itemsPerPage);
+  const paginatedProducts = filteredProducts; // Already paginated by database
 
   // Reset pagination when filters change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedGame, selectedTier, statusFilter, itemsPerPage]);
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [debouncedSearch, selectedGame, selectedTier, statusFilter, itemsPerPage]);
 
-  useEffect(() => {
-    (async () => {
-      try {
-  // Reset and detect current schema capabilities (silent)
-  ProductService.resetCapabilities();
-  await ProductService.detectSchemaCapabilities();
+  // Optimized data loading with database-level filtering and pagination
+  const loadProducts = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      if (!supabase) {
+        // Fallback to existing ProductService if no supabase
+        ProductService.resetCapabilities();
+        await ProductService.detectSchemaCapabilities();
         
         const [list, tList, gList] = await Promise.all([
           ProductService.getAllProducts({ includeArchived: true }),
@@ -119,13 +94,101 @@ const AdminProducts: React.FC = () => {
         setProducts(list);
         setTiers(tList);
         setGames(gList);
-      } catch (error) {
-        push('Gagal memuat data', 'error');
-      } finally {
+        setTotalProducts(list.length);
         setLoading(false);
+        return;
       }
-    })();
-  }, [push]);
+
+      // OPTIMIZED: Build query with database-level filtering
+      let query = supabase
+        .from('products')
+        .select(`
+          id, name, description, price, original_price, account_level,
+          is_active, archived_at, created_at, images, game_title_id, tier_id,
+          tiers (id, name, slug, color, background_gradient),
+          game_titles (id, name, slug, icon)
+        `, { count: 'exact' });
+
+      // Apply filters at DATABASE level (not client-side)
+      if (statusFilter === 'active') {
+        query = query.eq('is_active', true).is('archived_at', null);
+      } else if (statusFilter === 'archived') {
+        query = query.or('is_active.eq.false,archived_at.not.is.null');
+      }
+
+      if (debouncedSearch.trim()) {
+        query = query.or(`name.ilike.%${debouncedSearch.trim()}%,description.ilike.%${debouncedSearch.trim()}%`);
+      }
+
+      if (selectedGame !== 'all' && selectedGame) {
+        query = query.eq('game_title_id', selectedGame);
+      }
+
+      if (selectedTier !== 'all' && selectedTier) {
+        query = query.eq('tier_id', selectedTier);
+      }
+
+      // CRITICAL: Database-level pagination (not client-side)
+      const offset = (currentPage - 1) * itemsPerPage;
+      query = query
+        .order('created_at', { ascending: false })
+        .range(offset, offset + itemsPerPage - 1);
+
+      const { data: productData, error: productError, count } = await query;
+
+      if (productError) throw productError;
+
+      // Load filter options separately (these can be cached)
+      const [tList, gList] = await Promise.all([
+        ProductService.getTiers(),
+        ProductService.getGameTitles()
+      ]);
+
+      // Map data to existing format
+      const mappedProducts: Product[] = (productData || []).map(product => ({
+        id: product.id,
+        name: product.name,
+        description: product.description || '',
+        price: product.price,
+        originalPrice: product.original_price,
+        image: product.images?.[0] || '',
+        images: product.images || [],
+        category: '', // Legacy field
+        gameTitle: product.game_titles?.[0]?.name || '',
+        tier: product.tiers?.[0]?.slug as ProductTier || 'reguler',
+        tierId: product.tier_id,
+        gameTitleId: product.game_title_id,
+        tierData: product.tiers?.[0] as any,
+        gameTitleData: product.game_titles?.[0] as any,
+        accountLevel: product.account_level,
+        isFlashSale: false, // Set default
+        hasRental: false, // Set default
+        stock: 1, // Set default
+        isActive: product.is_active !== false,
+        archivedAt: product.archived_at,
+        createdAt: product.created_at,
+        updatedAt: product.created_at, // Use created_at as fallback
+        rentalOptions: [] // Load separately if needed for performance
+      }));
+
+      setProducts(mappedProducts);
+      setTiers(tList);
+      setGames(gList);
+      setTotalProducts(count || 0);
+      
+      console.log(`✅ Loaded ${mappedProducts.length} products (page ${currentPage}/${Math.ceil((count || 0) / itemsPerPage)}) - Total: ${count}`);
+      
+    } catch (error) {
+      console.error('Error loading products:', error);
+      push('Gagal memuat data', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch, selectedGame, selectedTier, statusFilter, currentPage, itemsPerPage, push]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const startCreate = () => {
     setForm(emptyForm);
@@ -259,8 +322,7 @@ const AdminProducts: React.FC = () => {
             push('Produk disimpan, tetapi gagal memproses opsi rental', 'info');
           }
         }
-        const updated = await ProductService.getAllProducts();
-        setProducts(updated);
+        await loadProducts(); // Use optimized reload
         setShowForm(false);
         setForm(emptyForm);
         push('Produk disimpan', 'success');
@@ -280,7 +342,7 @@ const AdminProducts: React.FC = () => {
     const allImages = target ? (target.images && target.images.length ? target.images : (target.image ? [target.image] : [])) : [];
     const ok = await ProductService.deleteProduct(id, { images: allImages });
     if (ok) {
-      setProducts(await ProductService.getAllProducts());
+      await loadProducts(); // Use optimized reload
       push('Produk dihapus', 'success');
     } else {
       push('Gagal menghapus produk', 'error');
@@ -424,15 +486,17 @@ const AdminProducts: React.FC = () => {
                   <button onClick={() => startEdit(p)} className="px-3 py-1.5 rounded border border-white/20 text-white hover:bg-white/10 mr-2">Edit</button>
                   {(p as any).isActive === false || (p as any).archivedAt ? (
                     <button onClick={async()=>{
-                      if (!supabase) return; await (supabase as any).from('products').update({ is_active: true, archived_at: null }).eq('id', p.id);
-                      setProducts(await ProductService.getAllProducts({ includeArchived: true }));
+                      if (!supabase) return; 
+                      await (supabase as any).from('products').update({ is_active: true, archived_at: null }).eq('id', p.id);
+                      await loadProducts(); // Use optimized reload
                       push('Produk dipulihkan dari arsip', 'success');
                     }} className="px-3 py-1.5 rounded border border-green-500/40 text-green-300 hover:bg-green-500/10 mr-2">Pulihkan</button>
                   ) : (
                     <button onClick={async()=>{
                       if (!confirm('Arsipkan produk ini?')) return;
-                      if (!supabase) return; await (supabase as any).from('products').update({ is_active: false, archived_at: new Date().toISOString() }).eq('id', p.id);
-                      setProducts(await ProductService.getAllProducts({ includeArchived: true }));
+                      if (!supabase) return; 
+                      await (supabase as any).from('products').update({ is_active: false, archived_at: new Date().toISOString() }).eq('id', p.id);
+                      await loadProducts(); // Use optimized reload
                       push('Produk diarsipkan', 'success');
                     }} className="px-3 py-1.5 rounded border border-yellow-500/40 text-amber-300 hover:bg-yellow-500/10 mr-2">Arsipkan</button>
                   )}
@@ -443,12 +507,29 @@ const AdminProducts: React.FC = () => {
           )}
         </div>
         
-        {/* Pagination */}
-        {filteredProducts.length > itemsPerPage && (
+        {/* Enhanced Pagination with Items Per Page */}
+        {!loading && totalPages > 1 && (
           <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-              <div className="text-sm text-gray-400">
-                Halaman {currentPage} dari {totalPages}
+              <div className="flex items-center gap-4">
+                <div>
+                  <label className="block text-xs text-gray-400 mb-1">Items per halaman</label>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="bg-black border border-pink-500/40 rounded px-3 py-1 text-white text-sm"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+                <div className="text-sm text-gray-400">
+                  Menampilkan {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalProducts)} dari {totalProducts.toLocaleString()} produk
+                </div>
               </div>
               
               <div className="flex items-center gap-2">
@@ -461,30 +542,34 @@ const AdminProducts: React.FC = () => {
                 </button>
                 
                 <div className="flex items-center gap-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1)
-                    .filter(page => {
-                      if (totalPages <= 7) return true;
-                      if (page === 1 || page === totalPages) return true;
-                      if (page >= currentPage - 2 && page <= currentPage + 2) return true;
-                      return false;
-                    })
-                    .map((page, index, array) => (
-                      <React.Fragment key={page}>
-                        {index > 0 && array[index - 1] !== page - 1 && (
-                          <span className="px-2 text-gray-400">...</span>
-                        )}
-                        <button
-                          onClick={() => setCurrentPage(page)}
-                          className={`px-3 py-1 rounded text-sm ${
-                            page === currentPage
-                              ? 'bg-pink-600 text-white'
-                              : 'border border-white/20 text-white hover:bg-white/10'
-                          }`}
-                        >
-                          {page}
-                        </button>
-                      </React.Fragment>
-                    ))}
+                  {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                    let page;
+                    if (totalPages <= 7) {
+                      page = i + 1;
+                    } else if (currentPage <= 4) {
+                      page = i + 1;
+                    } else if (currentPage >= totalPages - 3) {
+                      page = totalPages - 6 + i;
+                    } else {
+                      page = currentPage - 3 + i;
+                    }
+                    
+                    if (page < 1 || page > totalPages) return null;
+                    
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 rounded text-sm ${
+                          page === currentPage
+                            ? 'bg-pink-600 text-white'
+                            : 'border border-white/20 text-white hover:bg-white/10'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
                 </div>
                 
                 <button
