@@ -45,7 +45,6 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 
     const product = order.products;
     const productName = product?.name || 'Unknown Product';
-    const productDescription = product?.description || 'No description provided';
     
     // Generate notification message
     const message = `🎮 **ORDERAN BARU - PAID** 
@@ -56,24 +55,14 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 📋 **Order ID:** ${order.id}
 
 🎯 **Product:** ${productName}
-� **Description:** ${productDescription}
 💰 **Amount:** Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
 ✅ **Status:** PAID
 
 📅 **Paid at:** ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Just now'}
 
----
-🚀 **ACTION REQUIRED:**
-• Tim processing segera handle order ini
-• Kirim akun ke customer via WhatsApp/Email
-• Update status ke completed setelah delivered
-
-📊 **Admin:** https://jbalwikobra.com/admin
-💬 **Support:** wa.me/6289653510125
-
 #OrderPaid #${order.id}`;
 
-    // Send to WhatsApp group
+    // Send to WhatsApp group (admin notification)
     const API_BASE_URL = 'https://notifapi.com';
     const API_KEY = 'f104a4c19ea118dd464e9de20605c4e5';
     const GROUP_ID = '120363421819020887@g.us'; // ORDERAN WEBSITE group
@@ -96,6 +85,85 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
       console.log(`[WhatsApp] Order paid notification sent successfully: ${result.results?.id_message}`);
     } else {
       console.error('[WhatsApp] Failed to send order paid notification:', result);
+    }
+
+
+
+    // Send notification to customer if phone number is provided
+    if (order.customer_phone) {
+      try {
+        // Clean phone number (remove non-digits and ensure it starts with 62)
+        let customerPhone = order.customer_phone.replace(/\D/g, '');
+        
+        // Handle different input formats
+        if (customerPhone.startsWith('62')) {
+          // Already in correct format (62xxxxxxxx)
+          customerPhone = customerPhone;
+        } else if (customerPhone.startsWith('08')) {
+          // Indonesian format starting with 08 (08xxxxxxxx -> 62xxxxxxxx)
+          customerPhone = '62' + customerPhone.substring(1);
+        } else if (customerPhone.startsWith('8')) {
+          // Indonesian format without leading 0 (8xxxxxxxx -> 62xxxxxxxx)
+          customerPhone = '62' + customerPhone;
+        } else if (customerPhone.startsWith('0')) {
+          // Other Indonesian format starting with 0 (0xxxxxxxx -> 62xxxxxxxx)
+          customerPhone = '62' + customerPhone.substring(1);
+        } else if (customerPhone.length >= 8) {
+          // Assume it's Indonesian mobile without country code
+          customerPhone = '62' + customerPhone;
+        } else {
+          console.log(`[WhatsApp] Invalid phone number format: ${order.customer_phone}`);
+          return;
+        }
+
+        // Generate customer notification message
+        const customerMessage = `🎉 **PEMBAYARAN BERHASIL!**
+
+Halo ${order.customer_name || 'Customer'},
+
+Terima kasih! Pembayaran Anda telah berhasil diproses.
+
+📋 **Order ID:** ${order.id}
+🎯 **Product:** ${productName}
+💰 **Total:** Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
+✅ **Status:** PAID
+
+📅 **Paid at:** ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Just now'}
+
+🚀 **Selanjutnya:**
+• Tim kami akan segera memproses pesanan Anda
+• Akun game akan dikirim melalui WhatsApp dalam 1-5 Menit
+• Jika ada pertanyaan, hubungi support kami
+
+💬 **Support:** wa.me/6289653510125
+🌐 **Website:** https://jbalwikobra.com
+
+Terima kasih telah berbelanja di JB Alwikobra! 🎮`;
+
+        const customerResponse = await fetch(`${API_BASE_URL}/send_message`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            phone_no: customerPhone,
+            key: API_KEY,
+            message: customerMessage
+          })
+        });
+
+        const customerResult = await customerResponse.json();
+        
+        if (customerResponse.ok && (customerResult.code === 200 || customerResult.status === 'success')) {
+          console.log(`[WhatsApp] Customer notification sent successfully to ${customerPhone}: ${customerResult.results?.id_message || customerResult.id_message || customerResult.message_id}`);
+        } else {
+          console.error('[WhatsApp] Failed to send customer notification:', customerResult);
+        }
+      } catch (customerError) {
+        console.error('[WhatsApp] Error sending customer notification:', customerError);
+      }
+    } else {
+      console.log('[WhatsApp] No customer phone number provided, skipping customer notification');
     }
   } catch (error) {
     console.error('[WhatsApp] Error sending order paid notification:', error);

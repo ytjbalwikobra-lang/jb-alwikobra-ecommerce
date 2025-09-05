@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { createXenditInvoice } from '../services/paymentService.ts';
 import { getCurrentUserProfile, isLoggedIn, getAuthUserId } from '../services/authService.ts';
+import PhoneInput from '../components/PhoneInput';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +47,7 @@ const ProductDetailPage: React.FC = () => {
     email: '',
     phone: ''
   });
+  const [isPhoneValid, setIsPhoneValid] = useState(true);
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [paymentAttemptId, setPaymentAttemptId] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
@@ -213,6 +215,28 @@ const ProductDetailPage: React.FC = () => {
 
   const handleCheckout = async () => {
     if (!product) return;
+    
+    // Validate required fields
+    if (!customer.name.trim()) {
+      alert('Nama lengkap wajib diisi.');
+      return;
+    }
+    
+    if (!customer.email.trim()) {
+      alert('Email wajib diisi.');
+      return;
+    }
+    
+    if (!customer.phone.trim()) {
+      alert('Nomor WhatsApp wajib diisi.');
+      return;
+    }
+    
+    if (!isPhoneValid) {
+      alert('Nomor WhatsApp tidak valid. Pastikan format sudah benar.');
+      return;
+    }
+    
     if (checkoutType === 'purchase') {
       if (!acceptedTerms) {
         alert('Harap setujui Syarat & Ketentuan terlebih dahulu.');
@@ -660,13 +684,12 @@ const ProductDetailPage: React.FC = () => {
                   <label className="block text-sm font-medium text-gray-300 mb-1">
                     No. WhatsApp *
                   </label>
-                  <input
-                    type="tel"
-                    required
+                  <PhoneInput
                     value={customer.phone}
-                    onChange={(e) => setCustomer({ ...customer, phone: e.target.value })}
-                    className="w-full px-3 py-2 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                    placeholder="Masukkan nomor WhatsApp (628...)"
+                    onChange={(value) => setCustomer({ ...customer, phone: value })}
+                    onValidationChange={setIsPhoneValid}
+                    placeholder="Masukkan nomor WhatsApp"
+                    required
                   />
                 </div>
 
