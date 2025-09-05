@@ -102,7 +102,7 @@ const ProfilePage: React.FC = () => {
 
   return (
     <AuthRequired>
-      <div className="min-h-screen bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900">
+      <div className="min-h-screen">
         <Header />
         
         <div className="pt-20 pb-20 px-4">

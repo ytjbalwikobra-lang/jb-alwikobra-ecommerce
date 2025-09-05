@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import Header from '../components/Header.tsx';
 import Footer from '../components/Footer.tsx';
+import { AuthRequired } from '../components/ProtectedRoute.tsx';
 
 interface AppSettings {
   theme: 'light' | 'dark' | 'auto';
@@ -81,8 +82,12 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900">
-      <Header />
+    <AuthRequired>
+      <div className="min-h-screen" style={{
+        background: '#000000',
+        backgroundImage: 'linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #1a1a1a 50%, #0a0a0a 75%, #000000 100%)'
+      }}>
+        <Header />
       
       <div className="pt-20 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
@@ -274,6 +279,7 @@ const SettingsPage: React.FC = () => {
 
       <Footer />
     </div>
+    </AuthRequired>
   );
 };
 

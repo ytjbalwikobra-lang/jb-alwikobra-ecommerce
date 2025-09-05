@@ -3,6 +3,7 @@ import { Heart, Trash2, ShoppingCart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Header from '../components/Header.tsx';
 import Footer from '../components/Footer.tsx';
+import { AuthRequired } from '../components/ProtectedRoute.tsx';
 import { formatCurrency } from '../utils/helpers.ts';
 
 interface WishlistItem {
@@ -43,8 +44,12 @@ const WishlistPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-900 via-purple-900 to-indigo-900">
-      <Header />
+    <AuthRequired>
+      <div className="min-h-screen" style={{
+        background: '#000000',
+        backgroundImage: 'linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #1a1a1a 50%, #0a0a0a 75%, #000000 100%)'
+      }}>
+        <Header />
       
       <div className="pt-20 pb-20 px-4">
         <div className="max-w-4xl mx-auto">
@@ -173,6 +178,7 @@ const WishlistPage: React.FC = () => {
 
       <Footer />
     </div>
+    </AuthRequired>
   );
 };
 

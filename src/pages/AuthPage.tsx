@@ -46,12 +46,9 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-black to-black">
+    <div className="relative min-h-screen overflow-hidden bg-black">
       {/* Subtle grid */}
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.04)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.04)_1px,transparent_1px)] bg-[size:3rem_3rem]" />
-      {/* Animated blobs */}
-      <div className="pointer-events-none absolute -top-40 -left-40 w-80 h-80 rounded-full bg-pink-600/25 blur-3xl animate-pulse" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 w-96 h-96 rounded-full bg-rose-600/20 blur-3xl animate-[pulse_6s_ease-in-out_infinite]" />
+      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:3rem_3rem]" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-4 py-10">
         <Link to="/" className="inline-flex items-center gap-2 text-gray-300 hover:text-white mb-6">
