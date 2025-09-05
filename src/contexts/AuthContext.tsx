@@ -7,7 +7,7 @@ interface AuthContextType {
   loading: boolean;
   signOut: () => Promise<void>;
   signIn: (email: string, password: string) => Promise<{error?: any}>;
-  signUp: (email: string, password: string, whatsapp?: string) => Promise<{error?: any}>;
+  signUp: (email: string, password: string, whatsapp?: string) => Promise<{error?: any; success?: boolean; message?: string; whatsappSent?: boolean}>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -95,18 +95,46 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signUp = async (email: string, password: string, whatsapp?: string) => {
     try {
       if (supabase) {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            data: {
-              name: email.split('@')[0],
-              whatsapp: whatsapp || '',
-              role: 'user'
-            }
+        // Use WhatsApp confirmation instead of email confirmation
+        if (whatsapp) {
+          const response = await fetch('/api/auth/whatsapp-confirm', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              email,
+              whatsapp,
+              name: email.split('@')[0]
+            })
+          });
+
+          const result = await response.json();
+          
+          if (result.success) {
+            return { 
+              success: true, 
+              message: 'Konfirmasi telah dikirim via WhatsApp. Silakan cek pesan untuk mengaktifkan akun.',
+              whatsappSent: true 
+            };
+          } else {
+            return { error: { message: result.error || 'Gagal mengirim konfirmasi WhatsApp' } };
           }
-        });
-        return { error };
+        } else {
+          // Fallback to traditional email signup if no WhatsApp
+          const { error } = await supabase.auth.signUp({
+            email,
+            password,
+            options: {
+              data: {
+                name: email.split('@')[0],
+                whatsapp: whatsapp || '',
+                role: 'user'
+              }
+            }
+          });
+          return { error };
+        }
       } else {
         // Demo mode
         if (email && password) {
