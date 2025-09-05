@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Zap, Home, HelpCircle } from 'lucide-react';
+import { ShoppingBag, Zap, Home, User } from 'lucide-react';
 
 const MobileBottomNav: React.FC = () => {
   const location = useLocation();
@@ -10,7 +10,7 @@ const MobileBottomNav: React.FC = () => {
     { path: '/products', label: 'Katalog', icon: ShoppingBag },
     { path: '/flash-sales', label: 'Flash Sale', icon: Zap },
     { path: '/sell', label: 'Jual Akun', icon: ShoppingBag },
-    { path: '/help', label: 'Bantuan', icon: HelpCircle },
+    { path: '/profile', label: 'Profile', icon: User },
   ];
 
   return (

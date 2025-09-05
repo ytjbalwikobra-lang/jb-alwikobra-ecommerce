@@ -44,6 +44,10 @@ const AuthPage: React.FC = () => {
       setLoading(false); 
     }
   };
+    } catch (e: any) {
+      setError(e?.message || 'Auth error');
+    } finally { setLoading(false); }
+  };
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-900 via-black to-black">
@@ -74,19 +78,19 @@ const AuthPage: React.FC = () => {
                 <div className="mt-6 grid grid-cols-3 gap-3 text-center">
                   <div className="bg-black/40 border border-white/10 rounded-xl p-4">
                     <div className="text-2xl font-bold text-white">Aman</div>
-                    <div className="text-xs text-gray-400">Enkripsi End-to-End</div>
+                    <div className="text-xs text-gray-400">Autentikasi Supabase</div>
                   </div>
                   <div className="bg-black/40 border border-white/10 rounded-xl p-4">
                     <div className="text-2xl font-bold text-white">Cepat</div>
-                    <div className="text-xs text-gray-400">WhatsApp Otomatis</div>
+                    <div className="text-xs text-gray-400">Proses instan</div>
                   </div>
                   <div className="bg-black/40 border border-white/10 rounded-xl p-4">
                     <div className="text-2xl font-bold text-white">Modern</div>
-                    <div className="text-xs text-gray-400">UI Responsif</div>
+                    <div className="text-xs text-gray-400">UI tematik</div>
                   </div>
                 </div>
               </div>
-              <div className="text-xs text-gray-400 text-center">Protected by Advanced Authentication</div>
+              <div className="text-xs text-gray-400 text-center">Protected by RLS & Supabase Auth</div>
             </div>
           </div>
 
@@ -101,9 +105,7 @@ const AuthPage: React.FC = () => {
                       <Lock size={24} className="text-pink-400" />
                       {mode === 'login' ? 'Masuk' : 'Daftar'}
                     </h1>
-                    <p className="text-gray-400 mt-1">
-                      {mode === 'login' ? 'Masuk ke akun Anda' : 'Buat akun baru dengan WhatsApp'}
-                    </p>
+                    <p className="text-gray-400 mt-1">Gunakan email dan password</p>
                   </div>
                   <Sparkles className="text-pink-400" />
                 </div>
@@ -113,14 +115,8 @@ const AuthPage: React.FC = () => {
                     <label className="block text-xs font-medium mb-1 text-gray-400">Email</label>
                     <div className="relative">
                       <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                      <input 
-                        type="email" 
-                        required 
-                        value={email} 
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full pl-9 pr-3 py-2 rounded-lg bg-black/60 border border-white/15 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50" 
-                        placeholder="name@email.com" 
-                      />
+                      <input type="email" required value={email} onChange={(e)=>setEmail(e.target.value)}
+                        className="w-full pl-9 pr-3 py-2 rounded-lg bg-black/60 border border-white/15 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50" placeholder="name@email.com" />
                     </div>
                   </div>
 
@@ -128,86 +124,28 @@ const AuthPage: React.FC = () => {
                     <label className="block text-xs font-medium mb-1 text-gray-400">Password</label>
                     <div className="relative">
                       <User size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-                      <input 
-                        type={showPass ? 'text' : 'password'} 
-                        required 
-                        value={password} 
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="w-full pl-9 pr-9 py-2 rounded-lg bg-black/60 border border-white/15 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50" 
-                        placeholder="••••••••" 
-                      />
-                      <button 
-                        type="button" 
-                        onClick={() => setShowPass(v => !v)} 
-                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200"
-                      >
+                      <input type={showPass ? 'text' : 'password'} required value={password} onChange={(e)=>setPassword(e.target.value)}
+                        className="w-full pl-9 pr-9 py-2 rounded-lg bg-black/60 border border-white/15 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500/50" placeholder="••••••••" />
+                      <button type="button" onClick={()=>setShowPass(v=>!v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200">
                         {showPass ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
                   </div>
 
-                  {mode === 'signup' && (
-                    <div>
-                      <label className="block text-xs font-medium mb-1 text-gray-400">
-                        <Phone size={12} className="inline mr-1" />
-                        WhatsApp (Opsional)
-                      </label>
-                      <PhoneInput
-                        value={whatsapp}
-                        onChange={setWhatsapp}
-                        onValidationChange={setIsValidPhone}
-                        placeholder="Contoh: 812345678901"
-                        className="bg-black/60 border-white/15 text-white"
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Anda akan menerima pesan selamat datang via WhatsApp
-                      </p>
-                    </div>
-                  )}
+                  {error && <div className="text-sm text-red-500">{error}</div>}
 
-                  {error && <div className="text-sm text-red-500 bg-red-500/10 border border-red-500/20 rounded-lg p-3">{error}</div>}
-
-                  <button 
-                    type="submit" 
-                    disabled={loading}
-                    className="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-lg py-2.5 font-semibold hover:shadow-[0_0_25px_rgba(236,72,153,0.35)] transition disabled:opacity-60 disabled:cursor-not-allowed"
-                  >
-                    {loading ? 'Memproses…' : (mode === 'login' ? 'Masuk' : 'Daftar Sekarang')}
+                  <button type="submit" disabled={loading}
+                    className="w-full bg-gradient-to-r from-pink-600 to-rose-600 text-white rounded-lg py-2.5 font-semibold hover:shadow-[0_0_25px_rgba(236,72,153,0.35)] transition disabled:opacity-60">
+                    {loading ? 'Memproses…' : (mode === 'login' ? 'Masuk' : 'Daftar')}
                   </button>
                 </form>
 
-                <div className="text-sm text-gray-300 mt-6 text-center">
+                <div className="text-sm text-gray-300 mt-4">
                   {mode === 'login' ? (
-                    <span>
-                      Belum punya akun?{' '}
-                      <button 
-                        onClick={() => setMode('signup')} 
-                        className="text-pink-400 hover:text-pink-300 font-medium underline"
-                      >
-                        Daftar di sini
-                      </button>
-                    </span>
+                    <span>Belum punya akun? <button onClick={()=>setMode('signup')} className="text-pink-400">Daftar</button></span>
                   ) : (
-                    <span>
-                      Sudah punya akun?{' '}
-                      <button 
-                        onClick={() => setMode('login')} 
-                        className="text-pink-400 hover:text-pink-300 font-medium underline"
-                      >
-                        Masuk di sini
-                      </button>
-                    </span>
+                    <span>Sudah punya akun? <button onClick={()=>setMode('login')} className="text-pink-400">Masuk</button></span>
                   )}
-                </div>
-
-                <div className="mt-6 pt-4 border-t border-white/10 text-center">
-                  <p className="text-xs text-gray-500">
-                    Dengan mendaftar, Anda menyetujui{' '}
-                    <Link to="/terms" className="text-pink-400 hover:text-pink-300 underline">
-                      Syarat & Ketentuan
-                    </Link>{' '}
-                    kami
-                  </p>
                 </div>
               </div>
             </div>

@@ -60,7 +60,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 
 📅 **Paid at:** ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Just now'}
 
-#OrderPaid #${order.id}`;
+#OrderPaid`;
 
     // Send to WhatsApp group (admin notification)
     const API_BASE_URL = 'https://notifapi.com';

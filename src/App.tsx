@@ -13,6 +13,9 @@ import FlashSalesPage from './pages/FlashSalesPage.tsx';
 import SellPage from './pages/SellPage.tsx';
 import PaymentStatusPage from './pages/PaymentStatusPage.tsx';
 import HelpPage from './pages/HelpPage.tsx';
+import ProfilePage from './pages/ProfilePage.tsx';
+import WishlistPage from './pages/WishlistPage.tsx';
+import SettingsPage from './pages/SettingsPage.tsx';
 import './App.css';
 import OrderHistoryPage from './pages/OrderHistoryPage.tsx';
 import AuthPage from './pages/AuthPage.tsx';
@@ -28,6 +31,7 @@ import AdminGameTitles from './pages/admin/AdminGameTitles.tsx';
 import WhatsAppTestPage from './pages/admin/WhatsAppTestPage.tsx';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
+import { AuthProvider } from './contexts/AuthContext.tsx';
 import TermsPage from './pages/TermsPage.tsx';
 import { FaviconService } from './services/faviconService.ts';
 
@@ -83,8 +87,9 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <ToastProvider>
-      <Router>
+      <AuthProvider>
+        <ToastProvider>
+          <Router>
         <ScrollToTop />
         {/* Public shell: shows global header/footer. Admin routes have their own layout without this shell. */}
         <Routes>
@@ -123,6 +128,9 @@ function App() {
                   <Route path="/flash-sales" element={<FlashSalesPage />} />
                   <Route path="/sell" element={<SellPage />} />
                   <Route path="/help" element={<HelpPage />} />
+                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/wishlist" element={<WishlistPage />} />
+                  <Route path="/settings" element={<SettingsPage />} />
                   <Route path="/terms" element={<TermsPage />} />
                   <Route path="/payment-status" element={<PaymentStatusPage />} />
                   <Route path="/auth" element={<AuthPage />} />
@@ -136,8 +144,9 @@ function App() {
             }
           />
         </Routes>
-      </Router>
-      </ToastProvider>
+        </Router>
+        </ToastProvider>
+      </AuthProvider>
       <Analytics />
       <SpeedInsights />
     </ErrorBoundary>
