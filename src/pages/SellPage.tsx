@@ -27,11 +27,17 @@ const SellPage: React.FC = () => {
   const [gameOptions, setGameOptions] = useState<string[]>([
     'Mobile Legends','PUBG Mobile','Free Fire','Genshin Impact','Call of Duty Mobile','Valorant','Arena of Valor','Clash of Clans','Clash Royale','Honkai Impact','Lainnya'
   ]);
-  const [popularGames, setPopularGames] = useState<Array<{name: string, count: string, icon: any}>>([
-    { name: 'Mobile Legends', count: '500+', icon: Gamepad2 },
-    { name: 'PUBG Mobile', count: '350+', icon: Smartphone },
-    { name: 'Free Fire', count: '300+', icon: Trophy },
-    { name: 'Genshin Impact', count: '200+', icon: Star },
+  const [popularGames, setPopularGames] = useState<Array<{
+    name: string; 
+    count: string; 
+    icon: any;
+    color?: string;
+    logoUrl?: string;
+  }>>([
+    { name: 'Mobile Legends', count: '500+', icon: Gamepad2, color: '#3b82f6' },
+    { name: 'PUBG Mobile', count: '350+', icon: Smartphone, color: '#f59e0b' },
+    { name: 'Free Fire', count: '300+', icon: Trophy, color: '#ef4444' },
+    { name: 'Genshin Impact', count: '200+', icon: Star, color: '#8b5cf6' },
   ]);
   const [loadingGames, setLoadingGames] = useState(false);
 
@@ -58,30 +64,37 @@ const SellPage: React.FC = () => {
     (async () => {
       try {
         setLoadingGames(true);
-        const list = await ProductService.getGameTitles();
-        const names = list.filter(g=>g.isActive!==false).map(g=>g.name);
+        const gameList = await ProductService.getGameTitles();
+        const activeGames = gameList.filter(g=>g.isActive!==false);
+        const names = activeGames.map(g=>g.name);
         if (names.length) setGameOptions([...names, 'Lainnya']);
         
         // Get popular games from database based on sold products
-        const products = await ProductService.getAllProducts();
-        const gameStats = names.map(gameName => {
-          const gameProducts = products.filter(p => p.gameTitle === gameName && p.isActive === false);
+        const products = await ProductService.getAllProducts({ includeArchived: true });
+        const gameStats = activeGames.map(game => {
+          const gameProducts = products.filter(p => 
+            (p.gameTitle === game.name || p.gameTitleId === game.id) && 
+            (p.isActive === false || p.archivedAt !== null) // Sold products: inactive OR archived
+          );
           return {
-            name: gameName,
+            name: game.name,
             count: gameProducts.length > 0 ? `${gameProducts.length}+` : '0',
-            icon: getGameIcon(gameName)
+            icon: game.icon || 'Gamepad2',
+            color: game.color || '#3b82f6',
+            logoUrl: game.logoUrl
           };
         });
         
-        // Sort by count and take top 4
-        const sortedGames = gameStats
-          .filter(g => parseInt(g.count) > 0)
-          .sort((a, b) => parseInt(b.count) - parseInt(a.count))
-          .slice(0, 4);
-          
-        if (sortedGames.length >= 4) {
-          setPopularGames(sortedGames);
-        }
+        console.log('Game stats calculated:', gameStats);
+        
+        // Always show all games from database, prioritizing those with sales
+        const allGames = gameStats.map(game => ({
+          ...game,
+          // If no sales, show as available for selling
+          count: parseInt(game.count) > 0 ? game.count : 'Tersedia'
+        }));
+        
+        setPopularGames(allGames);
         
       } catch (e) {
         console.error('Failed to load games:', e);
@@ -90,20 +103,16 @@ const SellPage: React.FC = () => {
     })();
   }, []);
 
-  const getGameIcon = (gameName: string) => {
+  const getGameIconComponent = (iconName: string) => {
     const iconMap: {[key: string]: any} = {
-      'Mobile Legends': Gamepad2,
-      'PUBG Mobile': Smartphone,
-      'Free Fire': Trophy,
-      'Genshin Impact': Star,
-      'Call of Duty Mobile': Users,
-      'Valorant': Gamepad2,
-      'Arena of Valor': Trophy,
-      'Clash of Clans': Shield,
-      'Clash Royale': Trophy,
-      'Honkai Impact': Star
+      'Gamepad2': Gamepad2,
+      'Smartphone': Smartphone,
+      'Trophy': Trophy,
+      'Star': Star,
+      'Users': Users,
+      'Shield': Shield
     };
-    return iconMap[gameName] || Gamepad2;
+    return iconMap[iconName] || Gamepad2;
   };
 
   const handleSellAccount = () => {
@@ -328,14 +337,19 @@ const SellPage: React.FC = () => {
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {popularGames.map((game, index) => {
-              const Icon = game.icon;
+              const IconComponent = getGameIconComponent(game.icon);
               return (
                 <div key={index} className="bg-black p-6 rounded-xl text-center border border-pink-500/30 hover:bg-white/5 transition-colors">
-                  <div className="w-12 h-12 bg-black border border-pink-500/40 rounded-lg flex items-center justify-center mx-auto mb-3">
-                    <Icon className="text-pink-400" size={20} />
+                  <div 
+                    className="w-12 h-12 bg-black border border-pink-500/40 rounded-lg flex items-center justify-center mx-auto mb-3"
+                    style={{ borderColor: game.color + '40', backgroundColor: game.color + '10' }}
+                  >
+                    <IconComponent className="text-pink-400" size={20} style={{ color: game.color }} />
                   </div>
                   <h3 className="font-semibold text-white mb-1">{game.name}</h3>
-                  <p className="text-sm text-gray-400">{game.count} terjual</p>
+                  <p className="text-sm text-gray-400">
+                    {game.count === 'Tersedia' ? 'Siap dibeli' : `${game.count} terjual`}
+                  </p>
                 </div>
               );
             })}

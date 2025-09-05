@@ -25,17 +25,21 @@ async function createOrderIfProvided(order: any, clientExternalId?: string) {
       amount: order.amount 
     });
     
+    const { createClient } = await import('@supabase/supabase-js');
+    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    
     // Validate product_id if provided (should be UUID format or null)
     if (order.product_id && typeof order.product_id === 'string') {
       const isValidUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(order.product_id);
       if (!isValidUUID) {
         console.error('[createOrderIfProvided] Invalid product_id format:', order.product_id, 'Setting to null');
         order.product_id = null; // Set to null instead of failing
+      } else {
+        // Log that we have a valid product_id (useful for debugging)
+        console.log('[createOrderIfProvided] Valid product_id provided:', order.product_id);
       }
     }
     
-    const { createClient } = await import('@supabase/supabase-js');
-    const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
     const payload: any = {
       product_id: order.product_id || null,
       customer_name: order.customer_name,

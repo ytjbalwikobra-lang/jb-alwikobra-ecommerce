@@ -26,7 +26,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
           id,
           name,
           price,
-          link
+          description
         )
       `)
       .eq('status', 'paid')
@@ -45,7 +45,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 
     const product = order.products;
     const productName = product?.name || 'Unknown Product';
-    const productLink = product?.link || 'No link provided';
+    const productDescription = product?.description || 'No description provided';
     
     // Generate notification message
     const message = `🎮 **ORDERAN BARU - PAID** 
@@ -56,7 +56,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 📋 **Order ID:** ${order.id}
 
 🎯 **Product:** ${productName}
-🔗 **Link:** ${productLink}
+� **Description:** ${productDescription}
 💰 **Amount:** Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
 ✅ **Status:** PAID
 

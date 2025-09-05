@@ -622,17 +622,7 @@ const AdminProducts: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-1">Kategori</label>
-                  <select value={form.category} onChange={(e)=>setForm({...form, category:e.target.value})} className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white">
-                    <option value="general">General</option>
-                    <option value="account">Account</option>
-                    <option value="item">Item</option>
-                    <option value="currency">Currency</option>
-                    <option value="boost">Boost</option>
-                  </select>
-                </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Game</label>
                   <select value={form.gameTitleId} onChange={(e)=>setForm({...form, gameTitleId:e.target.value})} className="w-full bg-black border border-white/20 rounded px-3 py-2 text-white">
