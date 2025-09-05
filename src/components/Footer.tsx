@@ -145,15 +145,17 @@ const Footer: React.FC = () => {
         </div>
 
   <div className="border-t border-pink-500/30 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-400 text-sm text-center md:text-left">
             © {currentYear} {siteName}. All rights reserved.
           </p>
-          <div className="flex items-center space-x-3 text-gray-400 text-sm mt-4 md:mt-0">
+          <div className="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-3 text-gray-400 text-sm mt-4 md:mt-0">
             <Link to="/terms" className="hover:text-pink-300">Syarat & Ketentuan</Link>
-            <span className="opacity-50">|</span>
-            <span>Made with</span>
-            <Heart size={14} className="text-primary-500" />
-            <span>for Indonesian Gamers</span>
+            <span className="opacity-50 hidden sm:inline">|</span>
+            <div className="flex items-center space-x-2">
+              <span>Made with</span>
+              <Heart size={14} className="text-primary-500" />
+              <span>for Indonesian Gamers</span>
+            </div>
           </div>
         </div>
       </div>

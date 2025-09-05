@@ -19,7 +19,6 @@ import {
   Check,
   X
 } from 'lucide-react';
-import Footer from '../components/Footer.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
 import { useAuth } from '../contexts/AuthContext.tsx';
@@ -393,8 +392,6 @@ const ProfilePage: React.FC = () => {
             </div>
           </div>
         </div>
-
-        <Footer />
       </div>
     </AuthRequired>
   );
