@@ -27,7 +27,9 @@ import {
 } from 'lucide-react';
 import { createXenditInvoice } from '../services/paymentService.ts';
 import { getCurrentUserProfile, isLoggedIn, getAuthUserId } from '../services/authService.ts';
-import PhoneInput from '../components/PhoneInput';
+import Header from '../components/Header.tsx';
+import Footer from '../components/Footer.tsx';
+import PhoneInput from '../components/PhoneInput.tsx';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

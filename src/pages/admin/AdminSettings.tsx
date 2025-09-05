@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { SettingsService } from '../../services/settingsService.ts';
 import { WebsiteSettings } from '../../types/index.ts';
 import { Save, Loader2, Image as ImageIcon } from 'lucide-react';
-import PhoneInput from '../../components/PhoneInput';
+import PhoneInput from '../../components/PhoneInput.tsx';
 
 const AdminSettings: React.FC = () => {
   const [loading, setLoading] = useState(true);
