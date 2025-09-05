@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase.ts';
 import { useAuth } from '../contexts/AuthContext.tsx';
-import Header from '../components/Header.tsx';
 import Footer from '../components/Footer.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
 
@@ -52,7 +51,6 @@ const OrderHistoryPage: React.FC = () => {
   return (
     <AuthRequired>
       <div className="min-h-screen bg-app-dark">
-        <Header />
         <div className="pt-20 pb-20 px-4">
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-white mb-6">Riwayat Order Saya</h1>

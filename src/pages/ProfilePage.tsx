@@ -19,7 +19,6 @@ import {
   Check,
   X
 } from 'lucide-react';
-import Header from '../components/Header.tsx';
 import Footer from '../components/Footer.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
@@ -103,8 +102,6 @@ const ProfilePage: React.FC = () => {
   return (
     <AuthRequired>
       <div className="min-h-screen">
-        <Header />
-        
         <div className="pt-20 pb-20 px-4">
           <div className="max-w-4xl mx-auto">
             {/* Profile Hero Section */}

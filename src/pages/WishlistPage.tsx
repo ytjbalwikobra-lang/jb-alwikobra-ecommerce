@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Trash2, ShoppingCart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Header from '../components/Header.tsx';
 import Footer from '../components/Footer.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
 import { useWishlist } from '../contexts/WishlistContext.tsx';
@@ -22,7 +21,6 @@ const WishlistPage: React.FC = () => {
         background: '#000000',
         backgroundImage: 'linear-gradient(135deg, #000000 0%, #0a0a0a 25%, #1a1a1a 50%, #0a0a0a 75%, #000000 100%)'
       }}>
-        <Header />
       
       <div className="pt-20 pb-20 px-4">
         <div className="max-w-4xl mx-auto">

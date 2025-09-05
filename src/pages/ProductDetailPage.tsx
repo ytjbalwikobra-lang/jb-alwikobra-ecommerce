@@ -28,7 +28,6 @@ import {
 import { createXenditInvoice } from '../services/paymentService.ts';
 import { getCurrentUserProfile, isLoggedIn, getAuthUserId } from '../services/authService.ts';
 import { useWishlist } from '../contexts/WishlistContext.tsx';
-import Header from '../components/Header.tsx';
 import Footer from '../components/Footer.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
 
