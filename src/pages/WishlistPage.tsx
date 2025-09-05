@@ -4,42 +4,15 @@ import { Link } from 'react-router-dom';
 import Header from '../components/Header.tsx';
 import Footer from '../components/Footer.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
+import { useWishlist } from '../contexts/WishlistContext.tsx';
 import { formatCurrency } from '../utils/helpers.ts';
 
-interface WishlistItem {
-  id: string;
-  name: string;
-  price: number;
-  image: string;
-  rating: number;
-  category: string;
-  available: boolean;
-}
-
 const WishlistPage: React.FC = () => {
-  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
+  const { wishlistItems, removeFromWishlist, clearWishlist } = useWishlist();
 
-  useEffect(() => {
-    loadWishlist();
-  }, []);
-
-  const loadWishlist = () => {
-    const savedWishlist = localStorage.getItem('wishlist');
-    if (savedWishlist) {
-      setWishlistItems(JSON.parse(savedWishlist));
-    }
-  };
-
-  const removeFromWishlist = (id: string) => {
-    const updatedWishlist = wishlistItems.filter(item => item.id !== id);
-    setWishlistItems(updatedWishlist);
-    localStorage.setItem('wishlist', JSON.stringify(updatedWishlist));
-  };
-
-  const clearWishlist = () => {
+  const handleClearWishlist = () => {
     if (confirm('Yakin ingin mengosongkan wishlist?')) {
-      setWishlistItems([]);
-      localStorage.removeItem('wishlist');
+      clearWishlist();
     }
   };
 
@@ -66,7 +39,7 @@ const WishlistPage: React.FC = () => {
             </div>
             {wishlistItems.length > 0 && (
               <button
-                onClick={clearWishlist}
+                onClick={handleClearWishlist}
                 className="text-red-400 hover:text-red-300 text-sm underline transition-colors"
               >
                 Kosongkan Semua

@@ -1,16 +1,13 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Zap, Home, Settings, HelpCircle } from 'lucide-react';
+import { ShoppingBag, Zap, Home, Settings, HelpCircle, User } from 'lucide-react';
 import { isAdmin } from '../utils/auth.ts';
-import { isLoggedIn } from '../services/authService.ts';
-import { supabase } from '../services/supabase.ts';
+import { useAuth } from '../contexts/AuthContext.tsx';
 import { SettingsService } from '../services/settingsService.ts';
 
 const Header: React.FC = () => {
   const location = useLocation();
-
-  const [authed, setAuthed] = React.useState(false);
-  React.useEffect(() => { (async () => setAuthed(await isLoggedIn()))(); }, []);
+  const { user, signOut } = useAuth();
 
   const [siteName, setSiteName] = React.useState<string>('JB Alwikobra');
   const [logoUrl, setLogoUrl] = React.useState<string | undefined>(undefined);
@@ -78,11 +75,24 @@ const Header: React.FC = () => {
 
           {/* Auth actions */}
             <div className="flex items-center gap-2">
-            {authed ? (
-              <button
-                onClick={async ()=>{ if (supabase) await supabase.auth.signOut(); window.location.reload(); }}
-                className="px-3 py-2 text-sm rounded-lg border border-pink-500/40 text-gray-200 hover:bg-white/5"
-              >Keluar</button>
+            {user ? (
+              <>
+                <Link 
+                  to="/profile" 
+                  className={`px-3 py-2 text-sm rounded-lg border border-pink-500/40 text-gray-200 hover:bg-white/5 flex items-center space-x-2 ${
+                    location.pathname === '/profile' ? 'bg-pink-500/10 text-pink-400' : ''
+                  }`}
+                >
+                  <User size={16} />
+                  <span>Profile</span>
+                </Link>
+                <button
+                  onClick={() => signOut()}
+                  className="px-3 py-2 text-sm rounded-lg border border-pink-500/40 text-gray-200 hover:bg-white/5"
+                >
+                  Keluar
+                </button>
+              </>
             ) : (
               <Link to="/auth" className="px-3 py-2 text-sm rounded-lg border border-pink-500/40 text-gray-200 hover:bg-white/5">Masuk</Link>
             )}

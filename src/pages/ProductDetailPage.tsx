@@ -27,12 +27,14 @@ import {
 } from 'lucide-react';
 import { createXenditInvoice } from '../services/paymentService.ts';
 import { getCurrentUserProfile, isLoggedIn, getAuthUserId } from '../services/authService.ts';
+import { useWishlist } from '../contexts/WishlistContext.tsx';
 import Header from '../components/Header.tsx';
 import Footer from '../components/Footer.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
@@ -101,6 +103,26 @@ const ProductDetailPage: React.FC = () => {
       document.execCommand('copy');
       document.body.removeChild(textArea);
       alert('Link produk telah disalin ke clipboard!');
+    }
+  };
+
+  const handleWishlistToggle = () => {
+    if (!product) return;
+    
+    const wishlistItem = {
+      id: product.id,
+      name: product.name,
+      price: effectivePrice,
+      image: product.images?.[0] || '',
+      rating: 5, // Default rating since it's not in Product type
+      category: product.category || '',
+      available: true // Default to available since it's not in Product type
+    };
+
+    if (isInWishlist(product.id)) {
+      removeFromWishlist(product.id);
+    } else {
+      addToWishlist(wishlistItem);
     }
   };
 
@@ -592,8 +614,18 @@ const ProductDetailPage: React.FC = () => {
 
             {/* Additional Actions */}
             <div className="flex items-center space-x-4 text-gray-300">
-              <button className="flex items-center space-x-1 hover:text-red-400 transition-colors">
-                <Heart size={16} />
+              <button 
+                onClick={handleWishlistToggle}
+                className={`flex items-center space-x-1 transition-colors ${
+                  product && isInWishlist(product.id) 
+                    ? 'text-red-400 hover:text-red-300' 
+                    : 'hover:text-red-400'
+                }`}
+              >
+                <Heart 
+                  size={16} 
+                  className={product && isInWishlist(product.id) ? 'fill-current' : ''} 
+                />
                 <span>Favorit</span>
               </button>
               <button 

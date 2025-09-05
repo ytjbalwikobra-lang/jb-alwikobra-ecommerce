@@ -32,6 +32,7 @@ import WhatsAppTestPage from './pages/admin/WhatsAppTestPage.tsx';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
 import { AuthProvider } from './contexts/AuthContext.tsx';
+import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import TermsPage from './pages/TermsPage.tsx';
 import { FaviconService } from './services/faviconService.ts';
 
@@ -88,11 +89,12 @@ function App() {
   return (
     <ErrorBoundary>
       <AuthProvider>
-        <ToastProvider>
-          <Router>
-        <ScrollToTop />
-        {/* Public shell: shows global header/footer. Admin routes have their own layout without this shell. */}
-        <Routes>
+        <WishlistProvider>
+          <ToastProvider>
+            <Router>
+          <ScrollToTop />
+          {/* Public shell: shows global header/footer. Admin routes have their own layout without this shell. */}
+          <Routes>
           {/* Admin branch without global header/footer */}
           <Route element={<RequireAdmin />}>
             <Route path="/admin" element={<AdminLayout />}>
@@ -146,6 +148,7 @@ function App() {
         </Routes>
         </Router>
         </ToastProvider>
+        </WishlistProvider>
       </AuthProvider>
       <Analytics />
       <SpeedInsights />
