@@ -76,23 +76,15 @@ const Header: React.FC = () => {
           {/* Auth actions */}
             <div className="flex items-center gap-2">
             {user ? (
-              <>
-                <Link 
-                  to="/profile" 
-                  className={`px-3 py-2 text-sm rounded-lg border border-pink-500/40 text-gray-200 hover:bg-white/5 flex items-center space-x-2 ${
-                    location.pathname === '/profile' ? 'bg-pink-500/10 text-pink-400' : ''
-                  }`}
-                >
-                  <User size={16} />
-                  <span>Profile</span>
-                </Link>
-                <button
-                  onClick={() => signOut()}
-                  className="px-3 py-2 text-sm rounded-lg border border-pink-500/40 text-gray-200 hover:bg-white/5"
-                >
-                  Keluar
-                </button>
-              </>
+              <Link 
+                to="/profile" 
+                className={`px-3 py-2 text-sm rounded-lg border border-pink-500/40 text-gray-200 hover:bg-white/5 flex items-center space-x-2 ${
+                  location.pathname === '/profile' ? 'bg-pink-500/10 text-pink-400' : ''
+                }`}
+              >
+                <User size={16} />
+                <span>Profile</span>
+              </Link>
             ) : (
               <Link to="/auth" className="px-3 py-2 text-sm rounded-lg border border-pink-500/40 text-gray-200 hover:bg-white/5">Masuk</Link>
             )}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   User, 
   Mail, 
@@ -23,6 +23,7 @@ import Footer from '../components/Footer.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
 import { useAuth } from '../contexts/AuthContext.tsx';
+import { useWishlist } from '../contexts/WishlistContext.tsx';
 
 interface UserProfile {
   name: string;
@@ -35,20 +36,37 @@ interface UserProfile {
 
 const ProfilePage: React.FC = () => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
+  const { wishlistItems } = useWishlist();
   const [profile, setProfile] = useState<UserProfile>({
     name: user?.user_metadata?.name || user?.email?.split('@')[0] || '',
     email: user?.email || '',
     whatsapp: user?.user_metadata?.whatsapp || '',
     joinDate: user?.created_at ? new Date(user.created_at).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID'),
     totalOrders: 0,
-    wishlistCount: 0
+    wishlistCount: wishlistItems.length
   });
   const [isEditing, setIsEditing] = useState(false);
   const [isValidPhone, setIsValidPhone] = useState(false);
 
+  const handleLogout = async () => {
+    if (confirm('Yakin ingin keluar dari akun?')) {
+      await signOut();
+      navigate('/');
+    }
+  };
+
   useEffect(() => {
     loadProfile();
   }, []);
+
+  // Update wishlist count when wishlistItems change
+  useEffect(() => {
+    setProfile(prev => ({
+      ...prev,
+      wishlistCount: wishlistItems.length
+    }));
+  }, [wishlistItems]);
 
   const loadProfile = () => {
     // Load from localStorage or API
@@ -338,11 +356,7 @@ const ProfilePage: React.FC = () => {
 
               {/* Logout Button */}
               <button
-                onClick={() => {
-                  if (confirm('Yakin ingin keluar dari akun?')) {
-                    signOut();
-                  }
-                }}
+                onClick={handleLogout}
                 className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-2xl p-6 transition-all group"
               >
                 <div className="flex items-center justify-center space-x-3">
