@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../../services/supabase.ts';
 import { useToast } from '../../components/Toast.tsx';
 import { RefreshCw, Filter } from 'lucide-react';
 
@@ -43,32 +42,18 @@ const AdminOrders: React.FC = () => {
   const load = async () => {
     setLoading(true); setErrorMsg('');
     try {
-      if (!supabase) return;
-      // Attempt joined select for product info
-      let data: any[] | null = null;
-      let errMsg = '';
-      try {
-        const { data: d, error } = await (supabase as any)
-          .from('orders')
-          .select('*, products:product_id ( id, name )')
-          .order('created_at', { ascending: false })
-          .limit(500);
-        if (error) throw error; else data = d as any[];
-      } catch (e: any) {
-        // Fallback to basic select if relation or RLS blocks join
-        errMsg = e?.message || String(e);
-        const { data: d2, error: e2 } = await (supabase as any)
-          .from('orders')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(500);
-        if (e2) throw e2; else data = d2 as any[];
+      // Fetch orders from admin API endpoint
+      const response = await fetch('/api/admin/orders');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      setRows((data || []).map(mapRow));
-      if (errMsg) {
-        // Show soft warning but keep data loaded
-        setErrorMsg(`Relasi produk tidak bisa dimuat: ${errMsg}`);
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch orders');
       }
+      
+      setRows((result.data || []).map(mapRow));
     } catch (e: any) {
       const m = e?.message || String(e);
       setErrorMsg(m);
@@ -79,15 +64,12 @@ const AdminOrders: React.FC = () => {
   useEffect(()=>{ load(); }, []);
   // Realtime updates: refresh on any change in orders
   useEffect(() => {
-    if (!supabase) return;
-    const channel = (supabase as any)
-      .channel('orders_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => {
-        // Lightweight: reload list to pick up latest status
-        load();
-      })
-      .subscribe();
-    return () => { try { (supabase as any).removeChannel?.(channel); } catch(_) {} };
+    // Simple polling for updates since we're using API endpoints
+    const interval = setInterval(() => {
+      load();
+    }, 30000); // Refresh every 30 seconds
+    
+    return () => clearInterval(interval);
   }, []);
 
   const filtered = useMemo(() => {
@@ -118,9 +100,29 @@ const AdminOrders: React.FC = () => {
   }, [rows, statusFilter, orderTypeFilter, searchTerm]);
 
   const updateStatus = async (id: string, status: OrderRow['status']) => {
-    if (!supabase) return;
-    const { error } = await (supabase as any).from('orders').update({ status }).eq('id', id);
-    if (error) push('Gagal memperbarui status', 'error'); else { push('Status diperbarui', 'success'); await load(); }
+    try {
+      const response = await fetch('/api/admin/update-order', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, status }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update order');
+      }
+
+      push('Status diperbarui', 'success');
+      await load();
+    } catch (e: any) {
+      push(`Gagal memperbarui status: ${e.message}`, 'error');
+    }
   };
 
   return (

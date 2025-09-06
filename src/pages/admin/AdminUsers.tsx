@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../services/supabase.ts';
 import { getAuthUserId } from '../../services/authService.ts';
 import { useToast } from '../../components/Toast.tsx';
 import { RefreshCw, Search, User, Shield, Clock } from 'lucide-react';
@@ -30,37 +29,42 @@ const AdminUsers: React.FC = () => {
 
   const load = async () => {
     try {
-      if (!supabase) return;
-      
-      // Get users data from the actual users table
-      const { data: usersData, error: usersError } = await (supabase as any)
-        .from('users')
-        .select('id, name, email, phone, is_admin, is_active, phone_verified, created_at, updated_at, last_login_at')
-        .order('created_at', { ascending: false });
-      
-      if (usersError) {
-        console.error('Error loading users:', usersError);
-        push('Gagal memuat data pengguna', 'error');
-        return;
+      // Fetch users from admin API endpoint
+      const response = await fetch('/api/admin/users');
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-
-      // Transform data to include role field for compatibility
-      const transformedData = (usersData || []).map((user: any) => ({
-        ...user,
-        role: user.is_admin ? 'admin' : 'user'
+      
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to fetch users');
+      }
+      
+      const usersData = result.data || [];
+      
+      // Transform the data to match the ProfileRow interface
+      const transformedRows: ProfileRow[] = usersData.map((user: any) => ({
+        id: user.id,
+        name: user.name,
+        is_admin: user.is_admin || false,
+        email: user.email || '',
+        phone: user.phone || '',
+        is_active: user.is_active || true,
+        phone_verified: user.phone_verified || false,
+        created_at: user.created_at || new Date().toISOString(),
+        updated_at: user.updated_at || new Date().toISOString(),
+        last_login_at: user.last_login_at || null
       }));
-
-      setRows(transformedData);
-      setAuthUsers([]); // No longer using auth users
-    } catch (error: any) {
-      console.error('Error in load:', error);
-      push(`Error: ${error.message}`, 'error');
-    } finally { 
-      setLoading(false); 
+      
+      setRows(transformedRows);
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      console.error('Load users error:', e);
+      push(`Gagal memuat users: ${msg}`, 'error');
+    } finally {
+      setLoading(false);
     }
-  };
-
-  useEffect(() => { 
+  };  useEffect(() => { 
     (async()=>{ 
       setUid(await getAuthUserId()); 
       await load(); 
@@ -89,30 +93,44 @@ const AdminUsers: React.FC = () => {
   });
 
   const updateRole = async (id: string, role: string) => {
-    if (!supabase) return;
-    // Prevent demoting the last admin (including 'super admin'/'owner')
-    const normalized = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
-    const adminSet = new Set(['admin','superadmin','super-admin','super admin','owner']);
-    const isAdminRole = (r: string) => adminSet.has(normalized(r));
-    const current = rows.find(r=>r.id===id);
-    if (current && current.role && isAdminRole(current.role) && !isAdminRole(role)) {
-      const adminCount = rows.filter(r=> r.role && isAdminRole(r.role)).length;
-      if (adminCount <= 1 && uid === id) {
-        alert('Tidak bisa menurunkan peran: ini adalah admin terakhir. Tambahkan admin lain terlebih dahulu.');
-        return;
+    try {
+      // Prevent demoting the last admin (including 'super admin'/'owner')
+      const normalized = (s: string) => s.toLowerCase().trim().replace(/\s+/g, ' ');
+      const adminSet = new Set(['admin','superadmin','super-admin','super admin','owner']);
+      const isAdminRole = (r: string) => adminSet.has(normalized(r));
+      const current = rows.find(r=>r.id===id);
+      if (current && current.role && isAdminRole(current.role) && !isAdminRole(role)) {
+        const adminCount = rows.filter(r=> r.role && isAdminRole(r.role)).length;
+        if (adminCount <= 1 && uid === id) {
+          alert('Tidak bisa menurunkan peran: ini adalah admin terakhir. Tambahkan admin lain terlebih dahulu.');
+          return;
+        }
       }
-    }
-    
-    // Update in users table with is_admin field
-    const isAdmin = isAdminRole(role);
-    const { error } = await (supabase as any)
-      .from('users')
-      .update({ is_admin: isAdmin })
-      .eq('id', id);
       
-    if (error) push('Gagal memperbarui peran', 'error');
-    else push('Peran diperbarui', 'success');
-    await load();
+      // Update user role via admin API
+      const isAdmin = isAdminRole(role);
+      const response = await fetch('/api/admin/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id, isAdmin }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update user role');
+      }
+
+      push('Peran diperbarui', 'success');
+      await load();
+    } catch (e: any) {
+      push(`Gagal memperbarui peran: ${e.message}`, 'error');
+    }
   };
 
   const getRoleBadgeColor = (role: string) => {

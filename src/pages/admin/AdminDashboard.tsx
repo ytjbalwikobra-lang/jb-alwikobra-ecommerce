@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../../services/supabase.ts';
 
 const StatCard: React.FC<{ label: string; value: string; hint?: string }> = ({ label, value, hint }) => (
   <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4">
@@ -14,18 +13,29 @@ const AdminDashboard: React.FC = () => {
   useEffect(()=>{
     (async()=>{
       try {
-        if (!supabase) return;
-        const now = new Date();
-        const sevenAgo = new Date(now.getTime() - 7*24*60*60*1000).toISOString();
-        const [{ count: pCount }, { count: fsCount }, { data: oRows }]: any = await Promise.all([
-          (supabase as any).from('products').select('id', { count: 'exact', head: true }),
-          (supabase as any).from('flash_sales').select('id', { count: 'exact', head: true }).eq('is_active', true).gte('end_time', new Date().toISOString()),
-          (supabase as any).from('orders').select('amount, status, created_at').gte('created_at', sevenAgo)
-        ]);
-        const orders = oRows || [];
-        const revenue = orders.filter((o:any)=>['paid','completed'].includes(o.status)).reduce((s:number,o:any)=>s+Number(o.amount||0),0);
-        setCounts({ products: pCount||0, flash: fsCount||0, orders7: orders.length, revenue7: revenue });
-      } catch {}
+        // Fetch dashboard data from admin API endpoint
+        const response = await fetch('/api/admin/dashboard');
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        if (!result.success) {
+          throw new Error(result.error || 'Failed to fetch dashboard data');
+        }
+        
+        const data = result.data;
+        setCounts({ 
+          products: data.products, 
+          flash: data.flashSales, 
+          orders7: data.orders7days, 
+          revenue7: data.revenue7days 
+        });
+      } catch (error) {
+        console.error('Dashboard fetch error:', error);
+        // Set default values on error
+        setCounts({ products: 0, flash: 0, orders7: 0, revenue7: 0 });
+      }
     })();
   }, []);
   return (
