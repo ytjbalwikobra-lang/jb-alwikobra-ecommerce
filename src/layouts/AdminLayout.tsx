@@ -11,7 +11,7 @@ const AdminLayout: React.FC = () => {
     <div className="min-h-screen bg-app-dark text-gray-200">
       {/* Top Navigation */}
     <header className="sticky top-0 z-20 bg-black/80 backdrop-blur border-b border-pink-500/20">
-        <div className="h-16 px-4 md:px-6 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto h-16 px-4 md:px-6 flex items-center justify-between">
       {/* Left spacer to keep tabs centered */}
       <div className="w-24" />
 
@@ -82,7 +82,7 @@ const AdminLayout: React.FC = () => {
       </header>
 
       {/* Content */}
-      <main className="p-4 md:p-6">
+      <main className="max-w-7xl mx-auto p-4 md:p-6">
         <Outlet />
       </main>
     </div>

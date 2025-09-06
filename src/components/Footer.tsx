@@ -14,6 +14,7 @@ const Footer: React.FC = () => {
   const [facebookUrl, setFacebookUrl] = React.useState<string>('https://facebook.com/');
   const [instagramUrl, setInstagramUrl] = React.useState<string>('https://instagram.com/');
   const [tiktokUrl, setTiktokUrl] = React.useState<string>('https://tiktok.com/');
+  const [youtubeUrl, setYoutubeUrl] = React.useState<string>('https://youtube.com/');
 
   React.useEffect(() => {
     (async () => {
@@ -28,6 +29,7 @@ const Footer: React.FC = () => {
         if (s?.facebookUrl) setFacebookUrl(s.facebookUrl);
         if (s?.instagramUrl) setInstagramUrl(s.instagramUrl);
         if (s?.tiktokUrl) setTiktokUrl(s.tiktokUrl);
+        if (s?.youtubeUrl) setYoutubeUrl(s.youtubeUrl);
       } catch (error) {
         console.error('Failed to load settings:', error);
       }
@@ -75,7 +77,7 @@ const Footer: React.FC = () => {
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M21 8.5a7.5 7.5 0 0 1-5-2v8.2a5.7 5.7 0 1 1-4.9-5.65v2.7a3 3 0 1 0 2 2.83V2h3a4.5 4.5 0 0 0 4 3.9v2.6z"/></svg>
               </a>
               {/* YouTube */}
-              <a href="https://youtube.com/" target="_blank" rel="noreferrer" className="text-gray-400 hover:text-pink-300 transition-colors" aria-label="YouTube">
+              <a href={youtubeUrl} target="_blank" rel="noreferrer" className="text-gray-400 hover:text-pink-300 transition-colors" aria-label="YouTube">
                 <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31.4 31.4 0 0 0 0 12a31.4 31.4 0 0 0 .6 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.3.6 9.3.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31.4 31.4 0 0 0 24 12a31.4 31.4 0 0 0-.5-5.8zM9.8 15.5V8.5l6.3 3.5-6.3 3.5z"/></svg>
               </a>
             </div>

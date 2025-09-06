@@ -23,7 +23,23 @@ const AdminOrders: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all'|'pending'|'paid'|'completed'|'cancelled'>('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState<'all'|'purchase'|'rental'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Pagination states (like AdminProducts)
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [totalOrders, setTotalOrders] = useState(0);
+  
   const { push } = useToast();
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalOrders / itemsPerPage);
+
+  // Reset pagination when filters change
+  useEffect(() => {
+    if (currentPage !== 1) {
+      setCurrentPage(1);
+    }
+  }, [statusFilter, orderTypeFilter, searchTerm, itemsPerPage]);
 
   const mapRow = (r: any): OrderRow => ({
     id: r.id,
@@ -42,8 +58,25 @@ const AdminOrders: React.FC = () => {
   const load = async () => {
     setLoading(true); setErrorMsg('');
     try {
+      // Build query parameters for pagination and filtering
+      const params = new URLSearchParams({
+        page: currentPage.toString(),
+        limit: itemsPerPage.toString(),
+      });
+
+      // Add filters if they're not 'all'
+      if (statusFilter !== 'all') {
+        params.append('status', statusFilter);
+      }
+      if (orderTypeFilter !== 'all') {
+        params.append('order_type', orderTypeFilter);
+      }
+      if (searchTerm.trim()) {
+        params.append('search', searchTerm.trim());
+      }
+
       // Fetch orders from consolidated admin API endpoint
-      const response = await fetch('/api/admin?action=orders');
+      const response = await fetch(`/api/admin?action=orders&${params.toString()}`);
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -54,11 +87,14 @@ const AdminOrders: React.FC = () => {
       }
       
       setRows((result.data.orders || []).map(mapRow));
+      setTotalOrders(result.data.pagination?.total || 0);
       
       // Show warning if product relations couldn't be loaded
       if (result.warning) {
         setErrorMsg(result.warning);
       }
+
+      console.log(`✅ Loaded ${result.data.orders?.length || 0} orders (page ${currentPage}/${Math.ceil((result.data.pagination?.total || 0) / itemsPerPage)}) - Total: ${result.data.pagination?.total || 0}`);
     } catch (e: any) {
       const m = e?.message || String(e);
       setErrorMsg(m);
@@ -66,43 +102,21 @@ const AdminOrders: React.FC = () => {
     } finally { setLoading(false); }
   };
 
-  useEffect(()=>{ load(); }, []);
-  // Realtime updates: refresh on any change in orders
+  useEffect(() => { 
+    load(); 
+  }, [currentPage, itemsPerPage, statusFilter, orderTypeFilter, searchTerm]);
+  
+  // Realtime updates: refresh periodically
   useEffect(() => {
-    // Simple polling for updates since we're using API endpoints
     const interval = setInterval(() => {
       load();
     }, 30000); // Refresh every 30 seconds
     
     return () => clearInterval(interval);
-  }, []);
+  }, [currentPage, itemsPerPage, statusFilter, orderTypeFilter, searchTerm]);
 
-  const filtered = useMemo(() => {
-    let result = rows as OrderRow[];
-    
-    // Status filter
-    if (statusFilter !== 'all') {
-      result = result.filter(r => r.status === statusFilter);
-    }
-    
-    // Order type filter
-    if (orderTypeFilter !== 'all') {
-      result = result.filter(r => r.order_type === orderTypeFilter);
-    }
-    
-    // Search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      result = result.filter(r => 
-        r.id.toLowerCase().includes(searchLower) ||
-        r.customer_name.toLowerCase().includes(searchLower) ||
-        r.customer_email.toLowerCase().includes(searchLower) ||
-        r.customer_phone.includes(searchTerm)
-      );
-    }
-    
-    return result;
-  }, [rows, statusFilter, orderTypeFilter, searchTerm]);
+  // Since we're using server-side filtering and pagination, just use rows directly
+  const filtered = rows as OrderRow[];
 
   const updateStatus = async (id: string, status: OrderRow['status']) => {
     try {
@@ -274,6 +288,83 @@ const AdminOrders: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {/* Pagination component (copied from AdminProducts) */}
+      {!loading && totalPages > 1 && (
+        <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 mt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-4">
+              <div>
+                <label className="block text-xs text-gray-400 mb-1">Items per halaman</label>
+                <select
+                  value={itemsPerPage}
+                  onChange={(e) => {
+                    setItemsPerPage(Number(e.target.value));
+                    setCurrentPage(1);
+                  }}
+                  className="bg-black border border-pink-500/40 rounded px-3 py-1 text-white text-sm"
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+              <div className="text-sm text-gray-400">
+                Menampilkan {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalOrders)} dari {totalOrders.toLocaleString()} orders
+              </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded border border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                ← Sebelumnya
+              </button>
+              
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
+                  let page;
+                  if (totalPages <= 7) {
+                    page = i + 1;
+                  } else if (currentPage <= 4) {
+                    page = i + 1;
+                  } else if (currentPage >= totalPages - 3) {
+                    page = totalPages - 6 + i;
+                  } else {
+                    page = currentPage - 3 + i;
+                  }
+                  
+                  if (page < 1 || page > totalPages) return null;
+                  
+                  return (
+                    <button
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      className={`px-3 py-1 rounded text-sm ${
+                        page === currentPage
+                          ? 'bg-pink-600 text-white'
+                          : 'border border-white/20 text-white hover:bg-white/10'
+                      }`}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+              </div>
+              
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded border border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Selanjutnya →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

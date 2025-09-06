@@ -55,35 +55,75 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Orders count and revenue
-    const { data: orders, error: ordersError } = await supabase
-      .from('orders')
-      .select('total_amount, created_at')
-      .gte('created_at', sevenDaysAgo.toISOString());
+    // Initialize default values
+    let orders: any[] = [];
+    let usersCount = 0;
+    let productsCount = 0;
+    let flashSalesCount = 0;
 
-    if (ordersError) throw ordersError;
+    // Orders count and revenue (with error handling)
+    try {
+      const { data: ordersData, error: ordersError } = await supabase
+        .from('orders')
+        .select('total_amount, created_at')
+        .gte('created_at', sevenDaysAgo.toISOString());
 
-    // Users count
-    const { count: usersCount, error: usersError } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true });
+      if (ordersError) {
+        console.warn('Orders query error:', ordersError);
+      } else {
+        orders = ordersData || [];
+      }
+    } catch (error) {
+      console.warn('Orders query failed:', error);
+    }
 
-    if (usersError) throw usersError;
+    // Users count (with error handling)
+    try {
+      const { count, error: usersError } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
 
-    // Products count
-    const { count: productsCount, error: productsError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true });
+      if (usersError) {
+        console.warn('Users count error:', usersError);
+      } else {
+        usersCount = count || 0;
+      }
+    } catch (error) {
+      console.warn('Users count failed:', error);
+    }
 
-    if (productsError) throw productsError;
+    // Products count (with error handling)
+    try {
+      const { count, error: productsError } = await supabase
+        .from('products')
+        .select('*', { count: 'exact', head: true });
 
-    // Flash sales count
-    const { count: flashSalesCount, error: flashSalesError } = await supabase
-      .from('flash_sales')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true);
+      if (productsError) {
+        console.warn('Products count error:', productsError);
+      } else {
+        productsCount = count || 0;
+      }
+    } catch (error) {
+      console.warn('Products count failed:', error);
+    }
 
-    if (flashSalesError) throw flashSalesError;
+    // Flash sales count (with fallback if table doesn't exist)
+    try {
+      const { count, error: flashSalesError } = await supabase
+        .from('flash_sales')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_active', true);
+
+      if (flashSalesError) {
+        console.warn('Flash sales table not found or error:', flashSalesError);
+        flashSalesCount = 0;
+      } else {
+        flashSalesCount = count || 0;
+      }
+    } catch (error) {
+      console.warn('Flash sales query failed:', error);
+      flashSalesCount = 0;
+    }
 
     const totalRevenue = orders?.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0) || 0;
 
@@ -111,10 +151,11 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { page = '1', limit = '20' } = req.query;
+    const { page = '1', limit = '20', status, order_type, search } = req.query;
     const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
 
-    const { data: orders, error } = await supabase
+    // Build the query with filters
+    let ordersQuery = supabase
       .from('orders')
       .select(`
         *,
@@ -122,16 +163,43 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
           name,
           image
         )
-      `)
+      `);
+
+    // Apply filters
+    if (status && status !== 'all') {
+      ordersQuery = ordersQuery.eq('status', status);
+    }
+    if (order_type && order_type !== 'all') {
+      ordersQuery = ordersQuery.eq('order_type', order_type);
+    }
+    if (search) {
+      ordersQuery = ordersQuery.or(`customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,customer_phone.ilike.%${search}%,id.ilike.%${search}%`);
+    }
+
+    // Apply pagination and ordering
+    const { data: orders, error } = await ordersQuery
       .order('created_at', { ascending: false })
       .range(offset, offset + parseInt(limit as string) - 1);
 
     if (error) throw error;
 
-    // Get total count
-    const { count, error: countError } = await supabase
+    // Get total count with same filters
+    let countQuery = supabase
       .from('orders')
       .select('*', { count: 'exact', head: true });
+
+    // Apply same filters to count query
+    if (status && status !== 'all') {
+      countQuery = countQuery.eq('status', status);
+    }
+    if (order_type && order_type !== 'all') {
+      countQuery = countQuery.eq('order_type', order_type);
+    }
+    if (search) {
+      countQuery = countQuery.or(`customer_name.ilike.%${search}%,customer_email.ilike.%${search}%,customer_phone.ilike.%${search}%,id.ilike.%${search}%`);
+    }
+
+    const { count, error: countError } = await countQuery;
 
     if (countError) throw countError;
 
@@ -154,9 +222,16 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
 }
 
 async function handleUsers(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') {
+  if (req.method === 'GET') {
+    return await getUsersList(req, res);
+  } else if (req.method === 'PUT') {
+    return await updateUser(req, res);
+  } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+}
+
+async function getUsersList(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { page = '1', limit = '20' } = req.query;
@@ -192,6 +267,41 @@ async function handleUsers(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('Users error:', error);
     return res.status(500).json({ error: 'Failed to fetch users' });
+  }
+}
+
+async function updateUser(req: VercelRequest, res: VercelResponse) {
+  try {
+    const { userId, is_admin, is_active } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const updateData: any = {};
+    if (typeof is_admin === 'boolean') updateData.is_admin = is_admin;
+    if (typeof is_active === 'boolean') updateData.is_active = is_active;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No valid fields to update' });
+    }
+
+    const { data, error } = await supabase
+      .from('users')
+      .update(updateData)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return res.status(200).json({
+      success: true,
+      data: data
+    });
+  } catch (error) {
+    console.error('Update user error:', error);
+    return res.status(500).json({ error: 'Failed to update user' });
   }
 }
 

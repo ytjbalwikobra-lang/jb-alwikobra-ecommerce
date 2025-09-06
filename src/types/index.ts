@@ -115,6 +115,7 @@ export interface WebsiteSettings {
   facebookUrl?: string;
   instagramUrl?: string;
   tiktokUrl?: string;
+  youtubeUrl?: string;
   heroTitle?: string;
   heroSubtitle?: string;
   updatedAt?: string;

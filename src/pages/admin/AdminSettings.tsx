@@ -15,7 +15,7 @@ const AdminSettings: React.FC = () => {
   const [faviconFile, setFaviconFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [faviconPreview, setFaviconPreview] = useState<string>('');
-  const [phoneValidation, setPhoneValidation] = useState({ contactPhone: true, whatsapp: true });
+  const [phoneValidation, setPhoneValidation] = useState({ whatsapp: true });
 
   useEffect(() => { (async () => {
     setLoading(true);
@@ -32,6 +32,7 @@ const AdminSettings: React.FC = () => {
       facebookUrl: s.facebookUrl || '',
       instagramUrl: s.instagramUrl || '',
       tiktokUrl: s.tiktokUrl || '',
+      youtubeUrl: s.youtubeUrl || '',
       logoUrl: s.logoUrl || '',
       faviconUrl: s.faviconUrl || '',
     });
@@ -40,11 +41,6 @@ const AdminSettings: React.FC = () => {
 
   const save = async () => {
     // Validate phone numbers before saving
-    if (!phoneValidation.contactPhone && form.contactPhone) {
-      showToast('Nomor telepon kontak tidak valid. Pastikan format sudah benar.', 'error');
-      return;
-    }
-    
     if (!phoneValidation.whatsapp && form.whatsappNumber) {
       showToast('Nomor WhatsApp tidak valid. Pastikan format sudah benar.', 'error');
       return;
@@ -75,16 +71,6 @@ const AdminSettings: React.FC = () => {
             <input value={form.contactEmail} onChange={e=>setForm((p:any)=>({...p,contactEmail:e.target.value}))} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
           </div>
           <div>
-            <label className="text-sm text-gray-400">Telepon</label>
-            <PhoneInput
-              value={form.contactPhone}
-              onChange={(value) => setForm((p:any) => ({...p, contactPhone: value}))}
-              onValidationChange={(isValid) => setPhoneValidation(prev => ({...prev, contactPhone: isValid}))}
-              placeholder="Masukkan Nomor WhatsApp"
-              className="mt-1 bg-black/60 border-white/10"
-            />
-          </div>
-          <div>
             <label className="text-sm text-gray-400">WhatsApp</label>
             <PhoneInput
               value={form.whatsappNumber}
@@ -109,6 +95,10 @@ const AdminSettings: React.FC = () => {
           <div>
             <label className="text-sm text-gray-400">TikTok</label>
             <input value={form.tiktokUrl} onChange={e=>setForm((p:any)=>({...p,tiktokUrl:e.target.value}))} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
+          </div>
+          <div>
+            <label className="text-sm text-gray-400">YouTube</label>
+            <input value={form.youtubeUrl} onChange={e=>setForm((p:any)=>({...p,youtubeUrl:e.target.value}))} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
           </div>
           <div className="md:col-span-2 grid md:grid-cols-2 gap-4">
             <div>
