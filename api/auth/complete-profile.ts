@@ -121,7 +121,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 async function sendWelcomeMessage(phone: string, name: string, email: string): Promise<void> {
   try {
     // Import the dynamic WhatsApp service
-    const { DynamicWhatsAppService } = await import('../../src/services/dynamicWhatsAppService');
+    const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService');
     const whatsappService = new DynamicWhatsAppService();
 
     const result = await whatsappService.sendWelcomeMessage(name, phone, email);

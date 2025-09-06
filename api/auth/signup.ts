@@ -144,7 +144,7 @@ function generateVerificationCode(): string {
 async function sendWhatsAppVerification(phone: string, code: string): Promise<boolean> {
   try {
     // Import the dynamic WhatsApp service
-    const { DynamicWhatsAppService } = await import('../../src/services/dynamicWhatsAppService');
+    const { DynamicWhatsAppService } = await import('../_utils/dynamicWhatsAppService');
     const whatsappService = new DynamicWhatsAppService();
 
     const result = await whatsappService.sendVerificationCode(phone, code);
