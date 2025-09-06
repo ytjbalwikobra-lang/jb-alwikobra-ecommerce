@@ -146,11 +146,17 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Return user data (without password hash)
-    const { password_hash, login_attempts, locked_until, ...safeUser } = user;
+    const { password_hash, login_attempts, locked_until, is_admin, ...safeUser } = user;
+    
+    // Transform user data to match frontend expectations
+    const transformedUser = {
+      ...safeUser,
+      isAdmin: is_admin || false  // Convert is_admin to isAdmin
+    };
 
     return res.status(200).json({
       success: true,
-      user: safeUser,
+      user: transformedUser,
       session_token: sessionToken,
       expires_at: expiresAt.toISOString(),
       profile_completed: user.profile_completed

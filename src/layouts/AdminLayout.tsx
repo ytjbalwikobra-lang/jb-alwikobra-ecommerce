@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Package, Users, Zap, ListOrdered, Image as ImageIcon, Settings as SettingsIcon, Gamepad2 } from 'lucide-react';
-import { getUserRole, logout } from '../services/authService.ts';
+import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 
 const AdminLayout: React.FC = () => {
-  const [role, setRole] = useState<string>('');
-  useEffect(()=>{ (async()=> setRole(await getUserRole()))(); }, []);
-  const isSuper = (()=>{
-    const r = String(role).toLowerCase().trim().replace(/\s+/g,' ');
-    return r==='super admin' || r==='superadmin' || r==='owner' || r==='super-admin';
-  })();
+  const { user, logout } = useAuth();
+  const isSuper = user?.isAdmin || false;
+  
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
       {/* Top Navigation */}
