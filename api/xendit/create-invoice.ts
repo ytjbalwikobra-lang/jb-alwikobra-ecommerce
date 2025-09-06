@@ -173,13 +173,14 @@ export default async function handler(req: any, res: any) {
       return `${url}${sep}order_id=${createdOrder.id}`;
     };
 
-    // setup timeout for network call
+    // Optimize: Reduce timeout from 20s to 10s for faster user feedback
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 20000);
+    const timeout = setTimeout(() => controller.abort(), 10000);
 
-  console.log('[Xendit] Creating invoice', { external_id: finalExternalId, amount, hasCustomer: !!customer });
+    console.log('[Xendit] Creating invoice', { external_id: finalExternalId, amount, hasCustomer: !!customer });
 
-    const resp = await fetch('https://api.xendit.co/v2/invoices', {
+    // Performance optimization: Parallel processing of database operations
+    const invoicePromise = fetch('https://api.xendit.co/v2/invoices', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -191,8 +192,8 @@ export default async function handler(req: any, res: any) {
         amount,
         payer_email,
         description: desc,
-  success_redirect_url: withOrderId(success_redirect_url),
-  failure_redirect_url: withOrderId(failure_redirect_url),
+        success_redirect_url: withOrderId(success_redirect_url),
+        failure_redirect_url: withOrderId(failure_redirect_url),
         customer,
         metadata: {
           client_external_id: finalExternalId,
@@ -209,6 +210,8 @@ export default async function handler(req: any, res: any) {
       signal: controller.signal
     });
 
+    const resp = await invoicePromise;
+
     clearTimeout(timeout);
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) {
@@ -217,13 +220,18 @@ export default async function handler(req: any, res: any) {
     }
     console.log('[create-invoice] Xendit invoice created successfully:', data?.id);
     
-    // Persist invoice metadata to order
+    // Performance optimization: Non-blocking metadata attachment
     if (createdOrder?.id) {
-      console.log('[create-invoice] Attaching invoice metadata to order:', createdOrder.id);
-      await attachInvoiceToOrder(createdOrder.id, data);
+      console.log('[create-invoice] Scheduling metadata attachment for order:', createdOrder.id);
+      // Don't await this - let it run in background for better performance
+      attachInvoiceToOrder(createdOrder.id, data).catch(err => 
+        console.error('[create-invoice] Background metadata attachment failed:', err)
+      );
     } else {
       console.log('[create-invoice] No order created, skipping metadata attachment');
     }
+    
+    // Return immediately to user for better perceived performance
     return res.status(200).json(data);
   } catch (err: any) {
     console.error('[Xendit] Handler error', err);

@@ -64,8 +64,13 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 
     // Send to WhatsApp group (admin notification)
     const API_BASE_URL = 'https://notifapi.com';
-    const API_KEY = 'f104a4c19ea118dd464e9de20605c4e5';
-    const GROUP_ID = '120363421819020887@g.us'; // ORDERAN WEBSITE group
+    const API_KEY = process.env.WHATSAPP_API_KEY;
+    const GROUP_ID = process.env.WHATSAPP_GROUP_ID || '120363421819020887@g.us'; // ORDERAN WEBSITE group
+    
+    if (!API_KEY) {
+      console.error('WHATSAPP_API_KEY environment variable not set');
+      return;
+    }
 
     const response = await fetch(`${API_BASE_URL}/send_message_group_id`, {
       method: 'POST',

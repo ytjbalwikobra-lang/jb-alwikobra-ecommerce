@@ -33,26 +33,42 @@ export async function createXenditInvoice(input: CreateInvoiceInput) {
     orderCustomer: input.order?.customer_name
   });
   
-  const res = await fetch('/api/xendit/create-invoice', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      external_id: input.clientExternalId || input.externalId,
-      amount: input.amount,
-      payer_email: input.payerEmail,
-      description: input.description,
-      success_redirect_url: input.successRedirectUrl,
-      failure_redirect_url: input.failureRedirectUrl,
-      customer: input.customer
-  ,order: input.order
-    })
-  });
+  // Performance optimization: Shorter timeout for better UX
+  const controller = new AbortController();
+  const timeout = setTimeout(() => {
+    controller.abort();
+  }, 8000); // 8 seconds instead of default browser timeout
   
-  console.log('[paymentService] Server response status:', res.status);
-  
-  const data = await res.json();
-  console.log('[paymentService] Server response data:', data);
-  
-  if (!res.ok) throw new Error(data?.error || 'Failed to create invoice');
-  return data as { id: string; invoice_url: string; status: string };
+  try {
+    const res = await fetch('/api/xendit/create-invoice', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        external_id: input.clientExternalId || input.externalId,
+        amount: input.amount,
+        payer_email: input.payerEmail,
+        description: input.description,
+        success_redirect_url: input.successRedirectUrl,
+        failure_redirect_url: input.failureRedirectUrl,
+        customer: input.customer,
+        order: input.order
+      }),
+      signal: controller.signal
+    });
+    
+    clearTimeout(timeout);
+    console.log('[paymentService] Server response status:', res.status);
+    
+    const data = await res.json();
+    console.log('[paymentService] Server response data:', data);
+    
+    if (!res.ok) throw new Error(data?.error || 'Failed to create invoice');
+    return data as { id: string; invoice_url: string; status: string };
+  } catch (error) {
+    clearTimeout(timeout);
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new Error('Koneksi terlalu lambat. Silakan coba lagi.');
+    }
+    throw error;
+  }
 }

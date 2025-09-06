@@ -780,15 +780,18 @@ const ProductDetailPage: React.FC = () => {
           {checkoutType === 'purchase' ? (
                     <button
                       type="button"
-            onClick={handleCheckout}
-                      disabled={!acceptedTerms}
-                      className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
-                        acceptedTerms
+                      onClick={handleCheckout}
+                      disabled={!acceptedTerms || creatingInvoice}
+                      className={`flex-1 px-4 py-2 rounded-lg transition-colors flex items-center justify-center gap-2 ${
+                        acceptedTerms && !creatingInvoice
                           ? 'bg-pink-600 text-white hover:bg-pink-700'
                           : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                       }`}
                     >
-                      Bayar Sekarang
+                      {creatingInvoice && (
+                        <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                      )}
+                      {creatingInvoice ? 'Memproses...' : 'Bayar Sekarang'}
                     </button>
                   ) : (
                     <button
