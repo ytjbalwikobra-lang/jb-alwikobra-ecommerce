@@ -33,7 +33,7 @@ interface AuthContextType {
   login: (identifier: string, password: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; profileCompleted?: boolean}>;
   signup: (phone: string, password: string) => Promise<{error?: any; success?: boolean; userId?: string; message?: string}>;
   verifyPhone: (userId: string, code: string) => Promise<{error?: any; success?: boolean; user?: User; sessionToken?: string; nextStep?: string}>;
-  completeProfile: (email: string, name: string) => Promise<{error?: any; success?: boolean; user?: User}>;
+  completeProfile: (email: string, name: string, password: string) => Promise<{error?: any; success?: boolean; user?: User}>;
   logout: (logoutAll?: boolean) => Promise<void>;
   refreshSession: () => Promise<boolean>;
 }
@@ -123,7 +123,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         success: true, 
         user: data.user, 
         sessionToken: data.session_token,
-        profileCompleted: data.profile_completed
+        profileCompleted: data.user.profile_completed
       };
     } catch (error) {
       console.error('Login error:', error);
@@ -201,21 +201,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const completeProfile = async (email: string, name: string) => {
+  const completeProfile = async (email: string, name: string, password: string) => {
     try {
-      const sessionToken = localStorage.getItem('session_token');
+      const userData = localStorage.getItem('user_data');
       
-      if (!sessionToken) {
+      if (!userData) {
         return { error: 'Please login first' };
       }
 
+      const user = JSON.parse(userData);
+      
       const response = await fetch('/api/auth?action=complete-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${sessionToken}`,
         },
-        body: JSON.stringify({ email, name }),
+        body: JSON.stringify({ 
+          user_id: user.id, 
+          email, 
+          name, 
+          password 
+        }),
       });
 
       const data = await response.json();
@@ -224,13 +230,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: data.error || 'Profile completion failed' };
       }
 
-      // Update user data
-      localStorage.setItem('user_data', JSON.stringify(data.user));
-      setUser(data.user);
+      // Update user data with completed profile
+      const updatedUser = { ...user, ...data.user, profile_completed: true };
+      localStorage.setItem('user_data', JSON.stringify(updatedUser));
+      setUser(updatedUser);
 
       return { 
         success: true, 
-        user: data.user
+        user: updatedUser
       };
     } catch (error) {
       console.error('Profile completion error:', error);
@@ -299,10 +306,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ sessionToken: token }),
+        body: JSON.stringify({ session_token: token }),
       });
 
-      return response.ok;
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.user) {
+          // Update user data with latest from server
+          localStorage.setItem('user_data', JSON.stringify(data.user));
+          setUser(data.user);
+        }
+        return true;
+      }
+      
+      return false;
     } catch (error) {
       console.error('Session validation error:', error);
       return false;

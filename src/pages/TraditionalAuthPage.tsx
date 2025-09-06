@@ -50,7 +50,9 @@ const AuthPage: React.FC = () => {
   // Profile completion state
   const [profileData, setProfileData] = useState({
     email: '',
-    name: ''
+    name: '',
+    password: '',
+    confirmPassword: ''
   });
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -146,10 +148,21 @@ const AuthPage: React.FC = () => {
 
   const handleProfileCompletion = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (profileData.password !== profileData.confirmPassword) {
+      showToast('Password tidak cocok', 'error');
+      return;
+    }
+
+    if (profileData.password.length < 6) {
+      showToast('Password minimal 6 karakter', 'error');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const result = await completeProfile(profileData.email, profileData.name);
+      const result = await completeProfile(profileData.email, profileData.name, profileData.password);
       
       if (result.error) {
         showToast(result.error, 'error');
@@ -439,6 +452,24 @@ const AuthPage: React.FC = () => {
                   onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
                   className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   placeholder="Nama lengkap Anda"
+                  required
+                />
+              </div>
+
+              <div>
+                <PasswordInput
+                  value={profileData.password}
+                  onChange={(value) => setProfileData({ ...profileData, password: value })}
+                  placeholder="Buat password (min. 6 karakter)"
+                  required
+                />
+              </div>
+
+              <div>
+                <PasswordInput
+                  value={profileData.confirmPassword}
+                  onChange={(value) => setProfileData({ ...profileData, confirmPassword: value })}
+                  placeholder="Konfirmasi password"
                   required
                 />
               </div>
