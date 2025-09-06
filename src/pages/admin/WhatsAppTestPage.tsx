@@ -13,7 +13,7 @@ const WhatsAppTestPage: React.FC = () => {
 
     try {
       // Test our new dynamic WhatsApp service
-      const response = await fetch('/api/test-whatsapp-dynamic', {
+      const response = await fetch('/api/auth?action=test-whatsapp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

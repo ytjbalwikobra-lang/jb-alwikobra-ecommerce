@@ -58,6 +58,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleLogout(req, res);
       case 'whatsapp-confirm':
         return await handleWhatsAppConfirm(req, res);
+      case 'test-whatsapp':
+        return await handleTestWhatsApp(req, res);
+      case 'send-welcome':
+        return await handleSendWelcome(req, res);
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
@@ -452,5 +456,70 @@ async function handleWhatsAppConfirm(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     console.error('WhatsApp confirm error:', error);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleTestWhatsApp(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { message, phoneNumber } = req.body;
+
+    if (!message || !phoneNumber) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Message and phone number are required' 
+      });
+    }
+
+    const result = await whatsappService.sendMessage({
+      phone: phoneNumber,
+      message: message
+    });
+    
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('WhatsApp test error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Failed to send WhatsApp message',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}
+
+async function handleSendWelcome(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { name, phone, email } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Name and phone number are required' 
+      });
+    }
+
+    const result = await whatsappService.sendWelcomeMessage(name, phone, email);
+    
+    return res.status(200).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    console.error('Welcome message error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: 'Failed to send welcome message',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 }

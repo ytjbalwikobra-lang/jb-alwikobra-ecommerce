@@ -214,7 +214,7 @@ Terima kasih telah bergabung! 🚀`;
     // Format phone number
     const formattedPhone = whatsapp.startsWith('8') ? `62${whatsapp}` : whatsapp;
 
-    const response = await fetch('/api/woo-wa/send-welcome', {
+    const response = await fetch('/api/auth?action=send-welcome', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

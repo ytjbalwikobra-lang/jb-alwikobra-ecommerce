@@ -12,7 +12,7 @@ const WhatsAppQuickTest: React.FC = () => {
     try {
       // For development, we'll test the direct service
       // In production, this would call the API endpoint
-      const response = await fetch('/api/test-whatsapp-dynamic', {
+      const response = await fetch('/api/auth?action=test-whatsapp', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
