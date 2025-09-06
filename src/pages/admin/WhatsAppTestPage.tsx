@@ -12,14 +12,15 @@ const WhatsAppTestPage: React.FC = () => {
     setTestResults(null);
 
     try {
-      const response = await fetch('/api/test-whatsapp', {
+      // Test our new dynamic WhatsApp service
+      const response = await fetch('/api/test-whatsapp-dynamic', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          apiKey: 'f104a4c19ea118dd464e9de20605c4e5',
-          phoneNumber: testPhone
+          phone: testPhone,
+          testType: 'verification'
         })
       });
 
@@ -65,22 +66,23 @@ const WhatsAppTestPage: React.FC = () => {
           
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm text-gray-400 mb-2">API Key</label>
+              <label className="block text-sm text-gray-400 mb-2">API Configuration</label>
               <div className="bg-gray-800 rounded-lg p-3 font-mono text-sm">
-                f104a4c19ea118dd464e9de20605c4e5
+                Dynamic API Key Management
               </div>
               <p className="text-xs text-gray-500 mt-1">
-                Woo-wa.com API key - akan ditest melalui notifapi.com endpoint
+                Using database-driven API key selection with automatic failover
               </p>
             </div>
 
             <div>
               <label className="block text-sm text-gray-400 mb-2">Service Provider</label>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-blue-800">
-                <p className="font-medium">🌐 Woo-wa.com (NotifAPI)</p>
-                <p className="text-sm mt-1">• Endpoint: https://notifapi.com</p>
-                <p className="text-sm">• Device harus terhubung via QR code</p>
-                <p className="text-sm">• Support: text, image, file, scheduling</p>
+                <p className="font-medium">🌐 Multi-Provider Support</p>
+                <p className="text-sm mt-1">• Woo-wa (NotifAPI): https://notifapi.com</p>
+                <p className="text-sm">• Fonnte: https://api.fonnte.com</p>
+                <p className="text-sm">• Mock API: http://localhost:3002</p>
+                <p className="text-sm mt-2 font-medium text-green-700">✅ Automatic provider selection & failover</p>
               </div>
             </div>
 
