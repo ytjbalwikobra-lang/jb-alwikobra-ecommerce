@@ -56,6 +56,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleValidateSession(req, res);
       case 'logout':
         return await handleLogout(req, res);
+      case 'whatsapp-confirm':
+        return await handleWhatsAppConfirm(req, res);
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
@@ -425,6 +427,30 @@ async function handleLogout(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Logout error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleWhatsAppConfirm(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { email, whatsapp, name } = req.body;
+
+    if (!email || !whatsapp) {
+      return res.status(400).json({ error: 'Email and WhatsApp number are required' });
+    }
+
+    // For now, return a basic response - this can be extended based on specific needs
+    return res.status(200).json({
+      success: true,
+      message: 'WhatsApp confirmation initiated',
+      data: { email, whatsapp, name }
+    });
+  } catch (error) {
+    console.error('WhatsApp confirm error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

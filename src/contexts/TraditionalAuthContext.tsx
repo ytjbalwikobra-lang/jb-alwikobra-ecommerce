@@ -93,7 +93,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Use comprehensive phone normalization
       const normalizedIdentifier = normalizeLoginIdentifier(identifier);
 
-      const response = await fetch('/api/auth/login', {
+      const response = await fetch('/api/auth?action=login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Use comprehensive phone normalization
       const normalizedPhone = normalizeLoginIdentifier(phone);
       
-      const response = await fetch('/api/auth/signup', {
+      const response = await fetch('/api/auth?action=signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -163,7 +163,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const verifyPhone = async (userId: string, code: string) => {
     try {
-      const response = await fetch('/api/auth/verify-phone', {
+      const response = await fetch('/api/auth?action=verify-phone', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -209,7 +209,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: 'Please login first' };
       }
 
-      const response = await fetch('/api/auth/complete-profile', {
+      const response = await fetch('/api/auth?action=complete-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -243,7 +243,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sessionToken = localStorage.getItem('session_token');
       
       if (sessionToken) {
-        await fetch('/api/auth/logout', {
+        await fetch('/api/auth?action=logout', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -294,7 +294,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const validateSession = async (token: string): Promise<boolean> => {
     try {
-      const response = await fetch('/api/auth/validate-session', {
+      const response = await fetch('/api/auth?action=validate-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

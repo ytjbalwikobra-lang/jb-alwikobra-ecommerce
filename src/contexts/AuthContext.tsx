@@ -97,7 +97,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (supabase) {
         // Use WhatsApp confirmation instead of email confirmation
         if (whatsapp) {
-          const response = await fetch('/api/auth/whatsapp-confirm', {
+          const response = await fetch('/api/auth?action=whatsapp-confirm', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
