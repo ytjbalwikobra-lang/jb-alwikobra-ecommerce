@@ -231,9 +231,9 @@ const AdminOrders: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mt-3 shadow-sm">
+      <div className="admin-card">
         {errorMsg && (
-          <div className="px-4 py-2 text-sm text-amber-700 bg-amber-50 border-b border-amber-200">
+          <div className="px-4 py-2 text-sm text-amber-300 bg-amber-900/30 border-b border-amber-500/30 rounded mb-4">
             {errorMsg.includes('permission') || errorMsg.includes('RLS') ? (
               <span>Akses dibatasi oleh RLS. Pastikan kebijakan RLS untuk tabel orders mengizinkan admin melihat semua data.</span>
             ) : (
@@ -241,144 +241,118 @@ const AdminOrders: React.FC = () => {
             )}
           </div>
         )}
-        <div className="grid grid-cols-12 text-xs uppercase text-gray-500 px-4 py-3 border-b border-gray-200 bg-gray-50">
-          <div className="col-span-3 font-medium">Customer</div>
-          <div className="col-span-2 font-medium">Jenis</div>
-          <div className="col-span-2 font-medium">Jumlah</div>
-          <div className="col-span-2 font-medium">Status</div>
-          <div className="col-span-3 text-right font-medium">Aksi</div>
-        </div>
+        
         {loading ? (
-          <div className="p-4 text-gray-500">Memuat…</div>
+          <div className="p-4 text-center" style={{color: '#ffffff'}}>Memuat…</div>
         ) : filtered.length === 0 ? (
-          <div className="p-4 text-gray-500">Belum ada order{statusFilter!=='all' ? ` dengan status ${statusFilter}` : ''}.</div>
-        ) : filtered.map((r) => (
-          <div key={r.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
-            <div className="col-span-3 text-gray-900">
-              <div className="font-medium">{r.customer_name}</div>
-              <div className="text-xs text-gray-500">{r.customer_email} · {r.customer_phone}</div>
-            </div>
-            <div className="col-span-2 text-gray-700">
-              <div className="capitalize">{r.order_type}</div>
-              {/* Product quick link when available */}
-              {((r as any).products || r.product_id) && (
-                <div className="mt-1 text-xs">
-                  <a
-                    href={`/products/${(r as any).products?.id || r.product_id}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-pink-500 hover:text-pink-600 underline decoration-dotted"
-                    title={(r as any).products?.name || 'Lihat produk'}
-                  >
-                    {(r as any).products?.name || 'Buka produk'}
-                  </a>
-                </div>
-              )}
-            </div>
-            <div className="col-span-2 text-gray-700 font-medium">Rp {Number(r.amount||0).toLocaleString('id-ID')}</div>
-            <div className="col-span-2">
-              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                r.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
-                r.status === 'paid' ? 'bg-green-100 text-green-800' :
-                r.status === 'completed' ? 'bg-blue-100 text-blue-800' :
-                r.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                'bg-gray-100 text-gray-800'
-              }`}>
-                {r.status}
-              </span>
-            </div>
-            <div className="col-span-3 text-right">
-              <select 
-                value={r.status} 
-                onChange={(e)=>updateStatus(r.id, e.target.value as any)} 
-                className="bg-white border border-gray-300 rounded px-2 py-1 text-gray-900 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-              >
-                <option value="pending">pending</option>
-                <option value="paid">paid</option>
-                <option value="completed">completed</option>
-                <option value="cancelled">cancelled</option>
-              </select>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* Pagination component (copied from AdminProducts) */}
-      {!loading && totalPages > 1 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-4 mt-4 shadow-sm">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-4">
-              <div>
-                <label className="block text-xs text-gray-600 mb-1">Items per halaman</label>
-                <select
-                  value={itemsPerPage}
-                  onChange={(e) => {
-                    setItemsPerPage(Number(e.target.value));
-                    setCurrentPage(1);
-                  }}
-                  className="bg-white border border-gray-300 rounded px-3 py-1 text-gray-900 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                </select>
-              </div>
-              <div className="text-sm text-gray-600">
-                Menampilkan {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalOrders)} dari {totalOrders.toLocaleString()} orders
-              </div>
+          <div className="p-4 text-center" style={{color: '#ffffff'}}>Belum ada order{statusFilter!=='all' ? ` dengan status ${statusFilter}` : ''}.</div>
+        ) : (
+          <div style={{background: '#1a1a1a', border: '1px solid #333333', borderRadius: '8px', overflow: 'hidden'}}>
+            {/* Header */}
+            <div style={{display: 'grid', gridTemplateColumns: '3fr 2fr 2fr 2fr 3fr', background: '#2a2a2a', borderBottom: '1px solid #333333'}}>
+              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Customer</div>
+              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Jenis</div>
+              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Jumlah</div>
+              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Status</div>
+              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600', textAlign: 'right'}}>Aksi</div>
             </div>
             
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                ← Sebelumnya
-              </button>
-              
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(7, totalPages) }, (_, i) => {
-                  let page;
-                  if (totalPages <= 7) {
-                    page = i + 1;
-                  } else if (currentPage <= 4) {
-                    page = i + 1;
-                  } else if (currentPage >= totalPages - 3) {
-                    page = totalPages - 6 + i;
-                  } else {
-                    page = currentPage - 3 + i;
-                  }
-                  
-                  if (page < 1 || page > totalPages) return null;
-                  
-                  return (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded text-sm ${
-                        page === currentPage
-                          ? 'bg-pink-500 text-white'
-                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  );
-                })}
+            {/* Rows */}
+            {filtered.map((r) => (
+              <div key={r.id} style={{display: 'grid', gridTemplateColumns: '3fr 2fr 2fr 2fr 3fr', borderBottom: '1px solid #333333', background: '#1a1a1a'}} className="hover:bg-gray-800">
+                <div style={{padding: '12px', color: '#ffffff'}}>
+                  <div style={{fontWeight: '500'}}>{r.customer_name}</div>
+                  <div style={{fontSize: '12px', color: '#999999'}}>{r.customer_email} · {r.customer_phone}</div>
+                </div>
+                <div style={{padding: '12px', color: '#ffffff'}}>
+                  <div style={{textTransform: 'capitalize'}}>{r.order_type}</div>
+                </div>
+                <div style={{padding: '12px', color: '#ffffff', fontWeight: '500'}}>Rp {Number(r.amount||0).toLocaleString('id-ID')}</div>
+                <div style={{padding: '12px'}}>
+                  <span style={{
+                    display: 'inline-flex',
+                    padding: '4px 8px',
+                    borderRadius: '9999px',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    ...(r.status === 'pending' ? {background: '#fbbf24', color: '#000000'} :
+                       r.status === 'paid' ? {background: '#10b981', color: '#ffffff'} :
+                       r.status === 'completed' ? {background: '#3b82f6', color: '#ffffff'} :
+                       r.status === 'cancelled' ? {background: '#ef4444', color: '#ffffff'} :
+                       {background: '#6b7280', color: '#ffffff'})
+                  }}>
+                    {r.status}
+                  </span>
+                </div>
+                <div style={{padding: '12px', textAlign: 'right'}}>
+                  <select 
+                    value={r.status} 
+                    onChange={(e)=>updateStatus(r.id, e.target.value as any)} 
+                    className="admin-select"
+                    style={{width: 'auto', marginRight: '8px'}}
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="paid">Paid</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
               </div>
+            ))}
+          </div>
+        )}
+        
+        {/* Pagination */}
+        <div className="pagination mt-6">
+          <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <div style={{color: '#ffffff'}}>
+              Menampilkan {((currentPage - 1) * itemsPerPage) + 1} sampai {Math.min(currentPage * itemsPerPage, totalOrders)} dari {totalOrders} order
+            </div>
+            <div style={{display: 'flex', gap: '8px'}}>
+              <select 
+                value={itemsPerPage} 
+                onChange={(e) => setItemsPerPage(Number(e.target.value))}
+                className="admin-select"
+                style={{width: 'auto'}}
+              >
+                <option value={20}>20 per halaman</option>
+                <option value={50}>50 per halaman</option>
+                <option value={100}>100 per halaman</option>
+              </select>
               
               <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="pagination button"
+                style={{
+                  background: currentPage <= 1 ? '#1a1a1a' : '#2a2a2a',
+                  color: currentPage <= 1 ? '#666666' : '#ffffff',
+                  border: '1px solid #444444',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  cursor: currentPage <= 1 ? 'not-allowed' : 'pointer'
+                }}
               >
-                Selanjutnya →
+                Sebelumnya
               </button>
-            </div>
-          </div>
-        </div>
-      )}
+              
+              <span style={{color: '#ffffff', padding: '8px 12px'}}>
+                Halaman {currentPage} dari {totalPages}
+              </span>
+              
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages}
+                className="pagination button"
+                style={{
+                  background: currentPage >= totalPages ? '#1a1a1a' : '#2a2a2a',
+                  color: currentPage >= totalPages ? '#666666' : '#ffffff',
+                  border: '1px solid #444444',
+                  padding: '8px 12px',
+                  borderRadius: '4px',
+                  cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
+                }}
+      </div>
     </div>
   );
 };

@@ -47,7 +47,7 @@ code {
   box-sizing: border-box;
 }
 
-/* ADMIN THEME REFACTOR - CLEAN SLATE */
+/* ADMIN THEME - READABLE COLORS */
 .admin-layout {
   background: #000000 !important;
   color: #ffffff !important;
@@ -55,14 +55,10 @@ code {
   display: flex !important;
 }
 
-.admin-layout * {
-  color: inherit !important;
-}
-
 .admin-sidebar {
   width: 256px !important;
-  background: rgba(0, 0, 0, 0.95) !important;
-  border-right: 1px solid rgba(236, 72, 153, 0.3) !important;
+  background: #1a1a1a !important;
+  border-right: 1px solid #333333 !important;
   position: fixed !important;
   height: 100vh !important;
   left: 0 !important;
@@ -82,8 +78,8 @@ code {
 
 .admin-header {
   height: 64px !important;
-  background: #000000 !important;
-  border-bottom: 1px solid rgba(236, 72, 153, 0.3) !important;
+  background: #1a1a1a !important;
+  border-bottom: 1px solid #333333 !important;
   display: flex !important;
   align-items: center !important;
   padding: 0 24px !important;
@@ -93,112 +89,151 @@ code {
 .admin-content {
   flex: 1 !important;
   padding: 24px !important;
-  overflow-y: auto !important;
+  overflow-y: scroll !important;
+  max-height: calc(100vh - 64px) !important;
   background: #000000 !important;
 }
 
 .admin-card {
-  background: #111827 !important;
-  border: 1px solid rgba(236, 72, 153, 0.3) !important;
-  border-radius: 12px !important;
-  padding: 24px !important;
-  margin-bottom: 24px !important;
-}
-
-.admin-card h1,
-.admin-card h2, 
-.admin-card h3,
-.admin-card h4,
-.admin-card h5,
-.admin-card h6 {
+  background: #1a1a1a !important;
+  border: 1px solid #333333 !important;
+  border-radius: 8px !important;
+  padding: 20px !important;
+  margin-bottom: 20px !important;
   color: #ffffff !important;
-  margin-bottom: 16px !important;
 }
 
-.admin-card p,
-.admin-card span,
-.admin-card div {
-  color: #e5e7eb !important;
+/* NAVIGATION FIXES - NO WHITE HOVER */
+.admin-sidebar .active {
+  background: #ec4899 !important;
+  color: #ffffff !important;
 }
 
+.admin-sidebar a:hover {
+  background: #333333 !important;
+  color: #ffffff !important;
+}
+
+/* TABLE FIXES - READABLE ROWS */
+.admin-table {
+  width: 100% !important;
+  background: #1a1a1a !important;
+  border: 1px solid #333333 !important;
+  border-radius: 8px !important;
+  overflow: hidden !important;
+}
+
+.admin-table th {
+  background: #2a2a2a !important;
+  color: #ffffff !important;
+  padding: 12px !important;
+  text-align: left !important;
+  border-bottom: 1px solid #333333 !important;
+}
+
+.admin-table td {
+  background: #1a1a1a !important;
+  color: #ffffff !important;
+  padding: 12px !important;
+  border-bottom: 1px solid #333333 !important;
+}
+
+.admin-table tr:hover td {
+  background: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+/* FORM FIXES */
 .admin-input,
 .admin-select,
 .admin-textarea {
-  background: #1f2937 !important;
-  border: 1px solid #4b5563 !important;
+  background: #2a2a2a !important;
+  border: 1px solid #444444 !important;
   color: #ffffff !important;
-  border-radius: 8px !important;
-  padding: 8px 12px !important;
-  width: 100% !important;
+  border-radius: 6px !important;
+  padding: 10px !important;
 }
 
 .admin-input:focus,
 .admin-select:focus,
 .admin-textarea:focus {
   border-color: #ec4899 !important;
-  outline: none !important;
-  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1) !important;
+  background: #2a2a2a !important;
+  color: #ffffff !important;
 }
 
 .admin-button {
   background: #ec4899 !important;
   color: #ffffff !important;
   border: none !important;
-  border-radius: 8px !important;
-  padding: 8px 16px !important;
+  border-radius: 6px !important;
+  padding: 10px 16px !important;
   cursor: pointer !important;
-  font-weight: 500 !important;
 }
 
 .admin-button:hover {
   background: #db2777 !important;
+  color: #ffffff !important;
 }
 
-.admin-button-secondary {
-  background: #374151 !important;
+/* OVERRIDE ALL CONFLICTING STYLES */
+.admin-layout * {
+  color: inherit !important;
+}
+
+.admin-layout .bg-white {
+  background: #1a1a1a !important;
+}
+
+.admin-layout .text-gray-900,
+.admin-layout .text-gray-800,
+.admin-layout .text-gray-700,
+.admin-layout .text-gray-600 {
   color: #ffffff !important;
-  border: 1px solid #4b5563 !important;
+}
+
+.admin-layout .border-gray-200,
+.admin-layout .border-gray-300 {
+  border-color: #333333 !important;
+}
+
+.admin-layout .bg-gray-50,
+.admin-layout .bg-gray-100 {
+  background: #2a2a2a !important;
+}
+
+/* PAGINATION FIXES */
+.pagination {
+  background: #1a1a1a !important;
+  border: 1px solid #333333 !important;
   border-radius: 8px !important;
-  padding: 8px 16px !important;
-  cursor: pointer !important;
+  padding: 16px !important;
 }
 
-.admin-button-secondary:hover {
-  background: #4b5563 !important;
-}
-
-.admin-table {
-  width: 100% !important;
-  border-collapse: collapse !important;
-  background: #111827 !important;
-  border-radius: 12px !important;
-  overflow: hidden !important;
-}
-
-.admin-table th {
-  background: #1f2937 !important;
+.pagination button {
+  background: #2a2a2a !important;
   color: #ffffff !important;
-  padding: 12px !important;
-  text-align: left !important;
-  font-weight: 600 !important;
-  border-bottom: 1px solid rgba(236, 72, 153, 0.3) !important;
+  border: 1px solid #444444 !important;
+  padding: 8px 12px !important;
+  margin: 0 4px !important;
+  border-radius: 4px !important;
 }
 
-.admin-table td {
-  padding: 12px !important;
-  border-bottom: 1px solid rgba(75, 85, 99, 0.3) !important;
-  color: #e5e7eb !important;
+.pagination button:hover {
+  background: #ec4899 !important;
+  color: #ffffff !important;
 }
 
-.admin-table tr:hover {
-  background: #1f2937 !important;
+.pagination button:disabled {
+  background: #1a1a1a !important;
+  color: #666666 !important;
+  cursor: not-allowed !important;
 }
 
-/* Mobile responsive */
+/* MOBILE */
 @media (max-width: 1024px) {
   .admin-sidebar {
     transform: translateX(-100%) !important;
-    transition: transform 0.3s ease !important;
   }
   
   .admin-sidebar.open {
@@ -208,30 +243,6 @@ code {
   .admin-main {
     margin-left: 0 !important;
   }
-}
-
-/* Override any conflicting styles */
-.admin-layout .bg-white,
-.admin-layout .bg-gray-50,
-.admin-layout .bg-gray-100,
-.admin-layout .bg-gray-200 {
-  background: #111827 !important;
-}
-
-.admin-layout .text-gray-900,
-.admin-layout .text-gray-800,
-.admin-layout .text-gray-700 {
-  color: #ffffff !important;
-}
-
-.admin-layout .text-gray-600,
-.admin-layout .text-gray-500 {
-  color: #9ca3af !important;
-}
-
-.admin-layout .border-gray-200,
-.admin-layout .border-gray-300 {
-  border-color: rgba(236, 72, 153, 0.3) !important;
 }
 
 /* OLD CLASSES TO REMOVE */
