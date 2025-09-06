@@ -182,7 +182,7 @@ const AdminFlashSales: React.FC = () => {
                 <div className="col-span-2 text-gray-600">{(row.endTime || row.end_time)?.replace('T',' ').slice(0,16)}</div>
                 <div className="col-span-2">
                   {(row.isActive ?? row.is_active) ? 
-                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span> : 
+                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-500 text-black">Aktif</span> : 
                     <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Nonaktif</span>
                   }
                 </div>

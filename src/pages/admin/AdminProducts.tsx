@@ -477,7 +477,7 @@ const AdminProducts: React.FC = () => {
                     <div className="text-xs text-gray-600 line-clamp-1 flex items-center gap-2">
                       <span>{p.accountLevel || '-'}</span>
                       {((p as any).isActive === false || (p as any).archivedAt) && (
-                        <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-200">Diarsipkan</span>
+                        <span className="px-2 py-0.5 rounded bg-gray-500 text-gray-800 border border-gray-400">Diarsipkan</span>
                       )}
                     </div>
                   </div>
@@ -500,7 +500,7 @@ const AdminProducts: React.FC = () => {
                       await (supabase as any).from('products').update({ is_active: false, archived_at: new Date().toISOString() }).eq('id', p.id);
                       await loadProducts(); // Use optimized reload
                       push('Produk diarsipkan', 'success');
-                    }} className="px-3 py-1.5 rounded border border-yellow-500/40 text-amber-300 hover:bg-yellow-500/10 mr-2">Arsipkan</button>
+                    }} className="px-3 py-1.5 rounded border border-gray-500/40 text-gray-400 hover:bg-gray-500/10 mr-2">Arsipkan</button>
                   )}
                   <button onClick={() => handleDelete(p.id)} className="px-3 py-1.5 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10">Hapus</button>
                 </div>

@@ -199,7 +199,8 @@ Setelah verifikasi, Anda akan diminta melengkapi profil dengan email dan nama.
 
 ---
 🎮 *JB Alwikobra E-commerce*
-Premium Game Accounts & Services`;
+Jual Beli dan Rental Akun Game Indonesia
+Website : www.jbalwikobra.com`;
 
     return this.sendMessage({
       phone,

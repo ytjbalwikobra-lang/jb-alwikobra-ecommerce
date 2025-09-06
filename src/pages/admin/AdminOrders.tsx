@@ -276,7 +276,7 @@ const AdminOrders: React.FC = () => {
                     fontSize: '12px',
                     fontWeight: '500',
                     ...(r.status === 'pending' ? {background: '#fbbf24', color: '#000000'} :
-                       r.status === 'paid' ? {background: '#10b981', color: '#ffffff'} :
+                       r.status === 'paid' ? {background: '#10b981', color: '#000000'} :
                        r.status === 'completed' ? {background: '#3b82f6', color: '#ffffff'} :
                        r.status === 'cancelled' ? {background: '#ef4444', color: '#ffffff'} :
                        {background: '#6b7280', color: '#ffffff'})
