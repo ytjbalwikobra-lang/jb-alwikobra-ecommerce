@@ -6,9 +6,19 @@
 
 # Misc
 .DS_Store
+
+# Environment files (contain real secrets)
 .env
 .env.local
+.env.development
+.env.production
+.env.staging
 .env.*.local
+
+# Keep template files (safe examples)
+!.env.template
+!.env.example
+!.env.*.template
 
 # Logs
 npm-debug.log*

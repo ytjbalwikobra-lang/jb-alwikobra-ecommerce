@@ -1,182 +1,180 @@
-# Supabase CLI (v1)
+# JB Alwikobra E-commerce
 
-[![Coverage Status](https://coveralls.io/repos/github/supabase/cli/badge.svg?branch=main)](https://coveralls.io/github/supabase/cli?branch=main)
+A modern e-commerce platform for gaming account sales and rentals, built with React, TypeScript, and Supabase.
 
-[Supabase](https://supabase.io) is an open source Firebase alternative. We're building the features of Firebase using enterprise-grade open source tools.
+## Features
 
-This repository contains all the functionality for Supabase CLI.
+- 🎮 Gaming account marketplace
+- 💳 Secure payment processing with Xendit
+- 📱 WhatsApp integration for notifications
+- 🔐 Multi-layer authentication system
+- 📊 Admin dashboard for order management
+- 🚀 Real-time updates and notifications
 
-- [x] Running Supabase locally
-- [x] Managing database migrations
-- [x] Creating and deploying Supabase Functions
-- [x] Generating types directly from your database schema
-- [x] Making authenticated HTTP requests to [Management API](https://supabase.com/docs/reference/api/introduction)
+## 🔐 Security & Environment Setup
 
-## Getting started
-
-### Install the CLI
-
-Available via [NPM](https://www.npmjs.com) as dev dependency. To install:
-
+### Quick Start
 ```bash
-npm i supabase --save-dev
+# 1. Clone the repository
+git clone <repository-url>
+cd jb-alwikobra-ecommerce
+
+# 2. Set up environment variables
+cp .env.template .env
+# Edit .env with your actual API keys
+
+# 3. Install dependencies
+npm install
+
+# 4. Validate security configuration
+node scripts/validate-env-security.js
+
+# 5. Start development server
+npm start
 ```
 
-To install the beta release channel:
+### Environment Configuration
 
+This project uses environment variables for all sensitive configuration. **Never commit real API keys to Git.**
+
+#### Required Environment Variables
+
+**Frontend (Public - exposed to browser):**
 ```bash
-npm i supabase@beta --save-dev
+REACT_APP_SUPABASE_URL=https://your-project.supabase.co
+REACT_APP_SUPABASE_ANON_KEY=your_anon_key_here
+REACT_APP_XENDIT_PUBLIC_KEY=xnd_public_development_...
+REACT_APP_SITE_NAME=JB Alwikobra
+REACT_APP_SITE_URL=https://your-domain.com
 ```
 
-When installing with yarn 4, you need to disable experimental fetch with the following nodejs config.
-
-```
-NODE_OPTIONS=--no-experimental-fetch yarn add supabase
-```
-
-> **Note**
-For Bun versions below v1.0.17, you must add `supabase` as a [trusted dependency](https://bun.sh/guides/install/trusted) before running `bun add -D supabase`.
-
-<details>
-  <summary><b>macOS</b></summary>
-
-  Available via [Homebrew](https://brew.sh). To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To install the beta release channel:
-  
-  ```sh
-  brew install supabase/tap/supabase-beta
-  brew link --overwrite supabase-beta
-  ```
-  
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Windows</b></summary>
-
-  Available via [Scoop](https://scoop.sh). To install:
-
-  ```powershell
-  scoop bucket add supabase https://github.com/supabase/scoop-bucket.git
-  scoop install supabase
-  ```
-
-  To upgrade:
-
-  ```powershell
-  scoop update supabase
-  ```
-</details>
-
-<details>
-  <summary><b>Linux</b></summary>
-
-  Available via [Homebrew](https://brew.sh) and Linux packages.
-
-  #### via Homebrew
-
-  To install:
-
-  ```sh
-  brew install supabase/tap/supabase
-  ```
-
-  To upgrade:
-
-  ```sh
-  brew upgrade supabase
-  ```
-
-  #### via Linux packages
-
-  Linux packages are provided in [Releases](https://github.com/supabase/cli/releases). To install, download the `.apk`/`.deb`/`.rpm`/`.pkg.tar.zst` file depending on your package manager and run the respective commands.
-
-  ```sh
-  sudo apk add --allow-untrusted <...>.apk
-  ```
-
-  ```sh
-  sudo dpkg -i <...>.deb
-  ```
-
-  ```sh
-  sudo rpm -i <...>.rpm
-  ```
-
-  ```sh
-  sudo pacman -U <...>.pkg.tar.zst
-  ```
-</details>
-
-<details>
-  <summary><b>Other Platforms</b></summary>
-
-  You can also install the CLI via [go modules](https://go.dev/ref/mod#go-install) without the help of package managers.
-
-  ```sh
-  go install github.com/supabase/cli@latest
-  ```
-
-  Add a symlink to the binary in `$PATH` for easier access:
-
-  ```sh
-  ln -s "$(go env GOPATH)/cli" /usr/bin/supabase
-  ```
-
-  This works on other non-standard Linux distros.
-</details>
-
-<details>
-  <summary><b>Community Maintained Packages</b></summary>
-
-  Available via [pkgx](https://pkgx.sh/). Package script [here](https://github.com/pkgxdev/pantry/blob/main/projects/supabase.com/cli/package.yml).
-  To install in your working directory:
-
-  ```bash
-  pkgx install supabase
-  ```
-
-  Available via [Nixpkgs](https://nixos.org/). Package script [here](https://github.com/NixOS/nixpkgs/blob/master/pkgs/development/tools/supabase-cli/default.nix).
-</details>
-
-### Run the CLI
-
+**Backend (Private - server-side only):**
 ```bash
-supabase bootstrap
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+XENDIT_SECRET_KEY=xnd_development_...
+XENDIT_CALLBACK_TOKEN=your_callback_token_here
+WHATSAPP_API_KEY=your_whatsapp_api_key_here
 ```
 
-Or using npx:
+#### Environment Files
+- `.env.template` - Safe template with placeholders
+- `.env.example` - Example with safe dummy values
+- `.env.development.template` - Development-specific template
+- `.env.production.template` - Production-specific template
+- `.env` - Your actual secrets (git-ignored)
 
+### Security Features
+
+#### Automated Security Scanning
+This repository includes GitHub Actions workflows that automatically:
+- 🔍 Scan for exposed secrets in code and files
+- 🛡️ Check dependencies for vulnerabilities
+- 🔐 Validate environment file security
+- 📊 Run CodeQL security analysis
+
+#### Environment Security Validation
+Run the security validator to check your configuration:
 ```bash
-npx supabase bootstrap
+node scripts/validate-env-security.js
 ```
 
-The bootstrap command will guide you through the process of setting up a Supabase project using one of the [starter](https://github.com/supabase-community/supabase-samples/blob/main/samples.json) templates.
+This script checks for:
+- ✅ Required environment variables are set
+- ✅ No real secrets in example files
+- ✅ Proper .gitignore configuration
+- ✅ No hardcoded secrets in source code
 
-## Docs
+#### Security Best Practices Applied
+- 🔒 All API keys stored in environment variables
+- 🚫 No hardcoded secrets in source code
+- 🛡️ Environment files properly git-ignored
+- 📋 Template system for safe onboarding
+- 🔍 Automated secret scanning in CI/CD
+- ⚡ Graceful error handling for missing keys
 
-Command & config reference can be found [here](https://supabase.com/docs/reference/cli/about).
+### Deployment Security
 
-## Breaking changes
+#### Production Checklist
+- [ ] Set environment variables in deployment platform
+- [ ] Use production API keys (not development)
+- [ ] Enable HTTPS/SSL certificates
+- [ ] Configure proper CORS policies
+- [ ] Run security validation: `node scripts/validate-env-security.js`
+- [ ] Monitor deployment for security alerts
 
-We follow semantic versioning for changes that directly impact CLI commands, flags, and configurations.
-
-However, due to dependencies on other service images, we cannot guarantee that schema migrations, seed.sql, and generated types will always work for the same CLI major version. If you need such guarantees, we encourage you to pin a specific version of CLI in package.json.
-
-## Developing
-
-To run from source:
-
-```sh
-# Go >= 1.22
-go run . help
+#### Platform-Specific Setup
+**Vercel:**
+```bash
+vercel env add XENDIT_SECRET_KEY production
+vercel env add SUPABASE_SERVICE_ROLE_KEY production
 ```
+
+**Netlify:** Dashboard → Site Settings → Environment Variables
+
+**Railway:** Dashboard → Variables tab
+
+See [SECRET_MANAGEMENT_GUIDELINES.md](./SECRET_MANAGEMENT_GUIDELINES.md) for comprehensive security documentation.
+
+## 📖 Documentation
+
+- [Secret Management Guidelines](./SECRET_MANAGEMENT_GUIDELINES.md) - Comprehensive security documentation
+- [Security Performance Fixes](./SECURITY_PERFORMANCE_FIXES.md) - Recent security improvements
+- [Final App Review](./FINAL_APP_REVIEW.md) - Complete system status
+
+## 🛠️ Development
+
+### Tech Stack
+- **Frontend:** React, TypeScript, Tailwind CSS
+- **Backend:** Supabase, Node.js API routes
+- **Payments:** Xendit payment gateway
+- **Notifications:** WhatsApp API integration
+- **Deployment:** Vercel
+
+### Project Structure
+```
+src/
+├── components/     # Reusable UI components
+├── pages/         # Application pages
+├── services/      # API service functions
+├── contexts/      # React context providers
+├── utils/         # Utility functions
+└── types/         # TypeScript type definitions
+
+api/
+├── admin/         # Admin API endpoints
+├── auth/          # Authentication endpoints
+├── xendit/        # Payment processing
+└── analytics/     # Analytics endpoints
+```
+
+### Security Validation
+Always run security checks before committing:
+```bash
+# Validate environment security
+node scripts/validate-env-security.js
+
+# Check for secrets in code
+npm run security-check  # (if available)
+
+# Run comprehensive checks
+./comprehensive-check.sh
+```
+
+## 🚀 Contributing
+
+1. Follow the security guidelines in [SECRET_MANAGEMENT_GUIDELINES.md](./SECRET_MANAGEMENT_GUIDELINES.md)
+2. Never commit real API keys or sensitive data
+3. Use the provided environment templates
+4. Run security validation before submitting PRs
+5. All security checks must pass in CI/CD
+
+## 📞 Support
+
+For security-related questions or to report vulnerabilities:
+- Review [SECRET_MANAGEMENT_GUIDELINES.md](./SECRET_MANAGEMENT_GUIDELINES.md)
+- Create a GitHub issue for general questions
+- Contact the development team directly for sensitive security issues
+
+---
+
+**⚠️ Security Notice:** This application handles payment data and user information. Always follow security best practices and keep dependencies updated.

@@ -1,0 +1,169 @@
+name: Security Checks
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+jobs:
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch full history for better secret detection
+      
+      - name: Run Trivy secret scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-secrets-results.sarif'
+          scanners: 'secret'
+      
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-secrets-results.sarif'
+      
+      - name: Run TruffleHog OSS
+        uses: trufflesecurity/trufflehog@main
+        with:
+          path: ./
+          base: main
+          head: HEAD
+          extra_args: --debug --only-verified
+
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run npm audit
+        run: npm audit --audit-level high
+        continue-on-error: true
+      
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'sarif'
+          output: 'trivy-vuln-results.sarif'
+          scanners: 'vuln'
+      
+      - name: Upload vulnerability scan results
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: 'trivy-vuln-results.sarif'
+
+  code-scan:
+    name: CodeQL Analysis
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'javascript' ]
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+
+  environment-check:
+    name: Environment Security Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Check for exposed secrets in example files
+        run: |
+          echo "Checking for potential secrets in example files..."
+          
+          # Check for patterns that might indicate real secrets
+          if grep -E "(xnd_[a-zA-Z0-9_-]{50,}|sk_[a-zA-Z0-9_-]{50,}|pk_[a-zA-Z0-9_-]{50,})" .env.example .env.template 2>/dev/null; then
+            echo "❌ WARNING: Potential real API keys found in example files!"
+            exit 1
+          fi
+          
+          # Check for real URLs that might contain sensitive info
+          if grep -E "https://[a-zA-Z0-9-]+\.supabase\.co" .env.example 2>/dev/null | grep -v "your-project-id"; then
+            echo "❌ WARNING: Real Supabase URLs found in .env.example!"
+            exit 1
+          fi
+          
+          # Check for JWT tokens
+          if grep -E "eyJ[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*" .env.example 2>/dev/null; then
+            echo "❌ WARNING: JWT tokens found in .env.example!"
+            exit 1
+          fi
+          
+          echo "✅ Example files appear to be safe from real secrets"
+      
+      - name: Verify .env is properly gitignored
+        run: |
+          if grep -q "^\.env$" .gitignore; then
+            echo "✅ .env is properly gitignored"
+          else
+            echo "❌ WARNING: .env is not in .gitignore!"
+            exit 1
+          fi
+      
+      - name: Check for hardcoded secrets in code
+        run: |
+          echo "Scanning for hardcoded secrets in source code..."
+          
+          # Check for common API key patterns in source files
+          if find src api -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | xargs grep -E "(sk_|pk_|xnd_)[a-zA-Z0-9_-]{20,}" 2>/dev/null; then
+            echo "❌ WARNING: Potential hardcoded API keys found in source code!"
+            exit 1
+          fi
+          
+          # Check for hardcoded database URLs
+          if find src api -name "*.ts" -o -name "*.tsx" -o -name "*.js" -o -name "*.jsx" | xargs grep -E "https://[a-zA-Z0-9-]+\.supabase\.co" 2>/dev/null; then
+            echo "❌ WARNING: Hardcoded database URLs found in source code!"
+            exit 1
+          fi
+          
+          echo "✅ No obvious hardcoded secrets found in source code"
