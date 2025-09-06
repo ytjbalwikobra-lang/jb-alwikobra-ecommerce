@@ -29,8 +29,8 @@ const AdminUsers: React.FC = () => {
 
   const load = async () => {
     try {
-      // Fetch users from admin API endpoint
-      const response = await fetch('/api/admin/users');
+      // Fetch users from consolidated admin API endpoint
+      const response = await fetch('/api/admin?action=users');
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -107,9 +107,9 @@ const AdminUsers: React.FC = () => {
         }
       }
       
-      // Update user role via admin API
+      // Update user role via consolidated admin API
       const isAdmin = isAdminRole(role);
-      const response = await fetch('/api/admin/users', {
+      const response = await fetch('/api/admin?action=users', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',

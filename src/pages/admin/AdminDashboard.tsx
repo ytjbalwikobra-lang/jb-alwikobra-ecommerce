@@ -13,8 +13,8 @@ const AdminDashboard: React.FC = () => {
   useEffect(()=>{
     (async()=>{
       try {
-        // Fetch dashboard data from admin API endpoint
-        const response = await fetch('/api/admin/dashboard');
+        // Fetch dashboard data from consolidated admin API endpoint
+        const response = await fetch('/api/admin?action=dashboard');
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }

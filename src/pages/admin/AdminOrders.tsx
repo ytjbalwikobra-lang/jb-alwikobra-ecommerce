@@ -42,8 +42,8 @@ const AdminOrders: React.FC = () => {
   const load = async () => {
     setLoading(true); setErrorMsg('');
     try {
-      // Fetch orders from admin API endpoint
-      const response = await fetch('/api/admin/orders');
+      // Fetch orders from consolidated admin API endpoint
+      const response = await fetch('/api/admin?action=orders');
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
@@ -54,6 +54,11 @@ const AdminOrders: React.FC = () => {
       }
       
       setRows((result.data || []).map(mapRow));
+      
+      // Show warning if product relations couldn't be loaded
+      if (result.warning) {
+        setErrorMsg(result.warning);
+      }
     } catch (e: any) {
       const m = e?.message || String(e);
       setErrorMsg(m);
@@ -101,7 +106,7 @@ const AdminOrders: React.FC = () => {
 
   const updateStatus = async (id: string, status: OrderRow['status']) => {
     try {
-      const response = await fetch('/api/admin/update-order', {
+      const response = await fetch('/api/admin?action=update-order', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
