@@ -2,8 +2,15 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import bcrypt from 'bcryptjs';
 
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!;
+const supabaseUrl = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error('Missing Supabase environment variables:', {
+    url: !!supabaseUrl,
+    serviceKey: !!supabaseServiceKey
+  });
+}
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
@@ -24,6 +31,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Check environment variables
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error('Missing environment variables');
+    return res.status(500).json({ error: 'Server configuration error' });
   }
 
   try {

@@ -4,9 +4,13 @@ type ToastItem = { id: string; message: string; type?: 'success'|'error'|'info' 
 
 type ToastCtx = {
   push: (message: string, type?: ToastItem['type']) => void;
+  showToast: (message: string, type?: ToastItem['type']) => void;
 };
 
-const Ctx = createContext<ToastCtx>({ push: () => {} });
+const Ctx = createContext<ToastCtx>({ 
+  push: () => {}, 
+  showToast: () => {} 
+});
 
 export const useToast = () => useContext(Ctx);
 
@@ -17,7 +21,11 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setItems((prev) => [...prev, { id, message, type }]);
     setTimeout(() => setItems((prev) => prev.filter((i) => i.id !== id)), 3000);
   }, []);
-  const ctx = useMemo(()=>({ push }),[push]);
+  
+  const ctx = useMemo(() => ({ 
+    push, 
+    showToast: push // Alias for better API
+  }), [push]);
 
   return (
     <Ctx.Provider value={ctx}>
