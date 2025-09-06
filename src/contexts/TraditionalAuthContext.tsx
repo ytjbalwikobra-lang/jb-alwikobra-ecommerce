@@ -89,12 +89,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (identifier: string, password: string) => {
     try {
+      // Normalize phone number format if it's a phone (remove + sign)
+      let normalizedIdentifier = identifier;
+      if (identifier.startsWith('+') && /^\+\d+$/.test(identifier.replace(/\s|-/g, ''))) {
+        normalizedIdentifier = identifier.slice(1);
+      }
+
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ identifier, password }),
+        body: JSON.stringify({ identifier: normalizedIdentifier, password }),
       });
 
       const data = await response.json();
@@ -129,12 +135,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signup = async (phone: string, password: string) => {
     try {
+      // Normalize phone number format (remove + and ensure it starts with country code)
+      const normalizedPhone = phone.startsWith('+') ? phone.slice(1) : phone;
+      
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ phone, password }),
+        body: JSON.stringify({ phone: normalizedPhone, password }),
       });
 
       const data = await response.json();
