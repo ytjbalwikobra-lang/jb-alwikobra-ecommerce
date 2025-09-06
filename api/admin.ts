@@ -61,11 +61,12 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     let productsCount = 0;
     let flashSalesCount = 0;
 
-    // Orders count and revenue (with error handling)
+    // Orders count and revenue (with error handling) - ONLY PAID ORDERS
     try {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('amount, created_at, status')
+        .eq('status', 'PAID')
         .gte('created_at', sevenDaysAgo.toISOString());
 
       if (ordersError) {
@@ -130,12 +131,13 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     // Get additional analytics data
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    // Monthly orders data for chart
+    // Monthly orders data for chart - ONLY PAID ORDERS
     let monthlyOrders: any[] = [];
     try {
       const { data: monthlyData, error: monthlyError } = await supabase
         .from('orders')
         .select('amount, created_at, status')
+        .eq('status', 'PAID')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 

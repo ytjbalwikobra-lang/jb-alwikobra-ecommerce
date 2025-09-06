@@ -45,7 +45,6 @@ const AdminBanners = React.lazy(() => import('./pages/admin/AdminBanners.tsx'));
 const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings.tsx'));
 const AdminOrders = React.lazy(() => import('./pages/admin/AdminOrders.tsx'));
 const AdminGameTitles = React.lazy(() => import('./pages/admin/AdminGameTitles.tsx'));
-const WhatsAppTestPage = React.lazy(() => import('./pages/admin/WhatsAppTestPage.tsx'));
 
 // Optimized loading component for better perceived performance
 const PageLoader = () => (
@@ -166,11 +165,6 @@ function App() {
                     <Route path="banners" element={
                       <Suspense fallback={<PageLoader />}>
                         <AdminBanners />
-                      </Suspense>
-                    } />
-                    <Route path="whatsapp-test" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <WhatsAppTestPage />
                       </Suspense>
                     } />
                     <Route path="settings" element={

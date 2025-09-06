@@ -154,32 +154,32 @@ const AdminOrders: React.FC = () => {
       </div>
 
       {/* Advanced Filters */}
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
+      <div className="bg-gray-900 border border-pink-500/30 rounded-xl p-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <Filter size={20} className="text-pink-500" />
-          <h3 className="text-lg font-semibold text-gray-900">Filter Pesanan</h3>
+          <h3 className="text-lg font-semibold text-white">Filter Pesanan</h3>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Cari</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Cari</label>
             <input
               type="text"
               placeholder="ID, nama, email, telepon..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             />
           </div>
           
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
             <select 
               value={statusFilter} 
               onChange={e=>setStatusFilter(e.target.value as any)} 
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             >
               <option value="all">Semua Status</option>
               <option value="pending">Pending</option>
@@ -191,11 +191,11 @@ const AdminOrders: React.FC = () => {
           
           {/* Order Type Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Order</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Jenis Order</label>
             <select 
               value={orderTypeFilter} 
               onChange={e=>setOrderTypeFilter(e.target.value as any)} 
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             >
               <option value="all">Semua Jenis</option>
               <option value="purchase">Pembelian</option>
