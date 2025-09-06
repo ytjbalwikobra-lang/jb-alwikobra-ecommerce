@@ -353,20 +353,22 @@ const AdminProducts: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Kelola Produk</h1>
-          <p className="text-gray-600">Tambah, edit, dan kelola semua produk</p>
+      <div className="admin-card">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-white">Kelola Produk</h1>
+            <p style={{color: '#9ca3af'}}>Tambah, edit, dan kelola semua produk</p>
+          </div>
+          <button onClick={startCreate} className="admin-button">
+            Tambah Produk
+          </button>
         </div>
-        <button onClick={startCreate} className="px-4 py-2 rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors">
-          Tambah Produk
-        </button>
       </div>
 
       {!showForm && (
         <>
           {/* Filters and Search */}
-          <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
+          <div className="admin-card space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div>
