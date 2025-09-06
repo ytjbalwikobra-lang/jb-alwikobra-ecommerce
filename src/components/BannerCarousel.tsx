@@ -85,28 +85,57 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
   const active = resolvedSlides[index];
 
   return (
-  <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
-      {/* 3:2 ratio container */}
-      <div className="relative w-full" style={{ paddingTop: '66.6667%' }}>
-        <ResponsiveImage
-          src={active.image}
-          alt={active.title || 'Banner'}
-          className="absolute inset-0 w-full h-full"
-          priority={true} // Banners are above the fold
-          quality={90}
-          aspectRatio={3/2}
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 60vw"
-        />
+    <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
+      {/* Mobile-optimized aspect ratio using CSS */}
+      <div className="relative w-full">
+        {/* Mobile: 16:9 ratio */}
+        <div className="block md:hidden w-full" style={{ paddingTop: '56.25%' }}>
+          <ResponsiveImage
+            src={active.image}
+            alt={active.title || 'Banner'}
+            className="absolute inset-0 w-full h-full object-cover"
+            priority={true}
+            quality={90}
+            aspectRatio={16/9}
+            sizes="100vw"
+          />
+        </div>
+        
+        {/* Desktop: 3:2 ratio */}
+        <div className="hidden md:block w-full" style={{ paddingTop: '66.6667%' }}>
+          <ResponsiveImage
+            src={active.image}
+            alt={active.title || 'Banner'}
+            className="absolute inset-0 w-full h-full object-cover"
+            priority={true}
+            quality={90}
+            aspectRatio={3/2}
+            sizes="(max-width: 1024px) 90vw, 80vw"
+          />
+        </div>
 
-        <div className="absolute inset-0 bg-black/30" />
+        {/* Gradient overlay for better text readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
 
-        <div className="absolute inset-0 p-6 sm:p-10 flex flex-col justify-end">
+        {/* Content positioned responsively */}
+        <div className="absolute inset-0 p-4 sm:p-6 md:p-8 lg:p-10 flex flex-col justify-end">
           {(active.title || active.subtitle) && (
-            <div className="text-white max-w-xl">
-              {active.title && <h3 className="text-2xl sm:text-3xl font-bold mb-2">{active.title}</h3>}
-              {active.subtitle && <p className="text-white/90 mb-4">{active.subtitle}</p>}
+            <div className="text-white max-w-full sm:max-w-md lg:max-w-xl">
+              {active.title && (
+                <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 leading-tight drop-shadow-lg">
+                  {active.title}
+                </h3>
+              )}
+              {active.subtitle && (
+                <p className="text-white/95 mb-2 sm:mb-3 md:mb-4 text-sm sm:text-base leading-snug drop-shadow-md">
+                  {active.subtitle}
+                </p>
+              )}
               {active.ctaText && active.ctaLink && (
-                <a href={active.ctaLink} className="inline-block bg-primary-600 hover:bg-primary-700 text-white px-5 py-2 rounded-lg font-semibold">
+                <a 
+                  href={active.ctaLink} 
+                  className="inline-block bg-pink-500 hover:bg-pink-600 text-white px-3 sm:px-4 md:px-5 py-2 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+                >
                   {active.ctaText}
                 </a>
               )}
@@ -115,14 +144,18 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
         </div>
       </div>
 
-      {/* Dots */}
-      <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex space-x-2">
+      {/* Dots indicator - positioned better for mobile */}
+      <div className="absolute bottom-2 sm:bottom-3 left-1/2 -translate-x-1/2 flex space-x-1.5 sm:space-x-2">
         {Array.from({ length: count }).map((_, i) => (
           <button
             key={i}
             aria-label={`Slide ${i + 1}`}
             onClick={() => setIndex(i)}
-            className={`h-2.5 rounded-full transition-all ${i === index ? 'w-6 bg-white' : 'w-2.5 bg-white/70'}`}
+            className={`h-2 sm:h-2.5 rounded-full transition-all duration-200 ${
+              i === index 
+                ? 'w-4 sm:w-6 bg-white shadow-lg' 
+                : 'w-2 sm:w-2.5 bg-white/70 hover:bg-white/90'
+            }`}
           />
         ))}
       </div>
