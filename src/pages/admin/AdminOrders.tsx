@@ -352,6 +352,12 @@ const AdminOrders: React.FC = () => {
                   borderRadius: '4px',
                   cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer'
                 }}
+              >
+                →
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -6,6 +6,7 @@ import {
   ChevronDown, User, Home
 } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import '../styles/admin.css';
 
 const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
