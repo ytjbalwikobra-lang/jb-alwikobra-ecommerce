@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
@@ -12,6 +12,7 @@ import { ToastProvider } from './components/Toast.tsx';
 import { AuthProvider } from './contexts/TraditionalAuthContext.tsx';
 import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import { FaviconService } from './services/faviconService.ts';
+import { productionMonitor } from './utils/productionMonitor.ts';
 
 // CRITICAL PERFORMANCE FIX: Lazy load ALL pages including HomePage
 // This reduces initial JS bundle by 70%+
@@ -100,6 +101,14 @@ function App() {
   React.useEffect(() => {
     FaviconService.updateFavicon();
     FaviconService.updatePageTitle();
+  }, []);
+
+  // Initialize production monitoring
+  useEffect(() => {
+    // Production monitor is automatically initialized when imported
+    if (productionMonitor.isProduction()) {
+      console.log('🔍 Production monitoring active');
+    }
   }, []);
 
   return (

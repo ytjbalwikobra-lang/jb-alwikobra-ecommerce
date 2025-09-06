@@ -18,20 +18,23 @@ class FontOptimizer {
     { family: 'Inter', weight: 700, display: 'swap' }
   ];
 
-  // Non-critical fonts to load lazily
+  // Non-critical fonts to load lazily (reduced to prevent loading errors)
   static readonly OPTIONAL_FONTS: FontDescriptor[] = [
-    { family: 'Inter', weight: 300, display: 'optional' },
-    { family: 'Inter', weight: 800, display: 'optional' },
-    { family: 'Inter', weight: 900, display: 'optional' }
+    { family: 'Inter', weight: 500, display: 'optional' }
   ];
 
   // Preload critical fonts
   static preloadCriticalFonts(): void {
     if (typeof document === 'undefined') return;
 
-    this.CRITICAL_FONTS.forEach(font => {
-      this.preloadFont(font);
-    });
+    // Only preload if fonts are actually used in the current page
+    const hasInterFont = document.querySelector('[style*="Inter"], [class*="font-inter"], .font-inter');
+    
+    if (hasInterFont) {
+      this.CRITICAL_FONTS.forEach(font => {
+        this.preloadFont(font);
+      });
+    }
   }
 
   // Preload a specific font
@@ -40,19 +43,32 @@ class FontOptimizer {
     
     if (this.preloadedFonts.has(fontKey)) return;
 
-    // Create preload link
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'font';
-    link.type = 'font/woff2';
-    link.crossOrigin = 'anonymous';
-    
-    // Generate font URL (you can customize this based on your font hosting)
-    const fontUrl = this.generateFontUrl(font);
-    link.href = fontUrl;
+    try {
+      // Create preload link with better error handling
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'font';
+      link.type = 'font/woff2';
+      link.crossOrigin = 'anonymous';
+      
+      // Add error handling to prevent console warnings
+      link.onerror = () => {
+        console.warn(`Failed to preload font: ${fontKey}`);
+        // Remove the failed link to prevent repeated attempts
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+      };
+      
+      // Generate font URL
+      const fontUrl = this.generateFontUrl(font);
+      link.href = fontUrl;
 
-    document.head.appendChild(link);
-    this.preloadedFonts.add(fontKey);
+      document.head.appendChild(link);
+      this.preloadedFonts.add(fontKey);
+    } catch (error) {
+      console.warn(`Error preloading font ${fontKey}:`, error);
+    }
   }
 
   // Generate optimized font URL

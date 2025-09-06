@@ -149,31 +149,43 @@ class WebVitalsMonitor {
 
   // Send metrics to analytics (customize for your analytics provider)
   sendToAnalytics(metric: WebVitalMetric): void {
-    // Example: Send to Google Analytics 4
-    if (typeof (window as any).gtag !== 'undefined') {
-      (window as any).gtag('event', metric.name, {
-        event_category: 'Web Vitals',
-        value: Math.round(metric.value),
-        metric_rating: metric.rating,
-        metric_delta: Math.round(metric.delta),
-        custom_map: { metric_id: metric.id }
-      });
-    }
+    try {
+      // Example: Send to Google Analytics 4
+      if (typeof (window as any).gtag !== 'undefined') {
+        (window as any).gtag('event', metric.name, {
+          event_category: 'Web Vitals',
+          value: Math.round(metric.value),
+          metric_rating: metric.rating,
+          metric_delta: Math.round(metric.delta),
+          custom_map: { metric_id: metric.id }
+        });
+      }
 
-    // Example: Send to custom analytics endpoint
-    fetch('/api/analytics/vitals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        metric: metric.name,
-        value: metric.value,
-        rating: metric.rating,
-        url: window.location.href,
-        timestamp: Date.now()
-      })
-    }).catch(error => {
-      console.warn('Failed to send analytics:', error);
-    });
+      // Example: Send to custom analytics endpoint with better error handling
+      fetch('/api/analytics/vitals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: metric.name,
+          value: metric.value,
+          rating: metric.rating,
+          id: metric.id,
+          url: window.location.href,
+          timestamp: Date.now(),
+          userAgent: navigator.userAgent
+        })
+      }).catch(error => {
+        // Silently handle analytics failures - don't disrupt user experience
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('📊 Analytics endpoint unavailable:', error.message);
+        }
+      });
+    } catch (error) {
+      // Prevent analytics errors from affecting the app
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('📊 Analytics error:', error);
+      }
+    }
   }
 
   // Performance optimization recommendations
