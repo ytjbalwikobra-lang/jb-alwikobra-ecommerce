@@ -4,7 +4,7 @@ import { Product } from '../types/index.ts';
 import { formatCurrency, calculateTimeRemaining } from '../utils/helpers.ts';
 import { Zap, ArrowUpRight, Users, Trophy, Crown, Sparkles } from 'lucide-react';
 import FlashSaleTimer from './FlashSaleTimer.tsx';
-import OptimizedImage from './OptimizedImage.tsx';
+import ResponsiveImage from './ResponsiveImage.tsx';
 
 interface ProductCardProps {
   product: Product;
@@ -148,11 +148,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <div className="p-3 sm:p-4">
         {/* Image */}
         <div className="relative aspect-[4/5] overflow-hidden rounded-xl sm:rounded-2xl bg-black/20 ring-1 ring-white/10">
-          <OptimizedImage
+          <ResponsiveImage
             src={images[0]}
             alt={product.name}
-            className="w-full h-full transition-transform duration-500 ease-out transform-gpu group-hover:scale-[1.05]"
+            className="w-full h-full"
             priority={showFlashSaleTimer} // Prioritize flash sale images
+            quality={85}
+            aspectRatio={4/5}
+            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           />
           
           {/* Flash Sale or Best Badge */}
