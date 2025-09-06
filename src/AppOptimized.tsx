@@ -9,7 +9,7 @@ import Footer from './components/Footer.tsx';
 import './App.css';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
-import { AuthProvider } from './contexts/AuthContext.tsx';
+import { AuthProvider } from './contexts/TraditionalAuthContext.tsx';
 import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import { FaviconService } from './services/faviconService.ts';
 
@@ -18,7 +18,7 @@ import { FaviconService } from './services/faviconService.ts';
 
 // Core pages (loaded immediately for better UX)
 import HomePage from './pages/HomePage.tsx';
-import AuthPage from './pages/AuthPage.tsx';
+import TraditionalAuthPage from './pages/TraditionalAuthPage.tsx';
 
 // Lazy load all other pages
 const ProductsPage = React.lazy(() => import('./pages/ProductsPage.tsx'));
@@ -189,7 +189,7 @@ function App() {
                         <Routes>
                           {/* Core pages - loaded immediately */}
                           <Route path="/" element={<HomePage />} />
-                          <Route path="/auth" element={<AuthPage />} />
+                          <Route path="/auth" element={<TraditionalAuthPage />} />
                           
                           {/* Lazy loaded pages */}
                           <Route path="/products" element={<ProductsPage />} />

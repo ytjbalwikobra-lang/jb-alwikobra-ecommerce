@@ -9,7 +9,7 @@ import Footer from './components/Footer.tsx';
 import './App.css';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
-import { WhatsAppAuthProvider } from './contexts/WhatsAppAuthContext.tsx';
+import { AuthProvider } from './contexts/TraditionalAuthContext.tsx';
 import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import { FaviconService } from './services/faviconService.ts';
 
@@ -18,7 +18,7 @@ import { FaviconService } from './services/faviconService.ts';
 
 // Core pages (loaded immediately for better UX)
 import HomePage from './pages/HomePage.tsx';
-import AuthPage from './pages/AuthPage.tsx';
+import TraditionalAuthPage from './pages/TraditionalAuthPage.tsx';
 
 // Lazy load all other pages
 const ProductsPage = React.lazy(() => import('./pages/ProductsPage.tsx'));
@@ -30,7 +30,6 @@ const HelpPage = React.lazy(() => import('./pages/HelpPage.tsx'));
 const ProfilePage = React.lazy(() => import('./pages/ProfilePage.tsx'));
 const WishlistPage = React.lazy(() => import('./pages/WishlistPage.tsx'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage.tsx'));
-const WhatsAppConfirmPage = React.lazy(() => import('./pages/WhatsAppConfirmPage.tsx'));
 const OrderHistoryPage = React.lazy(() => import('./pages/OrderHistoryPage.tsx'));
 const TermsPage = React.lazy(() => import('./pages/TermsPage.tsx'));
 
@@ -105,7 +104,7 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <WhatsAppAuthProvider>
+      <AuthProvider>
         <WishlistProvider>
           <ToastProvider>
             <Router>
@@ -189,7 +188,7 @@ function App() {
                         <Routes>
                           {/* Core pages - loaded immediately */}
                           <Route path="/" element={<HomePage />} />
-                          <Route path="/auth" element={<AuthPage />} />
+                          <Route path="/auth" element={<TraditionalAuthPage />} />
                           
                           {/* Lazy loaded pages */}
                           <Route path="/products" element={<ProductsPage />} />
@@ -202,7 +201,6 @@ function App() {
                           <Route path="/settings" element={<SettingsPage />} />
                           <Route path="/terms" element={<TermsPage />} />
                           <Route path="/payment-status" element={<PaymentStatusPage />} />
-                          <Route path="/auth/confirm" element={<WhatsAppConfirmPage />} />
                           <Route path="/orders" element={<OrderHistoryPage />} />
                           <Route path="*" element={
                             <div className="min-h-screen flex items-center justify-center">
@@ -222,7 +220,7 @@ function App() {
             </Router>
           </ToastProvider>
         </WishlistProvider>
-      </WhatsAppAuthProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

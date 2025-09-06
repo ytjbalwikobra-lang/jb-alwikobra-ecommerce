@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useWhatsAppAuth } from './WhatsAppAuthContext.tsx';
+import { useAuth } from './TraditionalAuthContext.tsx';
 
 interface WishlistItem {
   id: string;
@@ -23,7 +23,7 @@ const WishlistContext = createContext<WishlistContextType | undefined>(undefined
 
 export const WishlistProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([]);
-  const { user } = useWhatsAppAuth();
+  const { user } = useAuth();
 
   // Load wishlist when user changes
   useEffect(() => {

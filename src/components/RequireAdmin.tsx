@@ -1,9 +1,9 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useWhatsAppAuth } from '../contexts/WhatsAppAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 
 const RequireAdmin: React.FC = () => {
-  const { user, loading } = useWhatsAppAuth();
+  const { user, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {

@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, Zap, Home, Settings, HelpCircle, User } from 'lucide-react';
-import { useWhatsAppAuth } from '../contexts/WhatsAppAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 import { SettingsService } from '../services/settingsService.ts';
 
 const Header: React.FC = () => {
   const location = useLocation();
-  const { user } = useWhatsAppAuth();
+  const { user } = useAuth();
 
   const [siteName, setSiteName] = React.useState<string>('JB Alwikobra');
   const [logoUrl, setLogoUrl] = React.useState<string | undefined>(undefined);

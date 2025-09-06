@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import PhoneInput from '../components/PhoneInput.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
-import { useWhatsAppAuth } from '../contexts/WhatsAppAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 import { useWishlist } from '../contexts/WishlistContext.tsx';
 import { supabase } from '../services/supabase.ts';
 
@@ -35,13 +35,13 @@ interface UserProfile {
 }
 
 const ProfilePage: React.FC = () => {
-  const { user, logout } = useWhatsAppAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { wishlistItems } = useWishlist();
   const [profile, setProfile] = useState<UserProfile>({
     name: user?.name || '',
-    email: '', // No email in WhatsApp auth
-    whatsapp: user?.whatsapp || '',
+    email: user?.email || '',
+    whatsapp: user?.phone || '',
     joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID'),
     totalOrders: 0,
     wishlistCount: wishlistItems.length
