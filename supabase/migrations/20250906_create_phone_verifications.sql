@@ -2,6 +2,21 @@
 -- Berdasarkan CSV schema yang ada, kedua tabel sudah ada di production
 -- Migration ini hanya menambahkan kolom/constraint yang missing (jika ada)
 
+-- CRITICAL FIX: Remove NOT NULL constraint from password_hash
+-- This allows signup flow: signup -> verify -> complete profile (set password)
+DO $$ 
+BEGIN
+  -- Check if password_hash has NOT NULL constraint and remove it
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'users' 
+    AND column_name = 'password_hash' 
+    AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+  END IF;
+END $$;
+
 -- Pastikan function update_updated_at_column ada
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
