@@ -1,5 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import { TrendingUp, DollarSign, ShoppingBag, Users, Zap, Calendar, BarChart3, PieChart, ArrowUpRight, ArrowDownRight } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { TrendingUp, DollarSign, ShoppingBag, Users, Zap, Calendar, BarChart3, PieChart, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+
+// Simple cache untuk optimasi
+const dataCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+
+const getCachedData = async <T,>(
+  key: string, 
+  fetcher: () => Promise<T>, 
+  ttlMs: number = 60000
+): Promise<T> => {
+  const cached = dataCache.get(key);
+  const now = Date.now();
+  
+  if (cached && (now - cached.timestamp) < cached.ttl) {
+    return cached.data;
+  }
+  
+  try {
+    const data = await fetcher();
+    dataCache.set(key, { data, timestamp: now, ttl: ttlMs });
+    return data;
+  } catch (error) {
+    if (cached) {
+      console.warn(`Using stale cache for ${key}:`, error);
+      return cached.data;
+    }
+    throw error;
+  }
+};
 
 interface DashboardData {
   orders: { count: number; revenue: number };
@@ -21,20 +49,33 @@ const StatCard: React.FC<{
   icon?: React.ReactNode;
   color?: string;
   trend?: { value: number; label: string };
-}> = ({ label, value, hint, icon, color = 'pink', trend }) => (
+  loading?: boolean;
+}> = ({ label, value, hint, icon, color = 'pink', trend, loading = false }) => (
   <div className="admin-card">
     <div className="flex items-center justify-between mb-4">
-      <div className="text-sm font-medium" style={{color: '#9ca3af'}}>{label}</div>
-      {icon && <div style={{color: '#ec4899'}}>{icon}</div>}
+      <div className="text-sm font-semibold text-gray-300">{label}</div>
+      {icon && <div className="text-pink-400">{icon}</div>}
     </div>
-    <div className="text-2xl font-bold text-white mb-2">{value}</div>
-    {trend && (
-      <div className={`text-sm flex items-center gap-1 ${trend.value >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-        {trend.value >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-        <span>{Math.abs(trend.value)}% {trend.label}</span>
+    
+    {loading ? (
+      <div className="animate-pulse">
+        <div className="h-8 bg-gray-700 rounded mb-2"></div>
+        <div className="h-4 bg-gray-700 rounded w-3/4"></div>
       </div>
+    ) : (
+      <>
+        <div className="text-3xl font-bold text-white mb-2">{value}</div>
+        {trend && (
+          <div className={`text-sm flex items-center gap-1 font-medium ${
+            trend.value >= 0 ? 'text-green-400' : 'text-red-400'
+          }`}>
+            {trend.value >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+            <span>{Math.abs(trend.value)}% {trend.label}</span>
+          </div>
+        )}
+        {hint && <div className="text-sm mt-1 text-gray-400">{hint}</div>}
+      </>
     )}
-    {hint && <div className="text-sm mt-1" style={{color: '#9ca3af'}}>{hint}</div>}
   </div>
 );
 
@@ -47,23 +88,23 @@ const SimpleChart: React.FC<{
   return (
     <div className="admin-card">
       <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-        <BarChart3 className="w-5 h-5" style={{color: '#ec4899'}} />
+        <BarChart3 className="w-5 h-5 text-pink-400" />
         {title}
       </h3>
       <div className="space-y-4">
         {data.map((item, index) => (
-          <div key={index} className="space-y-2">
+          <div key={index} className="space-y-3">
             <div className="flex justify-between text-sm">
-              <span className="font-medium" style={{color: '#9ca3af'}}>
+              <span className="font-semibold text-gray-300">
                 {new Date(item.date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
               </span>
-              <span className="text-white font-medium">
+              <span className="text-white font-semibold">
                 {item.orders} pesanan • Rp {item.revenue.toLocaleString('id-ID')}
               </span>
             </div>
-            <div className="w-full rounded-full h-3" style={{backgroundColor: '#374151'}}>
+            <div className="w-full rounded-full h-4 bg-gray-700 border border-gray-600">
               <div 
-                className="bg-gradient-to-r from-pink-500 to-purple-500 h-3 rounded-full transition-all duration-700 ease-out" 
+                className="bg-gradient-to-r from-pink-500 to-purple-500 h-4 rounded-full transition-all duration-700 ease-out shadow-sm" 
                 style={{ width: `${maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0}%` }}
               ></div>
             </div>
@@ -77,10 +118,10 @@ const SimpleChart: React.FC<{
 const StatusChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
   const total = Object.values(data).reduce((sum, count) => sum + count, 0);
   const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    paid: 'bg-green-100 text-green-800',
-    completed: 'bg-blue-100 text-blue-800',
-    cancelled: 'bg-red-100 text-red-800'
+    pending: 'bg-yellow-900/50 text-yellow-300 border border-yellow-700',
+    paid: 'bg-green-900/50 text-green-300 border border-green-700',
+    completed: 'bg-blue-900/50 text-blue-300 border border-blue-700',
+    cancelled: 'bg-red-900/50 text-red-300 border border-red-700'
   };
   
   const statusLabels: Record<string, string> = {
@@ -91,21 +132,21 @@ const StatusChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
   };
 
   return (
-    <div className="bg-gray-900 rounded-xl shadow-sm border border-pink-500/30 p-6">
+    <div className="admin-card">
       <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
         <PieChart className="w-5 h-5 text-pink-400" />
         Status Pesanan (7 Hari)
       </h3>
       <div className="space-y-4">
         {Object.entries(data).map(([status, count]) => (
-          <div key={status} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50">
+          <div key={status} className="flex items-center justify-between p-4 rounded-lg bg-gray-800/50 border border-gray-700">
             <div className="flex items-center gap-3">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status] || 'bg-gray-700 text-gray-300 border border-gray-600'}`}>
+              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${statusColors[status] || 'bg-gray-700 text-gray-300 border border-gray-600'}`}>
                 {statusLabels[status] || status}
               </span>
             </div>
             <div className="text-right">
-              <div className="text-lg font-semibold text-white">{count}</div>
+              <div className="text-xl font-bold text-white">{count}</div>
               <div className="text-sm text-gray-400">
                 {total > 0 ? Math.round((count / total) * 100) : 0}%
               </div>
@@ -124,55 +165,123 @@ const AdminDashboard: React.FC = () => {
     products: 0,
     flashSales: 0
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState({ basic: true, analytics: true });
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-        const response = await fetch('/api/admin?action=dashboard');
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        if (!result.success) {
-          throw new Error(result.error || 'Failed to fetch dashboard data');
-        }
-        
-        setData(result.data);
-      } catch (error) {
-        console.error('Dashboard fetch error:', error);
-        setData({
-          orders: { count: 0, revenue: 0 },
-          users: 0,
-          products: 0,
-          flashSales: 0
-        });
-      } finally {
-        setLoading(false);
+  const fetchDashboardData = useCallback(async (forceRefresh = false) => {
+    try {
+      if (forceRefresh) {
+        setRefreshing(true);
+        dataCache.clear();
       }
-    };
-
-    fetchDashboardData();
-    
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchDashboardData, 30000);
-    return () => clearInterval(interval);
+      
+      setLoading({ basic: true, analytics: true });
+      
+      // Fetch basic stats dengan cache 1 menit
+      const basicData = await getCachedData(
+        'basic-stats',
+        async () => {
+          const response = await fetch('/api/admin?action=dashboard');
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          const result = await response.json();
+          if (!result.success) throw new Error(result.error);
+          return {
+            orders: result.data.orders || { count: 0, revenue: 0 },
+            users: result.data.users || 0,
+            products: result.data.products || 0,
+            flashSales: result.data.flashSales || 0
+          };
+        },
+        60000 // 1 menit cache
+      );
+      
+      setData(prevData => ({ ...prevData, ...basicData }));
+      setLoading(prev => ({ ...prev, basic: false }));
+      
+      // Kemudian fetch analytics dengan cache 5 menit
+      try {
+        const analytics = await getCachedData(
+          'analytics',
+          async () => {
+            const response = await fetch('/api/admin?action=dashboard');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error);
+            return result.data.analytics;
+          },
+          300000 // 5 menit cache
+        );
+        
+        if (analytics) {
+          setData(prevData => ({ ...prevData, analytics }));
+        }
+      } catch (error) {
+        console.warn('Analytics fetch failed:', error);
+      } finally {
+        setLoading(prev => ({ ...prev, analytics: false }));
+      }
+      
+    } catch (error) {
+      console.error('Dashboard fetch error:', error);
+      setData({
+        orders: { count: 0, revenue: 0 },
+        users: 0,
+        products: 0,
+        flashSales: 0
+      });
+      setLoading({ basic: false, analytics: false });
+    } finally {
+      setRefreshing(false);
+    }
   }, []);
 
-  if (loading) {
+  useEffect(() => {
+    fetchDashboardData();
+    
+    // Refresh basic stats setiap 2 menit
+    const basicInterval = setInterval(() => {
+      if (!refreshing) {
+        getCachedData(
+          'basic-stats',
+          async () => {
+            const response = await fetch('/api/admin?action=dashboard');
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error);
+            return {
+              orders: result.data.orders || { count: 0, revenue: 0 },
+              users: result.data.users || 0,
+              products: result.data.products || 0,
+              flashSales: result.data.flashSales || 0
+            };
+          },
+          60000
+        ).then(basicData => {
+          setData(prevData => ({ ...prevData, ...basicData }));
+        }).catch(console.error);
+      }
+    }, 120000);
+    
+    return () => {
+      clearInterval(basicInterval);
+    };
+  }, [fetchDashboardData, refreshing]);
+
+  if (loading.basic) {
     return (
       <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl font-bold text-white">Dashboard Admin</h1>
+        </div>
         <div className="animate-pulse space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="admin-card h-32"></div>
+              <div key={i} className="admin-card h-32">
+                <div className="h-4 bg-gray-700 rounded mb-4"></div>
+                <div className="h-8 bg-gray-700 rounded mb-2"></div>
+                <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+              </div>
             ))}
-          </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="admin-card h-96"></div>
-            <div className="admin-card h-96"></div>
           </div>
         </div>
       </div>
@@ -181,10 +290,20 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="admin-card bg-gradient-to-r from-pink-500 to-purple-600 text-white">
-        <h1 className="text-2xl font-bold mb-2 text-white">Selamat Datang di Dashboard Admin</h1>
-        <p style={{color: '#fce7f3'}}>Kelola toko online JB Alwikobra dengan mudah</p>
+      {/* Header dengan refresh button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-white mb-2">Dashboard Admin</h1>
+          <p className="text-gray-400">Kelola toko online JB Alwikobra dengan mudah</p>
+        </div>
+        <button
+          onClick={() => fetchDashboardData(true)}
+          disabled={refreshing}
+          className={`admin-button flex items-center gap-2 ${refreshing ? 'opacity-50' : ''}`}
+        >
+          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+          {refreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
       </div>
 
       {/* Main Stats */}
@@ -195,6 +314,7 @@ const AdminDashboard: React.FC = () => {
           hint="Total produk tersedia"
           icon={<ShoppingBag className="w-6 h-6" />}
           color="blue"
+          loading={loading.basic}
         />
         <StatCard 
           label="Flash Sale Aktif" 
@@ -202,6 +322,7 @@ const AdminDashboard: React.FC = () => {
           hint="Sedang berlangsung"
           icon={<Zap className="w-6 h-6" />}
           color="yellow"
+          loading={loading.basic}
         />
         <StatCard 
           label="Pesanan 7 Hari" 
@@ -209,6 +330,7 @@ const AdminDashboard: React.FC = () => {
           hint="Pesanan baru"
           icon={<Calendar className="w-6 h-6" />}
           color="green"
+          loading={loading.basic}
         />
         <StatCard 
           label="Pendapatan 7 Hari" 
@@ -216,11 +338,45 @@ const AdminDashboard: React.FC = () => {
           hint="Total revenue"
           icon={<DollarSign className="w-6 h-6" />}
           color="pink"
+          loading={loading.basic}
         />
       </div>
 
-      {/* Analytics Section */}
-      {data.analytics && (
+      {/* Analytics Section - dengan loading terpisah */}
+      {loading.analytics ? (
+        <div className="animate-pulse space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="admin-card h-32">
+              <div className="h-4 bg-gray-700 rounded mb-4"></div>
+              <div className="h-8 bg-gray-700 rounded mb-2"></div>
+              <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+            </div>
+            <div className="admin-card h-32">
+              <div className="h-4 bg-gray-700 rounded mb-4"></div>
+              <div className="h-8 bg-gray-700 rounded mb-2"></div>
+              <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="admin-card h-96">
+              <div className="h-6 bg-gray-700 rounded mb-6"></div>
+              <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i} className="h-8 bg-gray-700 rounded"></div>
+                ))}
+              </div>
+            </div>
+            <div className="admin-card h-96">
+              <div className="h-6 bg-gray-700 rounded mb-6"></div>
+              <div className="space-y-4">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="h-16 bg-gray-700 rounded"></div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : data.analytics && (
         <>
           {/* Monthly Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -250,28 +406,28 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Performance Insights */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">💡 Insight Performa</h3>
+          <div className="admin-card">
+            <h3 className="text-lg font-semibold text-white mb-6">💡 Insight Performa</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="text-green-700 font-semibold mb-2">Rata-rata Pesanan/Hari</div>
-                <div className="text-2xl font-bold text-green-900">
+              <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
+                <div className="text-green-400 font-semibold mb-2">Rata-rata Pesanan/Hari</div>
+                <div className="text-2xl font-bold text-white">
                   {data.analytics.dailyRevenue.length > 0 
                     ? Math.round(data.orders.count / 7) 
                     : 0} pesanan
                 </div>
               </div>
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="text-blue-700 font-semibold mb-2">Rata-rata Nilai Pesanan</div>
-                <div className="text-2xl font-bold text-blue-900">
+              <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
+                <div className="text-blue-400 font-semibold mb-2">Rata-rata Nilai Pesanan</div>
+                <div className="text-2xl font-bold text-white">
                   Rp {data.orders.count > 0 
                     ? Math.round(data.orders.revenue / data.orders.count).toLocaleString('id-ID')
                     : 0}
                 </div>
               </div>
-              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-                <div className="text-purple-700 font-semibold mb-2">Growth Rate</div>
-                <div className="text-2xl font-bold text-purple-900">
+              <div className="bg-purple-900/30 border border-purple-700 rounded-lg p-4">
+                <div className="text-purple-400 font-semibold mb-2">Growth Rate</div>
+                <div className="text-2xl font-bold text-white">
                   {data.analytics.monthlyOrders > 0 && data.orders.count > 0
                     ? `${Math.round(((data.orders.count / 7 * 30) / data.analytics.monthlyOrders - 1) * 100)}%`
                     : 'N/A'

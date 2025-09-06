@@ -2,7 +2,7 @@
 
 /* Layout utama admin */
 .admin-layout {
-  background: #000000;
+  background: #0f0f0f;
   color: #ffffff;
   min-height: 100vh;
   display: flex;
@@ -11,8 +11,8 @@
 /* Sidebar admin */
 .admin-sidebar {
   width: 256px;
-  background: #1a1a1a;
-  border-right: 1px solid #333333;
+  background: #1c1c1c;
+  border-right: 1px solid #404040;
   position: fixed;
   height: 100vh;
   left: 0;
@@ -25,7 +25,7 @@
 .admin-main {
   margin-left: 256px;
   flex: 1;
-  background: #000000;
+  background: #0f0f0f;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -34,8 +34,8 @@
 /* Header admin */
 .admin-header {
   height: 64px;
-  background: #1a1a1a;
-  border-bottom: 1px solid #333333;
+  background: #1c1c1c;
+  border-bottom: 1px solid #404040;
   display: flex;
   align-items: center;
   padding: 0 24px;
@@ -48,68 +48,84 @@
   padding: 24px;
   overflow-y: auto;
   max-height: calc(100vh - 64px);
-  background: #000000;
+  background: #0f0f0f;
 }
 
-/* Card components */
+/* Card components dengan kontras lebih baik */
 .admin-card {
-  background: #1a1a1a;
-  border: 1px solid #333333;
-  border-radius: 8px;
-  padding: 20px;
+  background: #1c1c1c;
+  border: 1px solid #404040;
+  border-radius: 12px;
+  padding: 24px;
   margin-bottom: 20px;
   color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
-/* Navigation fixes */
+/* Navigation fixes - kontras tinggi */
 .admin-sidebar .active {
   background: #ec4899;
   color: #ffffff;
+  border-radius: 8px;
+  margin: 2px 8px;
 }
 
 .admin-sidebar a:hover {
-  background: #333333;
+  background: #404040;
   color: #ffffff;
+  border-radius: 8px;
+  margin: 2px 8px;
 }
 
-/* Table styling */
+.admin-sidebar a {
+  display: block;
+  padding: 12px 16px;
+  color: #e5e5e5;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+/* Table styling - readability tinggi */
 .admin-table {
   width: 100%;
-  background: #1a1a1a;
-  border: 1px solid #333333;
-  border-radius: 8px;
+  background: #1c1c1c;
+  border: 1px solid #404040;
+  border-radius: 12px;
   overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 
 .admin-table th {
   background: #2a2a2a;
   color: #ffffff;
-  padding: 12px;
+  padding: 16px;
   text-align: left;
-  border-bottom: 1px solid #333333;
+  border-bottom: 1px solid #404040;
+  font-weight: 600;
 }
 
 .admin-table td {
-  background: #1a1a1a;
-  color: #ffffff;
-  padding: 12px;
-  border-bottom: 1px solid #333333;
+  background: #1c1c1c;
+  color: #e5e5e5;
+  padding: 16px;
+  border-bottom: 1px solid #2a2a2a;
 }
 
 .admin-table tr:hover td {
-  background: #2a2a2a;
+  background: #252525;
   color: #ffffff;
 }
 
-/* Form elements */
+/* Form elements - kontras tinggi */
 .admin-input,
 .admin-select,
 .admin-textarea {
   background: #2a2a2a;
-  border: 1px solid #444444;
+  border: 2px solid #505050;
   color: #ffffff;
-  border-radius: 6px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 14px;
 }
 
 .admin-input:focus,
@@ -119,26 +135,50 @@
   background: #2a2a2a;
   color: #ffffff;
   outline: none;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1);
 }
 
-/* Buttons */
+.admin-input::placeholder,
+.admin-textarea::placeholder {
+  color: #9ca3af;
+}
+
+/* Buttons - konsisten dan accessible */
 .admin-button {
   background: #ec4899;
   color: #ffffff;
   border: none;
-  border-radius: 6px;
-  padding: 10px 16px;
+  border-radius: 8px;
+  padding: 12px 20px;
   cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.2s ease;
 }
 
 .admin-button:hover {
   background: #db2777;
   color: #ffffff;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(236, 72, 153, 0.3);
 }
 
 .admin-button:disabled {
   background: #666666;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.admin-button-secondary {
+  background: #374151;
+  color: #e5e5e5;
+  border: 2px solid #505050;
+}
+
+.admin-button-secondary:hover {
+  background: #4b5563;
+  border-color: #6b7280;
 }
 
 /* Override conflicts dalam scope admin saja */
