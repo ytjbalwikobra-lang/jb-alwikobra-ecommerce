@@ -2,14 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, Package, Users, Zap, ListOrdered, Image as ImageIcon, 
-  Settings as SettingsIcon, Gamepad2, Menu, X, LogOut, Search,
+  Settings as SettingsIcon, Gamepad2, Menu, X, LogOut,
   ChevronDown, User, Home
 } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { useSettings } from '../hooks/useSettings.ts';
 import '../styles/admin.css';
 
 const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
+  const { settings } = useSettings();
   const location = useLocation();
   const isSuper = user?.isAdmin || false;
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -46,12 +48,20 @@ const AdminLayout: React.FC = () => {
         {/* Sidebar Header */}
         <div className="flex items-center justify-between h-16 px-6" style={{borderBottom: '1px solid rgba(236, 72, 153, 0.3)'}}>
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-sm">JB</span>
-            </div>
+            {settings?.logoUrl ? (
+              <img 
+                src={settings.logoUrl} 
+                alt={settings.siteName || 'JB Alwikobra'} 
+                className="w-8 h-8 rounded-lg object-contain"
+              />
+            ) : (
+              <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-purple-600 rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">JB</span>
+              </div>
+            )}
             <div>
               <h1 className="text-lg font-bold text-white">Admin Panel</h1>
-              <p className="text-xs text-gray-400">JB Alwikobra</p>
+              <p className="text-xs text-gray-400">{settings?.siteName || 'JB Alwikobra'}</p>
             </div>
           </div>
           <button
@@ -120,20 +130,8 @@ const AdminLayout: React.FC = () => {
             </div>
           </div>
 
-          {/* Right: Search + User Menu */}
+          {/* Right: User Menu */}
           <div className="flex items-center space-x-4">
-            {/* Search */}
-            <div className="relative hidden md:block">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Cari..."
-                className="admin-input pl-10 w-64"
-              />
-            </div>
-
             <div className="relative">
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
@@ -191,4 +189,4 @@ const AdminLayout: React.FC = () => {
   );
 };
 
-export default AdminLayout;
+export default React.memo(AdminLayout);

@@ -307,7 +307,7 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         <StatCard 
           label="Produk Aktif" 
           value={String(data.products)} 
@@ -338,6 +338,14 @@ const AdminDashboard: React.FC = () => {
           hint="Total revenue"
           icon={<DollarSign className="w-6 h-6" />}
           color="pink"
+          loading={loading.basic}
+        />
+        <StatCard 
+          label="Rata-rata Pesanan" 
+          value={`Rp ${((data.orders as any).averageValue || 0).toLocaleString('id-ID')}`}
+          hint="Nilai rata-rata per pesanan"
+          icon={<TrendingUp className="w-6 h-6" />}
+          color="purple"
           loading={loading.basic}
         />
       </div>

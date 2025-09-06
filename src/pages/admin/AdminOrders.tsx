@@ -163,23 +163,23 @@ const AdminOrders: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Cari</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Cari</label>
             <input
               type="text"
               placeholder="ID, nama, email, telepon..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             />
           </div>
           
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
             <select 
               value={statusFilter} 
               onChange={e=>setStatusFilter(e.target.value as any)} 
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             >
               <option value="all">Semua Status</option>
               <option value="pending">Pending</option>
@@ -191,11 +191,11 @@ const AdminOrders: React.FC = () => {
           
           {/* Order Type Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Order</label>
+            <label className="block text-sm font-medium text-gray-300 mb-2">Jenis Order</label>
             <select 
               value={orderTypeFilter} 
               onChange={e=>setOrderTypeFilter(e.target.value as any)} 
-              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             >
               <option value="all">Semua Jenis</option>
               <option value="purchase">Pembelian</option>
@@ -249,23 +249,34 @@ const AdminOrders: React.FC = () => {
         ) : (
           <div style={{background: '#1a1a1a', border: '1px solid #333333', borderRadius: '8px', overflow: 'hidden'}}>
             {/* Header */}
-            <div style={{display: 'grid', gridTemplateColumns: '3fr 2fr 2fr 2fr 3fr', background: '#2a2a2a', borderBottom: '1px solid #333333'}}>
+            <div style={{display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 2.5fr 1fr 1fr', background: '#2a2a2a', borderBottom: '1px solid #333333'}}>
               <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Customer</div>
+              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>WhatsApp</div>
               <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Jenis</div>
+              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Detail Produk</div>
               <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Jumlah</div>
               <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Status</div>
-              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600', textAlign: 'right'}}>Aksi</div>
             </div>
             
             {/* Rows */}
             {filtered.map((r) => (
-              <div key={r.id} style={{display: 'grid', gridTemplateColumns: '3fr 2fr 2fr 2fr 3fr', borderBottom: '1px solid #333333', background: '#1a1a1a'}} className="hover:bg-gray-800">
+              <div key={r.id} style={{display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 2.5fr 1fr 1fr', borderBottom: '1px solid #333333', background: '#1a1a1a'}} className="hover:bg-gray-800">
                 <div style={{padding: '12px', color: '#ffffff'}}>
                   <div style={{fontWeight: '500'}}>{r.customer_name}</div>
-                  <div style={{fontSize: '12px', color: '#999999'}}>{r.customer_email} · {r.customer_phone}</div>
+                  <div style={{fontSize: '12px', color: '#999999'}}>{r.customer_email}</div>
+                </div>
+                <div style={{padding: '12px', color: '#ffffff'}}>
+                  <div style={{fontSize: '14px'}}>{r.customer_phone || '-'}</div>
                 </div>
                 <div style={{padding: '12px', color: '#ffffff'}}>
                   <div style={{textTransform: 'capitalize'}}>{r.order_type}</div>
+                  {r.rental_duration && (
+                    <div style={{fontSize: '12px', color: '#999999'}}>{r.rental_duration}</div>
+                  )}
+                </div>
+                <div style={{padding: '12px', color: '#ffffff'}}>
+                  <div style={{fontSize: '14px', fontWeight: '500'}}>Product ID: {r.product_id || 'N/A'}</div>
+                  <div style={{fontSize: '12px', color: '#999999'}}>Order #{r.id.slice(0, 8)}</div>
                 </div>
                 <div style={{padding: '12px', color: '#ffffff', fontWeight: '500'}}>Rp {Number(r.amount||0).toLocaleString('id-ID')}</div>
                 <div style={{padding: '12px'}}>
@@ -276,26 +287,13 @@ const AdminOrders: React.FC = () => {
                     fontSize: '12px',
                     fontWeight: '500',
                     ...(r.status === 'pending' ? {background: '#fbbf24', color: '#000000'} :
-                       r.status === 'paid' ? {background: '#10b981', color: '#000000'} :
+                       r.status === 'paid' ? {background: '#10b981', color: '#ffffff'} :
                        r.status === 'completed' ? {background: '#3b82f6', color: '#ffffff'} :
                        r.status === 'cancelled' ? {background: '#ef4444', color: '#ffffff'} :
                        {background: '#6b7280', color: '#ffffff'})
                   }}>
                     {r.status}
                   </span>
-                </div>
-                <div style={{padding: '12px', textAlign: 'right'}}>
-                  <select 
-                    value={r.status} 
-                    onChange={(e)=>updateStatus(r.id, e.target.value as any)} 
-                    className="admin-select"
-                    style={{width: 'auto', marginRight: '8px'}}
-                  >
-                    <option value="pending">Pending</option>
-                    <option value="paid">Paid</option>
-                    <option value="completed">Completed</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
                 </div>
               </div>
             ))}

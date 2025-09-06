@@ -372,23 +372,23 @@ const AdminProducts: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Cari Produk</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Cari Produk</label>
                 <input
                   type="text"
                   placeholder="Nama, deskripsi, level..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 />
               </div>
               
               {/* Game Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Filter Game</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Filter Game</label>
                 <select
                   value={selectedGame}
                   onChange={(e) => setSelectedGame(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 >
                   <option value="">Semua Game</option>
                   {games.map(game => (
@@ -399,11 +399,11 @@ const AdminProducts: React.FC = () => {
               
               {/* Tier Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Filter Tier</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Filter Tier</label>
                 <select
                   value={selectedTier}
                   onChange={(e) => setSelectedTier(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 >
                   <option value="">Semua Tier</option>
                   {tiers.map(tier => (
@@ -414,11 +414,11 @@ const AdminProducts: React.FC = () => {
               
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                  className="w-full px-3 py-2 bg-black/60 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 >
                   <option value="all">Semua</option>
                   <option value="active">Aktif</option>
@@ -453,10 +453,11 @@ const AdminProducts: React.FC = () => {
           {/* Product List */}
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             <div className="grid grid-cols-12 text-xs uppercase text-gray-600 px-4 py-3 border-b border-gray-200 bg-gray-50">
-              <div className="col-span-5 font-medium">Nama</div>
+              <div className="col-span-4 font-medium">Nama</div>
               <div className="col-span-2 font-medium">Game</div>
+              <div className="col-span-2 font-medium">Tier</div>
               <div className="col-span-2 font-medium">Harga</div>
-              <div className="col-span-3 text-right font-medium">Aksi</div>
+              <div className="col-span-2 text-right font-medium">Aksi</div>
             </div>
             {loading ? (
               <div className="p-4 text-gray-500">Memuat...</div>
@@ -470,21 +471,34 @@ const AdminProducts: React.FC = () => {
             ) : (
               paginatedProducts.map(p => (
               <div key={p.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
-                <div className="col-span-5 flex items-center gap-3">
+                <div className="col-span-4 flex items-center gap-3">
                   <img src={p.image} alt={p.name} className="w-10 h-10 rounded object-cover" />
                   <div>
                     <div className="text-gray-900 font-medium line-clamp-1">{p.name}</div>
                     <div className="text-xs text-gray-600 line-clamp-1 flex items-center gap-2">
                       <span>{p.accountLevel || '-'}</span>
                       {((p as any).isActive === false || (p as any).archivedAt) && (
-                        <span className="px-2 py-0.5 rounded bg-gray-500 text-gray-800 border border-gray-400">Diarsipkan</span>
+                        <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-200">Diarsipkan</span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="col-span-2 text-gray-700">{p.gameTitleData?.name || p.gameTitle}</div>
+                <div className="col-span-2 text-gray-700">{p.gameTitleData?.name || p.gameTitle || '-'}</div>
+                <div className="col-span-2 text-gray-700">
+                  {p.tierData?.name ? (
+                    <span 
+                      className="px-2 py-1 rounded text-xs font-medium"
+                      style={{
+                        backgroundColor: p.tierData.color || '#6b7280',
+                        color: '#ffffff'
+                      }}
+                    >
+                      {p.tierData.name}
+                    </span>
+                  ) : '-'}
+                </div>
                 <div className="col-span-2 text-gray-900 font-medium">Rp {Number(p.price||0).toLocaleString('id-ID')}</div>
-                <div className="col-span-3 text-right">
+                <div className="col-span-2 text-right">
                   <button onClick={() => startEdit(p)} className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 mr-2">Edit</button>
                   {(p as any).isActive === false || (p as any).archivedAt ? (
                     <button onClick={async()=>{
@@ -500,7 +514,7 @@ const AdminProducts: React.FC = () => {
                       await (supabase as any).from('products').update({ is_active: false, archived_at: new Date().toISOString() }).eq('id', p.id);
                       await loadProducts(); // Use optimized reload
                       push('Produk diarsipkan', 'success');
-                    }} className="px-3 py-1.5 rounded border border-gray-500/40 text-gray-400 hover:bg-gray-500/10 mr-2">Arsipkan</button>
+                    }} className="px-3 py-1.5 rounded border border-yellow-500/40 text-amber-300 hover:bg-yellow-500/10 mr-2">Arsipkan</button>
                   )}
                   <button onClick={() => handleDelete(p.id)} className="px-3 py-1.5 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10">Hapus</button>
                 </div>

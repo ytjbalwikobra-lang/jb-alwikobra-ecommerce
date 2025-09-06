@@ -34,8 +34,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleUsers(req, res);
       case 'update-order':
         return await handleUpdateOrder(req, res);
-      case 'update-user-role':
-        return await handleUpdateUserRole(req, res);
       case 'whatsapp-settings':
         return await handleWhatsAppSettings(req, res);
       default:
@@ -63,30 +61,18 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     let productsCount = 0;
     let flashSalesCount = 0;
 
-    // Orders for 7 days - ALL ORDERS for count, PAID ORDERS for revenue
-    let allOrders: any[] = [];
-    let paidOrders: any[] = [];
-    
+    // Orders count and revenue (with error handling) - ONLY PAID ORDERS
     try {
-      // Get all orders for count
-      const { data: allOrdersData, error: allOrdersError } = await supabase
-        .from('orders')
-        .select('amount, created_at, status')
-        .gte('created_at', sevenDaysAgo.toISOString());
-
-      if (!allOrdersError) {
-        allOrders = allOrdersData || [];
-      }
-
-      // Get paid orders for revenue calculation
-      const { data: paidOrdersData, error: paidOrdersError } = await supabase
+      const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
         .select('amount, created_at, status')
         .eq('status', 'PAID')
         .gte('created_at', sevenDaysAgo.toISOString());
 
-      if (!paidOrdersError) {
-        paidOrders = paidOrdersData || [];
+      if (ordersError) {
+        console.warn('Orders query error:', ordersError);
+      } else {
+        orders = ordersData || [];
       }
     } catch (error) {
       console.warn('Orders query failed:', error);
@@ -140,74 +126,67 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       flashSalesCount = 0;
     }
 
-    const totalRevenue = paidOrders?.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0) || 0;
+    const totalRevenue = orders?.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0) || 0;
+    const averageOrderValue = orders?.length > 0 ? totalRevenue / orders.length : 0;
 
     // Get additional analytics data
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    // Monthly orders data for chart - ALL ORDERS
-    let monthlyAllOrders: any[] = [];
-    let monthlyPaidOrders: any[] = [];
-    
+    // Monthly orders data for chart - ONLY PAID ORDERS
+    let monthlyOrders: any[] = [];
     try {
-      // All orders for 30 days
-      const { data: monthlyAllData, error: monthlyAllError } = await supabase
-        .from('orders')
-        .select('amount, created_at, status')
-        .gte('created_at', thirtyDaysAgo.toISOString())
-        .order('created_at', { ascending: true });
-
-      if (!monthlyAllError) {
-        monthlyAllOrders = monthlyAllData || [];
-      }
-
-      // Paid orders for 30 days revenue
-      const { data: monthlyPaidData, error: monthlyPaidError } = await supabase
+      const { data: monthlyData, error: monthlyError } = await supabase
         .from('orders')
         .select('amount, created_at, status')
         .eq('status', 'PAID')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
-      if (!monthlyPaidError) {
-        monthlyPaidOrders = monthlyPaidData || [];
+      if (!monthlyError) {
+        monthlyOrders = monthlyData || [];
       }
     } catch (error) {
       console.warn('Monthly orders query failed:', error);
     }
 
-    // Status distribution - from ALL 7-day orders
+    // Status distribution - check all orders not just 7 days
+    let allOrders: any[] = [];
+    try {
+      const { data: allOrdersData, error: allOrdersError } = await supabase
+        .from('orders')
+        .select('status, created_at')
+        .order('created_at', { ascending: false });
+
+      if (!allOrdersError) {
+        allOrders = allOrdersData || [];
+      }
+    } catch (error) {
+      console.warn('All orders query failed:', error);
+    }
+
     const statusDistribution = allOrders?.reduce((acc, order) => {
-      const status = order.status?.toLowerCase() || 'unknown';
-      acc[status] = (acc[status] || 0) + 1;
+      acc[order.status] = (acc[order.status] || 0) + 1;
       return acc;
     }, {} as Record<string, number>) || {};
 
-    // Daily revenue for last 7 days - using paid orders for revenue, all orders for count
+    // Daily revenue for last 7 days
     const dailyRevenue: Array<{date: string; revenue: number; orders: number}> = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
       const dayStart = new Date(date.setHours(0, 0, 0, 0));
       const dayEnd = new Date(date.setHours(23, 59, 59, 999));
       
-      // All orders for count
-      const dayAllOrders = allOrders?.filter(order => {
-        const orderDate = new Date(order.created_at);
-        return orderDate >= dayStart && orderDate <= dayEnd;
-      }) || [];
-
-      // Paid orders for revenue
-      const dayPaidOrders = paidOrders?.filter(order => {
+      const dayOrders = orders?.filter(order => {
         const orderDate = new Date(order.created_at);
         return orderDate >= dayStart && orderDate <= dayEnd;
       }) || [];
       
-      const dayRevenue = dayPaidOrders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0);
+      const dayRevenue = dayOrders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0);
       
       dailyRevenue.push({
         date: dayStart.toISOString().split('T')[0],
         revenue: dayRevenue,
-        orders: dayAllOrders.length // Use all orders for count
+        orders: dayOrders.length
       });
     }
 
@@ -215,8 +194,9 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       success: true,
       data: {
         orders: {
-          count: allOrders?.length || 0, // All orders count
-          revenue: totalRevenue // Paid orders revenue
+          count: orders?.length || 0,
+          revenue: totalRevenue,
+          averageValue: averageOrderValue
         },
         users: usersCount || 0,
         products: productsCount || 0,
@@ -224,8 +204,9 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
         analytics: {
           statusDistribution,
           dailyRevenue,
-          monthlyOrders: monthlyAllOrders.length, // All orders count
-          monthlyRevenue: monthlyPaidOrders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0) // Paid orders revenue
+          monthlyOrders: monthlyOrders.length,
+          monthlyRevenue: monthlyOrders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0),
+          averageOrderValue
         }
       }
     });
@@ -483,47 +464,4 @@ async function handleWhatsAppSettings(req: VercelRequest, res: VercelResponse) {
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
-}
-
-async function handleUpdateUserRole(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { userId, isAdmin } = req.body;
-
-    if (!userId || typeof isAdmin !== 'boolean') {
-      return res.status(400).json({ error: 'User ID and isAdmin boolean are required' });
-    }
-
-    // Update user admin status
-    const { data: updatedUser, error } = await supabase
-      .from('users')
-      .update({ 
-        is_admin: isAdmin,
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
-      .select()
-      .single();
-
-    if (error) {
-      console.error('Update user role error:', error);
-      throw error;
-    }
-
-    if (!updatedUser) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
-    return res.status(200).json({
-      success: true,
-      user: updatedUser,
-      message: `User ${isAdmin ? 'promoted to admin' : 'demoted from admin'} successfully`
-    });
-  } catch (error) {
-    console.error('Update user role error:', error);
-    return res.status(500).json({ error: 'Failed to update user role' });
-  }
 }

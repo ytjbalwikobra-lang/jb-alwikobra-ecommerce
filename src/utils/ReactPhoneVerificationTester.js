@@ -1,7 +1,8 @@
 // Test Phone Verification Flow untuk Frontend React
 // Test ini akan menggunakan API yang sudah ada dan UI component
 
-import { authService } from '../services/authService';
+// Commented out temporarily to fix compilation
+// import { authService } from '../services/authService';
 
 export class ReactPhoneVerificationTester {
   constructor() {
