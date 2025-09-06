@@ -31,13 +31,14 @@
   flex-direction: column;
 }
 
-/* Header admin */
+/* Header admin - rata kiri kanan */
 .admin-header {
   height: 64px;
   background: #1c1c1c;
   border-bottom: 1px solid #404040;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   padding: 0 24px;
   flex-shrink: 0;
 }
@@ -181,9 +182,10 @@
   border-color: #6b7280;
 }
 
-/* Override conflicts dalam scope admin saja */
+/* Override all white backgrounds and inconsistent styling dalam scope admin */
 .admin-layout .bg-white {
-  background: #1a1a1a !important;
+  background: #1c1c1c !important;
+  color: #ffffff !important;
 }
 
 .admin-layout .text-gray-900,
@@ -195,12 +197,63 @@
 
 .admin-layout .border-gray-200,
 .admin-layout .border-gray-300 {
-  border-color: #333333 !important;
+  border-color: #404040 !important;
 }
 
 .admin-layout .bg-gray-50,
 .admin-layout .bg-gray-100 {
-  background: #1a1a1a !important;
+  background: #1c1c1c !important;
+}
+
+/* Fix hover states - no more white hover */
+.admin-layout .hover\:bg-gray-50:hover,
+.admin-layout .hover\:bg-white:hover {
+  background: #252525 !important;
+  color: #ffffff !important;
+}
+
+.admin-layout .hover\:bg-gray-100:hover {
+  background: #2a2a2a !important;
+  color: #ffffff !important;
+}
+
+/* Fix input fields in admin */
+.admin-layout input,
+.admin-layout select,
+.admin-layout textarea {
+  background: #2a2a2a !important;
+  border: 2px solid #505050 !important;
+  color: #ffffff !important;
+  border-radius: 8px !important;
+}
+
+.admin-layout input:focus,
+.admin-layout select:focus,
+.admin-layout textarea:focus {
+  border-color: #ec4899 !important;
+  background: #2a2a2a !important;
+  color: #ffffff !important;
+  outline: none !important;
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1) !important;
+}
+
+.admin-layout input::placeholder,
+.admin-layout textarea::placeholder {
+  color: #9ca3af !important;
+}
+
+/* Fix buttons in admin */
+.admin-layout button {
+  transition: all 0.2s ease !important;
+}
+
+.admin-layout .border-gray-300 {
+  border-color: #505050 !important;
+}
+
+/* Override any remaining text colors */
+.admin-layout .text-gray-700 {
+  color: #e5e5e5 !important;
 }
 
 /* Pagination styling */

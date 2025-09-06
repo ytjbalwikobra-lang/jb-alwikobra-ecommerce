@@ -10,6 +10,7 @@ interface PhoneInputProps {
   className?: string;
   onValidationChange?: (isValid: boolean) => void;
   defaultCountry?: string;
+  disableAutoDetect?: boolean; // New prop to disable auto region detection
 }
 
 const PhoneInput: React.FC<PhoneInputProps> = ({
@@ -19,7 +20,8 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   required = false,
   className = "",
   onValidationChange,
-  defaultCountry = 'ID'
+  defaultCountry = 'ID',
+  disableAutoDetect = true // Default to true - disable auto detect by default
 }) => {
   const [selectedCountry, setSelectedCountry] = useState<Country>(
     COUNTRIES.find(c => c.code === defaultCountry) || COUNTRIES[0]
@@ -258,22 +260,25 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   // Parse initial value
   useEffect(() => {
     if (value) {
-      // Find country from phone number
-      const detectedCountry = detectCountryFromNumber(value);
-      if (detectedCountry) {
-        setSelectedCountry(detectedCountry);
+      // Only auto-detect if not disabled
+      if (!disableAutoDetect) {
+        const detectedCountry = detectCountryFromNumber(value);
+        if (detectedCountry) {
+          setSelectedCountry(detectedCountry);
+        }
       }
       
-      // Format for display
-      const formatted = formatPhoneNumber(value, detectedCountry || selectedCountry);
+      // Format for display using current selected country (not auto-detected)
+      const formatted = formatPhoneNumber(value, selectedCountry);
       setPhoneNumber(formatted);
       
       // Validate
-      const validation = validatePhoneNumber(value, detectedCountry || selectedCountry);
+      const validation = validatePhoneNumber(value, selectedCountry);
       setError(validation.error);
       setIsValid(validation.isValid);
+      onValidationChange?.(validation.isValid);
     }
-  }, [value]);
+  }, [value, selectedCountry, disableAutoDetect, onValidationChange]); // Added dependencies
 
   const getBorderColor = () => {
     if (!phoneNumber) return 'border-pink-500/40';
