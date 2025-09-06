@@ -7,13 +7,16 @@ import { RefreshCw, Search, User, Shield, Clock } from 'lucide-react';
 type ProfileRow = { 
   id: string; 
   name: string | null; 
-  role: string; 
+  is_admin: boolean;
   email?: string | null;
   phone?: string | null;
   created_at?: string;
   updated_at?: string;
-  last_sign_in_at?: string;
-  email_verified?: boolean;
+  last_login_at?: string;
+  phone_verified?: boolean;
+  is_active?: boolean;
+  // Computed field for compatibility
+  role?: string;
 };
 
 const AdminUsers: React.FC = () => {
@@ -29,48 +32,26 @@ const AdminUsers: React.FC = () => {
     try {
       if (!supabase) return;
       
-      // Get profiles data with more details
-      const { data: profs, error: profError } = await (supabase as any)
-        .from('profiles')
-        .select('id, name, role, created_at, updated_at')
+      // Get users data from the actual users table
+      const { data: usersData, error: usersError } = await (supabase as any)
+        .from('users')
+        .select('id, name, email, phone, is_admin, is_active, phone_verified, created_at, updated_at, last_login_at')
         .order('created_at', { ascending: false });
       
-      if (profError) {
-        console.error('Error loading profiles:', profError);
-        push('Gagal memuat profil pengguna', 'error');
+      if (usersError) {
+        console.error('Error loading users:', usersError);
+        push('Gagal memuat data pengguna', 'error');
         return;
       }
 
-      // Try to get additional user data from auth.users if accessible
-      let authData: any[] = [];
-      try {
-        // This will only work if RLS allows it or if using service role
-        const { data: authUsers, error: authError } = await (supabase as any)
-          .from('auth.users')
-          .select('id, email, phone, created_at, last_sign_in_at, email_confirmed_at');
-        
-        if (!authError) {
-          authData = authUsers || [];
-        }
-      } catch (e) {
-        // Auth table might not be accessible, that's ok
-        console.log('Auth users table not accessible (normal for security)');
-      }
+      // Transform data to include role field for compatibility
+      const transformedData = (usersData || []).map((user: any) => ({
+        ...user,
+        role: user.is_admin ? 'admin' : 'user'
+      }));
 
-      // Merge profile and auth data
-      const enrichedProfiles = (profs || []).map((prof: any) => {
-        const authUser = authData.find((au: any) => au.id === prof.id);
-        return {
-          ...prof,
-          email: authUser?.email || null,
-          phone: authUser?.phone || null,
-          last_sign_in_at: authUser?.last_sign_in_at || null,
-          email_verified: !!authUser?.email_confirmed_at
-        };
-      });
-
-      setRows(enrichedProfiles);
-      setAuthUsers(authData);
+      setRows(transformedData);
+      setAuthUsers([]); // No longer using auth users
     } catch (error: any) {
       console.error('Error in load:', error);
       push(`Error: ${error.message}`, 'error');
@@ -114,14 +95,21 @@ const AdminUsers: React.FC = () => {
     const adminSet = new Set(['admin','superadmin','super-admin','super admin','owner']);
     const isAdminRole = (r: string) => adminSet.has(normalized(r));
     const current = rows.find(r=>r.id===id);
-    if (current && isAdminRole(current.role) && !isAdminRole(role)) {
-      const adminCount = rows.filter(r=>isAdminRole(r.role)).length;
+    if (current && current.role && isAdminRole(current.role) && !isAdminRole(role)) {
+      const adminCount = rows.filter(r=> r.role && isAdminRole(r.role)).length;
       if (adminCount <= 1 && uid === id) {
         alert('Tidak bisa menurunkan peran: ini adalah admin terakhir. Tambahkan admin lain terlebih dahulu.');
         return;
       }
     }
-    const { error } = await (supabase as any).from('profiles').update({ role }).eq('id', id);
+    
+    // Update in users table with is_admin field
+    const isAdmin = isAdminRole(role);
+    const { error } = await (supabase as any)
+      .from('users')
+      .update({ is_admin: isAdmin })
+      .eq('id', id);
+      
     if (error) push('Gagal memperbarui peran', 'error');
     else push('Peran diperbarui', 'success');
     await load();
@@ -253,7 +241,7 @@ const AdminUsers: React.FC = () => {
                   {r.email && (
                     <div className="text-gray-300 flex items-center gap-1">
                       <span>{r.email}</span>
-                      {r.email_verified && (
+                      {r.phone_verified && (
                         <Shield size={12} className="text-green-400" />
                       )}
                     </div>
@@ -269,8 +257,8 @@ const AdminUsers: React.FC = () => {
               
               {/* Role */}
               <div className="col-span-2">
-                <span className={`px-2 py-1 rounded text-xs border ${getRoleBadgeColor(r.role)}`}>
-                  {r.role}
+                <span className={`px-2 py-1 rounded text-xs border ${getRoleBadgeColor(r.role || 'user')}`}>
+                  {r.role || 'user'}
                 </span>
               </div>
               
@@ -284,10 +272,10 @@ const AdminUsers: React.FC = () => {
               
               {/* Last Login */}
               <div className="col-span-2 text-sm text-gray-300">
-                {r.last_sign_in_at ? (
+                {r.last_login_at ? (
                   <div className="flex items-center gap-1">
                     <Clock size={12} />
-                    {formatDate(r.last_sign_in_at)}
+                    {formatDate(r.last_login_at)}
                   </div>
                 ) : (
                   <span className="text-gray-500">Never</span>
@@ -317,9 +305,9 @@ const AdminUsers: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
           { label: 'Total Users', value: rows.length, icon: User },
-          { label: 'Admins', value: rows.filter(r => r.role.toLowerCase().includes('admin')).length, icon: Shield },
-          { label: 'Active Today', value: rows.filter(r => r.last_sign_in_at && new Date(r.last_sign_in_at) > new Date(Date.now() - 24*60*60*1000)).length, icon: Clock },
-          { label: 'Verified', value: rows.filter(r => r.email_verified).length, icon: Shield }
+          { label: 'Admins', value: rows.filter(r => r.role && r.role.toLowerCase().includes('admin')).length, icon: Shield },
+          { label: 'Active Today', value: rows.filter(r => r.last_login_at && new Date(r.last_login_at) > new Date(Date.now() - 24*60*60*1000)).length, icon: Clock },
+          { label: 'Verified', value: rows.filter(r => r.phone_verified).length, icon: Shield }
         ].map((stat, index) => {
           const Icon = stat.icon;
           return (

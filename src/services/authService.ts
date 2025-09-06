@@ -8,36 +8,37 @@ export type UserProfile = {
 
 export async function getCurrentUserProfile(): Promise<UserProfile | null> {
   try {
-    if (supabase) {
-      const { data } = await supabase.auth.getUser();
-      const user = data?.user;
-      if (user) {
-        const meta = (user.user_metadata || {}) as any;
-        return {
-          name: meta.name || meta.full_name || undefined,
-          email: user.email || undefined,
-          phone: meta.phone || meta.whatsapp || undefined,
-        };
-      }
+    // Get user data from our custom auth system
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      return {
+        name: user.name || undefined,
+        email: user.email || undefined,
+        phone: user.phone || undefined,
+      };
     }
-  } catch {}
-  // fallback to localStorage profile
-  try {
-    const raw = localStorage.getItem('user_profile');
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return null;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function isLoggedIn(): Promise<boolean> {
   try {
-    if (supabase) {
-      const { data } = await supabase.auth.getSession();
-      if (data?.session?.user) return true;
+    // Check for our custom session token
+    const sessionToken = localStorage.getItem('session_token');
+    const userData = localStorage.getItem('user_data');
+    const sessionExpires = localStorage.getItem('session_expires');
+    
+    if (sessionToken && userData && sessionExpires) {
+      // Check if session is still valid
+      const expiresAt = new Date(sessionExpires);
+      if (expiresAt > new Date()) {
+        return true;
+      }
     }
-  } catch {}
-  try {
-    return !!localStorage.getItem('user_profile');
+    return false;
   } catch {
     return false;
   }
@@ -49,33 +50,30 @@ export function setLocalUserProfile(profile: UserProfile) {
 
 export async function getAuthUserId(): Promise<string | null> {
   try {
-    if (supabase) {
-      const { data } = await supabase.auth.getUser();
-      return data?.user?.id ?? null;
+    // Get user ID from our custom auth system
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      return user.id || null;
     }
-  } catch {}
-  return null;
+    return null;
+  } catch {
+    return null;
+  }
 }
 
 export async function getUserRole(): Promise<string> {
   try {
-    if (!supabase) return 'user';
-    const { data } = await supabase.auth.getUser();
-    const user = data?.user;
-    if (!user) return 'guest';
-    const uid = user.id;
-    // Try profiles table first
-    try {
-      const { data: profile } = await (supabase as any)
-        .from('profiles')
-        .select('role')
-        .eq('id', uid)
-        .maybeSingle();
-    if (profile?.role) return String(profile.role);
-    } catch {}
-    // Fallback to user/app metadata
-    const meta = (user.user_metadata || user.app_metadata || {}) as any;
-    return meta.role || 'user';
+    // Since we use custom auth, check the stored user data
+    const userData = localStorage.getItem('user_data');
+    if (userData) {
+      const user = JSON.parse(userData);
+      if (user.isAdmin || user.is_admin) {
+        return 'admin';
+      }
+      return 'user';
+    }
+    return 'guest';
   } catch {
     return 'user';
   }
@@ -90,9 +88,10 @@ export async function isAdmin(): Promise<boolean> {
 
 export async function logout(): Promise<void> {
   try {
-    if (supabase) {
-      await supabase.auth.signOut();
-    }
+    // Clear our custom auth session data
+    localStorage.removeItem('session_token');
+    localStorage.removeItem('user_data');
+    localStorage.removeItem('session_expires');
+    localStorage.removeItem('user_profile'); // Legacy cleanup
   } catch {}
-  try { localStorage.removeItem('user_profile'); } catch {}
 }
