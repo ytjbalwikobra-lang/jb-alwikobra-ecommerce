@@ -132,27 +132,27 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   const detectCountryFromNumber = (number: string): Country | null => {
     const cleanNumber = number.replace(/\D/g, '');
     
-    // Indonesia detection (08xxx or 8xxx patterns)
-    if (/^(08|8)/.test(cleanNumber)) {
-      return COUNTRIES.find(c => c.code === 'ID') || null;
-    }
-    
-    // Malaysia detection (01xxx or 1xxx patterns)
-    if (/^(01|1)/.test(cleanNumber) && cleanNumber.length >= 9) {
-      return COUNTRIES.find(c => c.code === 'MY') || null;
-    }
-    
-    // Singapore detection ([689]xxx patterns)
-    if (/^[689]/.test(cleanNumber) && cleanNumber.length === 8) {
-      return COUNTRIES.find(c => c.code === 'SG') || null;
-    }
-    
-    // Check for country code prefixes
+    // PRIORITY 1: Check for full country code prefixes first (most reliable)
     for (const country of COUNTRIES) {
       const countryDigits = country.phoneCode.slice(1); // Remove +
       if (cleanNumber.startsWith(countryDigits)) {
         return country;
       }
+    }
+    
+    // PRIORITY 2: Indonesia detection (08xxx or 8xxx patterns)
+    if (/^(08|8)/.test(cleanNumber) && cleanNumber.length >= 10) {
+      return COUNTRIES.find(c => c.code === 'ID') || null;
+    }
+    
+    // PRIORITY 3: Malaysia detection (01xxx or 1xxx patterns)
+    if (/^(01|1)/.test(cleanNumber) && cleanNumber.length >= 9) {
+      return COUNTRIES.find(c => c.code === 'MY') || null;
+    }
+    
+    // PRIORITY 4: Singapore detection ([689]xxx patterns) - only if exactly 8 digits
+    if (/^[689]/.test(cleanNumber) && cleanNumber.length === 8 && !cleanNumber.startsWith('62')) {
+      return COUNTRIES.find(c => c.code === 'SG') || null;
     }
     
     return null;
@@ -404,7 +404,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           onChange={handlePhoneChange}
           placeholder={placeholder || selectedCountry.placeholder}
           required={required}
-          maxLength={selectedCountry.maxLength}
+          maxLength={Math.max(selectedCountry.maxLength || 15, 15)}
           className="flex-1 px-3 py-2 bg-transparent border-0 focus:outline-none focus:ring-0 text-white placeholder-gray-400"
         />
 
