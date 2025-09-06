@@ -19,7 +19,7 @@ const COUNTRIES: Country[] = [
     name: 'Indonesia',
     phoneCode: '+62',
     flag: '🇮🇩',
-    pattern: /^8[1-9][0-9]{7,11}$/,
+    pattern: /^8[1-9][0-9]{7,12}$/,
     placeholder: '812-3456-7890',
     maxLength: 13,
     validPrefixes: ['81', '82', '83', '85', '87', '88', '89']
@@ -29,7 +29,7 @@ const COUNTRIES: Country[] = [
     name: 'Malaysia',
     phoneCode: '+60',
     flag: '🇲🇾',
-    pattern: /^1[0-9]{8,9}$/,
+    pattern: /^[0-9]{9,10}$/,
     placeholder: '12-345-6789',
     maxLength: 11,
     validPrefixes: ['10', '11', '12', '13', '14', '15', '16', '17', '18', '19']
