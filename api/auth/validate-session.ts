@@ -18,15 +18,28 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Handle OPTIONS request for CORS preflight
+  if (req.method === 'OPTIONS') {
+    return res.status(200).json({ success: true });
+  }
+
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
+    return res.status(405).json({ error: 'Method not allowed. Use POST.' });
   }
 
   try {
-    const { sessionToken } = req.body;
+    // Extract session token from body or Authorization header
+    let sessionToken = req.body?.sessionToken;
+    
+    if (!sessionToken) {
+      const authHeader = req.headers.authorization;
+      if (authHeader?.startsWith('Bearer ')) {
+        sessionToken = authHeader.substring(7);
+      }
+    }
 
     if (!sessionToken) {
-      return res.status(401).json({ error: 'Session token is required' });
+      return res.status(401).json({ error: 'Session token is required in body or Authorization header' });
     }
 
     // Verify JWT token
