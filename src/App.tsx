@@ -13,12 +13,12 @@ import { AuthProvider } from './contexts/TraditionalAuthContext.tsx';
 import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import { FaviconService } from './services/faviconService.ts';
 
-// CRITICAL PERFORMANCE FIX: Lazy load all pages to reduce initial bundle
-// This reduces initial JS from ~580KB to ~150KB
+// CRITICAL PERFORMANCE FIX: Lazy load ALL pages including HomePage
+// This reduces initial JS bundle by 70%+
 
-// Core pages (loaded immediately for better UX)
-import HomePage from './pages/HomePage.tsx';
-import TraditionalAuthPage from './pages/TraditionalAuthPage.tsx';
+// Lazy load ALL pages for maximum performance
+const HomePage = React.lazy(() => import('./pages/HomePage.tsx'));
+const TraditionalAuthPage = React.lazy(() => import('./pages/TraditionalAuthPage.tsx'));
 
 // Lazy load all other pages
 const ProductsPage = React.lazy(() => import('./pages/ProductsPage.tsx'));
@@ -45,12 +45,12 @@ const AdminOrders = React.lazy(() => import('./pages/admin/AdminOrders.tsx'));
 const AdminGameTitles = React.lazy(() => import('./pages/admin/AdminGameTitles.tsx'));
 const WhatsAppTestPage = React.lazy(() => import('./pages/admin/WhatsAppTestPage.tsx'));
 
-// Loading component for better UX
+// Optimized loading component for better perceived performance
 const PageLoader = () => (
-  <div className="min-h-screen bg-app-dark flex items-center justify-center">
+  <div className="min-h-screen bg-black flex items-center justify-center">
     <div className="text-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-      <p className="text-gray-400">Memuat halaman...</p>
+      <div className="animate-spin rounded-full h-8 w-8 border-2 border-pink-500 border-t-transparent mx-auto mb-3"></div>
+      <div className="text-gray-400 text-sm">Loading...</div>
     </div>
   </div>
 );

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BannerService } from '../services/bannerService.ts';
+import OptimizedImage from './OptimizedImage.tsx';
 
 interface Slide {
   id: string;
@@ -87,10 +88,11 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
   <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
       {/* 3:2 ratio container */}
       <div className="relative w-full" style={{ paddingTop: '66.6667%' }}>
-        <img
+        <OptimizedImage
           src={active.image}
           alt={active.title || 'Banner'}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full"
+          priority={true} // Banners are above the fold
         />
 
         <div className="absolute inset-0 bg-black/30" />

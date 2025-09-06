@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ProductService } from '../services/productService.ts';
 import { Product } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
 import HorizontalScroller from '../components/HorizontalScroller.tsx';
@@ -22,23 +21,34 @@ const HomePage: React.FC = () => {
   const [popularGames, setPopularGames] = useState<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>>([]);
 
   useEffect(() => {
+    let mounted = true;
     const fetchData = async () => {
       try {
+        // Lazy load ProductService to reduce initial bundle
+        const { ProductService } = await import('../services/productService.ts');
+        
+        if (!mounted) return;
+
         const [flashSales, popular] = await Promise.all([
           ProductService.getFlashSales(),
           ProductService.getPopularGames(20)
         ]);
 
-        setFlashSaleProducts(flashSales.map(sale => sale.product));
-        setPopularGames(popular);
+        if (mounted) {
+          setFlashSaleProducts(flashSales.map(sale => sale.product));
+          setPopularGames(popular);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+    return () => { mounted = false; };
   }, []);
 
   const features = [

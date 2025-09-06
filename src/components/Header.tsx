@@ -2,7 +2,6 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, Zap, Home, Settings, HelpCircle, User } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
-import { SettingsService } from '../services/settingsService.ts';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -10,14 +9,29 @@ const Header: React.FC = () => {
 
   const [siteName, setSiteName] = React.useState<string>('JB Alwikobra');
   const [logoUrl, setLogoUrl] = React.useState<string | undefined>(undefined);
+  
+  // Lazy load settings to improve initial page load
   React.useEffect(() => {
-    (async () => {
+    let mounted = true;
+    const loadSettings = async () => {
       try {
+        const { SettingsService } = await import('../services/settingsService.ts');
+        if (!mounted) return;
         const s = await SettingsService.get();
-        if (s?.siteName) setSiteName(s.siteName);
-        if (s?.logoUrl) setLogoUrl(s.logoUrl);
-      } catch {}
-    })();
+        if (mounted) {
+          if (s?.siteName) setSiteName(s.siteName);
+          if (s?.logoUrl) setLogoUrl(s.logoUrl);
+        }
+      } catch {
+        // Silent fail for better UX
+      }
+    };
+    // Delay settings load to prioritize critical content
+    const timer = setTimeout(loadSettings, 100);
+    return () => {
+      mounted = false;
+      clearTimeout(timer);
+    };
   }, []);
 
   const navItems = [

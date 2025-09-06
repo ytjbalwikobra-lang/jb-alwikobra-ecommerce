@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { ProductService } from '../services/productService.ts';
 import { Product, Tier, GameTitle } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -45,13 +44,23 @@ const ProductsPage: React.FC = () => {
   ];
 
   useEffect(() => {
+    let mounted = true;
+    
     const fetchData = async () => {
       try {
+        // Dynamic import of ProductService
+        const { ProductService } = await import('../services/productService.ts');
+        
+        if (!mounted) return;
+        
         const [productsData, tiersData, gameTitlesData] = await Promise.all([
           ProductService.getAllProducts(),
           ProductService.getTiers(),
           ProductService.getGameTitles()
         ]);
+        
+        if (!mounted) return;
+        
         setProducts(productsData);
         
         // Sort tiers: Pelajar → Reguler → Premium
@@ -67,11 +76,17 @@ const ProductsPage: React.FC = () => {
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchData();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   // Restore filter state jika user kembali dari detail produk

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ProductService } from '../services/productService.ts';
 import { Product } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
 import HorizontalScroller from '../components/HorizontalScroller.tsx';
@@ -18,18 +17,34 @@ const FlashSalesPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     const fetchFlashSales = async () => {
       try {
+        // Dynamic import of ProductService
+        const { ProductService } = await import('../services/productService.ts');
+        
+        if (!mounted) return;
+        
         const flashSales = await ProductService.getFlashSales();
+        
+        if (!mounted) return;
+        
         setFlashSaleProducts(flashSales.map(sale => sale.product));
       } catch (error) {
         console.error('Error fetching flash sales:', error);
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchFlashSales();
+    
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) {
