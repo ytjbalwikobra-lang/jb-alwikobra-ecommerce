@@ -1,11 +1,1 @@
-{
-  "framework": null,
-  "installCommand": "npm install",
-  "buildCommand": "npm run build",
-  "outputDirectory": "build",
-  "functions": {
-    "api/**/*.ts": {
-      "runtime": "nodejs18.x"
-    }
-  }
-}
+{"projectId":"prj_3O0fU57OuQNxZN9ILA4YKmWkm6hf","orgId":"team_dlW65m8byaHOA8Wmc4vwvVHD","projectName":"jb-alwikobra-ecommerce"}

@@ -15,6 +15,11 @@ import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import { FaviconService } from './services/faviconService.ts';
 import { productionMonitor } from './utils/productionMonitor.ts';
 
+// Development only: Load phone verification tester
+if (process.env.NODE_ENV === 'development') {
+  import('./utils/ReactPhoneVerificationTester.js').catch(console.error);
+}
+
 // CRITICAL PERFORMANCE FIX: Lazy load ALL pages including HomePage
 // This reduces initial JS bundle by 70%+
 
