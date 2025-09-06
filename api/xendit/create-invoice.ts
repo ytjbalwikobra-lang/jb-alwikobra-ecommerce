@@ -1,5 +1,6 @@
 // Best practice: keep secret on server
-const XENDIT_SECRET_KEY = process.env.XENDIT_SECRET_KEY as string | undefined;
+const { getXenditSecretKey } = require('../../xendit_config');
+
 const SUPABASE_URL = process.env.SUPABASE_URL as string | undefined;
 const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY as string | undefined;
 
@@ -144,7 +145,14 @@ async function attachInvoiceToOrder(orderId: string, invoice: any) {
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
-  if (!XENDIT_SECRET_KEY) return res.status(500).json({ error: 'Missing XENDIT_SECRET_KEY' });
+  
+  let XENDIT_SECRET_KEY: string;
+  try {
+    XENDIT_SECRET_KEY = getXenditSecretKey();
+  } catch (error: any) {
+    console.error('Xendit configuration error:', error.message);
+    return res.status(500).json({ error: 'Xendit not configured properly', details: error.message });
+  }
 
   try {
   const { external_id, amount, payer_email, description, success_redirect_url, failure_redirect_url, customer, order } = req.body || {};

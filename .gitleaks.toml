@@ -1,0 +1,78 @@
+# Gitleaks configuration for JB Alwikobra E-commerce
+# This file configures secret detection patterns for the repository
+
+title = "JB Alwikobra Security Scan"
+
+[allowlist]
+description = "Allowlist for false positives"
+files = [
+  ".env.example",
+  ".env.template", 
+  "xendit_config.js",
+  "SECURITY.md",
+  "README.md"
+]
+
+# Allow example/template values
+regexes = [
+  "your_.*_key_here",
+  "replace_me_in_local_env_only",
+  "xnd_public_your_key_here",
+  "your_whatsapp_api_key_here"
+]
+
+[[rules]]
+id = "xendit-secret-key"
+description = "Xendit Secret API Key"
+regex = '''xnd_[a-zA-Z0-9_]{20,}'''
+entropy = 3.0
+keywords = ["xnd_"]
+
+[[rules]]
+id = "xendit-public-key"
+description = "Xendit Public API Key"
+regex = '''xnd_public_[a-zA-Z0-9_]{20,}'''
+entropy = 3.0
+keywords = ["xnd_public_"]
+
+[[rules]]
+id = "supabase-anon-key"
+description = "Supabase Anonymous Key (JWT)"
+regex = '''eyJ[A-Za-z0-9_/+-]*\.eyJ[A-Za-z0-9_/+-]*\.[A-Za-z0-9_/+-]*'''
+entropy = 3.5
+keywords = ["eyJ"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|access[_-]?key|secret[_-]?key)['"\s]*[:=]['"\s]*[a-zA-Z0-9_\-]{16,}'''
+entropy = 3.0
+keywords = ["api_key", "api-key", "apikey", "access_key", "secret_key"]
+
+[[rules]]
+id = "whatsapp-api-key"
+description = "WhatsApp API Key"
+regex = '''[a-f0-9]{32}'''
+entropy = 3.0
+keywords = ["whatsapp", "woo-wa", "notifapi"]
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN [A-Z]+ PRIVATE KEY-----'''
+keywords = ["-----BEGIN", "PRIVATE KEY-----"]
+
+[[rules]]
+id = "password"
+description = "Password in code"
+regex = '''(?i)(password|passwd|pwd)['"\s]*[:=]['"\s]*[^\s'";,]{8,}'''
+entropy = 2.5
+keywords = ["password", "passwd", "pwd"]
+
+# Custom rules for this project
+[[rules]]
+id = "hardcoded-credentials"
+description = "Hardcoded credentials in JavaScript/TypeScript"
+regex = '''(?i)(const|let|var)\s+(api_?key|secret|token|password)\s*=\s*['"][^'"]{8,}['"]'''
+entropy = 2.0
+keywords = ["const", "let", "var"]
