@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Product, Tier, GameTitle, ProductTier } from '../../types/index.ts';
-import { ProductService } from '../../services/productService.ts';
+import { UltraOptimizedProductService } from '../../services/ultraOptimizedProductService.ts';
 import { supabase } from '../../services/supabase.ts';
 import ImageUploader from '../../components/ImageUploader.tsx';
 import { uploadFiles } from '../../services/storageService.ts';
@@ -99,14 +99,14 @@ const AdminProducts: React.FC = () => {
         return;
       }
 
-      // OPTIMIZED: Build query with database-level filtering
+      // OPTIMIZED: Build query with database-level filtering - MINIMAL FIELDS
       let query = supabase
         .from('products')
         .select(`
-          id, name, description, price, original_price, account_level,
+          id, name, price, original_price, account_level,
           is_active, archived_at, created_at, images, game_title_id, tier_id,
-          tiers (id, name, slug, color, background_gradient),
-          game_titles (id, name, slug, icon)
+          tiers (id, name, color),
+          game_titles (id, name)
         `, { count: 'exact' });
 
       // Apply filters at DATABASE level (not client-side)
@@ -138,10 +138,10 @@ const AdminProducts: React.FC = () => {
 
       if (productError) throw productError;
 
-      // Load filter options separately (these can be cached)
+      // Load filter options separately (these can be cached) - MINIMAL FIELDS
       const [tList, gList] = await Promise.all([
-        ProductService.getTiers(),
-        ProductService.getGameTitles()
+        UltraOptimizedProductService.getTiers(),
+        UltraOptimizedProductService.getGameTitles()
       ]);
 
       // Map data to existing format

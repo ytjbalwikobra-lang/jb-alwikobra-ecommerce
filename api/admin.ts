@@ -1,5 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { compressResponse } from './_utils/compressionUtils.ts';
 
 // Admin service role client
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!;
@@ -51,6 +52,47 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Try to use optimized RPC function first
+    try {
+      const { data: rpcData, error: rpcError } = await supabase
+        .rpc('get_dashboard_data');
+
+      if (!rpcError && rpcData) {
+        // Get daily revenue data
+        const { data: dailyData, error: dailyError } = await supabase
+          .rpc('get_daily_revenue', { days_back: 7 });
+
+        const analytics = rpcData.analytics || {};
+        return compressResponse(req, res, {
+          success: true,
+          data: {
+            orders: {
+              count: analytics.orders_7d || 0,
+              revenue: analytics.revenue_7d || 0,
+              averageValue: analytics.avg_order_value || 0
+            },
+            users: rpcData.users || 0,
+            products: rpcData.products || 0,
+            flashSales: rpcData.flashSales || 0,
+            analytics: {
+              statusDistribution: {
+                pending: analytics.pending_orders || 0,
+                paid: analytics.paid_orders || 0,
+                cancelled: analytics.cancelled_orders || 0
+              },
+              dailyRevenue: dailyData || [],
+              monthlyOrders: analytics.orders_30d || 0,
+              monthlyRevenue: analytics.revenue_30d || 0,
+              averageOrderValue: analytics.avg_order_value || 0
+            }
+          }
+        });
+      }
+    } catch (rpcError) {
+      console.warn('RPC function not available, falling back to legacy method:', rpcError);
+    }
+
+    // Fallback to legacy method if RPC fails
     // Get analytics data
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -78,11 +120,11 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       console.warn('Orders query failed:', error);
     }
 
-    // Users count (with error handling)
+    // Users count (with error handling) - Only count, no data
     try {
       const { count, error: usersError } = await supabase
         .from('users')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true });
 
       if (usersError) {
         console.warn('Users count error:', usersError);
@@ -93,11 +135,11 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       console.warn('Users count failed:', error);
     }
 
-    // Products count (with error handling)
+    // Products count (with error handling) - Only count, no data
     try {
       const { count, error: productsError } = await supabase
         .from('products')
-        .select('*', { count: 'exact', head: true });
+        .select('id', { count: 'exact', head: true });
 
       if (productsError) {
         console.warn('Products count error:', productsError);
@@ -108,11 +150,11 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       console.warn('Products count failed:', error);
     }
 
-    // Flash sales count (with fallback if table doesn't exist)
+    // Flash sales count (with fallback if table doesn't exist) - Only count, no data
     try {
       const { count, error: flashSalesError } = await supabase
         .from('flash_sales')
-        .select('*', { count: 'exact', head: true })
+        .select('id', { count: 'exact', head: true })
         .eq('is_active', true);
 
       if (flashSalesError) {
@@ -149,12 +191,12 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       console.warn('Monthly orders query failed:', error);
     }
 
-    // Status distribution - check all orders not just 7 days
+    // Status distribution - check all orders not just 7 days - only get status field
     let allOrders: any[] = [];
     try {
       const { data: allOrdersData, error: allOrdersError } = await supabase
         .from('orders')
-        .select('status, created_at')
+        .select('status')
         .order('created_at', { ascending: false });
 
       if (!allOrdersError) {
@@ -190,7 +232,7 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    return res.status(200).json({
+    return compressResponse(req, res, {
       success: true,
       data: {
         orders: {
@@ -254,10 +296,10 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
 
     if (error) throw error;
 
-    // Get total count with same filters
+    // Get total count with same filters - only get id for count
     let countQuery = supabase
       .from('orders')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true });
 
     // Apply same filters to count query
     if (status && status !== 'all') {
@@ -274,7 +316,7 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
 
     if (countError) throw countError;
 
-    return res.status(200).json({
+    return compressResponse(req, res, {
       success: true,
       data: {
         orders: orders || [],
@@ -316,10 +358,10 @@ async function getUsersList(req: VercelRequest, res: VercelResponse) {
 
     if (error) throw error;
 
-    // Get total count
+    // Get total count - only get id for count
     const { count, error: countError } = await supabase
       .from('users')
-      .select('*', { count: 'exact', head: true });
+      .select('id', { count: 'exact', head: true });
 
     if (countError) throw countError;
 

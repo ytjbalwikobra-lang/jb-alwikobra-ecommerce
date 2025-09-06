@@ -2,6 +2,7 @@
 import { supabase } from './supabase.ts';
 import { deletePublicUrls } from './storageService.ts';
 import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
+import { clientCache } from './clientCacheService.ts';
 
 interface PaginatedResponse<T> {
   data: T[];

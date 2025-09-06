@@ -15,7 +15,11 @@ export class SettingsService {
       if (!supabase) return DEFAULT_SETTINGS;
       const { data, error } = await (supabase as any)
         .from('website_settings')
-        .select('*')
+        .select(`
+          id, site_name, logo_url, favicon_url, contact_email, contact_phone, 
+          whatsapp_number, address, facebook_url, instagram_url, tiktok_url, 
+          youtube_url, hero_title, hero_subtitle, updated_at
+        `)
         .limit(1)
         .maybeSingle();
       if (error) throw error;
