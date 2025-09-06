@@ -80,8 +80,8 @@ export const preloadCriticalResources = () => {
   if (typeof document === 'undefined') return;
   
   const resources = [
-    { href: '/manifest.json', as: 'fetch', crossorigin: 'anonymous' },
-    { href: 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap', as: 'style' }
+    { href: '/manifest.json', as: 'fetch', crossorigin: 'anonymous' }
+    // Font preloading disabled to prevent unused preload warnings
   ];
   
   resources.forEach(resource => {

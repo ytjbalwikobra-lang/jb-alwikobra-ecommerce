@@ -53,7 +53,7 @@ const AdminOrders: React.FC = () => {
         throw new Error(result.error || 'Failed to fetch orders');
       }
       
-      setRows((result.data || []).map(mapRow));
+      setRows((result.data.orders || []).map(mapRow));
       
       // Show warning if product relations couldn't be loaded
       if (result.warning) {

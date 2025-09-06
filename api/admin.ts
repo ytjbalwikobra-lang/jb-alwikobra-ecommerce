@@ -88,13 +88,16 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     const totalRevenue = orders?.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0) || 0;
 
     return res.status(200).json({
-      orders: {
-        count: orders?.length || 0,
-        revenue: totalRevenue
-      },
-      users: usersCount || 0,
-      products: productsCount || 0,
-      flashSales: flashSalesCount || 0
+      success: true,
+      data: {
+        orders: {
+          count: orders?.length || 0,
+          revenue: totalRevenue
+        },
+        users: usersCount || 0,
+        products: productsCount || 0,
+        flashSales: flashSalesCount || 0
+      }
     });
   } catch (error) {
     console.error('Dashboard error:', error);
@@ -133,12 +136,15 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
     if (countError) throw countError;
 
     return res.status(200).json({
-      orders: orders || [],
-      pagination: {
-        total: count || 0,
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        totalPages: Math.ceil((count || 0) / parseInt(limit as string))
+      success: true,
+      data: {
+        orders: orders || [],
+        pagination: {
+          total: count || 0,
+          page: parseInt(page as string),
+          limit: parseInt(limit as string),
+          totalPages: Math.ceil((count || 0) / parseInt(limit as string))
+        }
       }
     });
   } catch (error) {
@@ -172,12 +178,15 @@ async function handleUsers(req: VercelRequest, res: VercelResponse) {
     if (countError) throw countError;
 
     return res.status(200).json({
-      users: users || [],
-      pagination: {
-        total: count || 0,
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        totalPages: Math.ceil((count || 0) / parseInt(limit as string))
+      success: true,
+      data: {
+        users: users || [],
+        pagination: {
+          total: count || 0,
+          page: parseInt(page as string),
+          limit: parseInt(limit as string),
+          totalPages: Math.ceil((count || 0) / parseInt(limit as string))
+        }
       }
     });
   } catch (error) {

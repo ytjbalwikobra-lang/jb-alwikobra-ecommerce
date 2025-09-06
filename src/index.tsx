@@ -28,7 +28,7 @@ initWebVitalsMonitoring();
 
 // Inject critical CSS before any rendering
 injectCriticalCSS();
-preloadCriticalResources();
+// preloadCriticalResources(); // Disabled to prevent font preload warnings
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

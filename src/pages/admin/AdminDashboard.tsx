@@ -28,8 +28,8 @@ const AdminDashboard: React.FC = () => {
         setCounts({ 
           products: data.products, 
           flash: data.flashSales, 
-          orders7: data.orders7days, 
-          revenue7: data.revenue7days 
+          orders7: data.orders.count, 
+          revenue7: data.orders.revenue 
         });
       } catch (error) {
         console.error('Dashboard fetch error:', error);

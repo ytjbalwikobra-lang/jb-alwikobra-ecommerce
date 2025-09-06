@@ -40,7 +40,7 @@ const AdminUsers: React.FC = () => {
         throw new Error(result.error || 'Failed to fetch users');
       }
       
-      const usersData = result.data || [];
+      const usersData = result.data.users || [];
       
       // Transform the data to match the ProfileRow interface
       const transformedRows: ProfileRow[] = usersData.map((user: any) => ({
