@@ -148,38 +148,38 @@ const AdminOrders: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Orders</h1>
-          <p className="text-gray-400">Pantau pesanan guest/user dan tindak lanjuti</p>
+          <h1 className="text-2xl font-bold text-gray-900">Kelola Pesanan</h1>
+          <p className="text-gray-600">Pantau dan kelola semua pesanan pelanggan</p>
         </div>
       </div>
 
       {/* Advanced Filters */}
-      <div className="bg-black/60 border border-pink-500/30 rounded-xl p-6 space-y-4">
+      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <Filter size={20} className="text-pink-400" />
-          <h3 className="text-lg font-semibold text-white">Filter Pesanan</h3>
+          <Filter size={20} className="text-pink-500" />
+          <h3 className="text-lg font-semibold text-gray-900">Filter Pesanan</h3>
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Search */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Cari</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Cari</label>
             <input
               type="text"
               placeholder="ID, nama, email, telepon..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             />
           </div>
           
           {/* Status Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
             <select 
               value={statusFilter} 
               onChange={e=>setStatusFilter(e.target.value as any)} 
-              className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             >
               <option value="all">Semua Status</option>
               <option value="pending">Pending</option>
@@ -191,11 +191,11 @@ const AdminOrders: React.FC = () => {
           
           {/* Order Type Filter */}
           <div>
-            <label className="block text-sm font-medium text-gray-300 mb-2">Jenis Order</label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Order</label>
             <select 
               value={orderTypeFilter} 
               onChange={e=>setOrderTypeFilter(e.target.value as any)} 
-              className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500"
+              className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
             >
               <option value="all">Semua Jenis</option>
               <option value="purchase">Pembelian</option>
@@ -205,8 +205,8 @@ const AdminOrders: React.FC = () => {
         </div>
         
         {/* Filter Summary and Actions */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-pink-500/20">
-          <div className="text-sm text-gray-400">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200">
+          <div className="text-sm text-gray-600">
             Menampilkan {filtered.length} dari {rows.length} pesanan
           </div>
           
@@ -217,13 +217,13 @@ const AdminOrders: React.FC = () => {
                 setStatusFilter('all');
                 setOrderTypeFilter('all');
               }}
-              className="px-3 py-2 rounded-lg border border-white/20 text-white hover:bg-white/10 text-sm"
+              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
             >
               Reset Filter
             </button>
             <button 
               onClick={load} 
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm"
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-pink-500 text-white hover:bg-pink-600 text-sm"
             >
               <RefreshCw size={16} /> Refresh
             </button>
@@ -231,9 +231,9 @@ const AdminOrders: React.FC = () => {
         </div>
       </div>
 
-      <div className="bg-black/60 border border-pink-500/30 rounded-xl overflow-hidden mt-3">
+      <div className="bg-white border border-gray-200 rounded-xl overflow-hidden mt-3 shadow-sm">
         {errorMsg && (
-          <div className="px-4 py-2 text-sm text-amber-300 bg-amber-900/30 border-b border-amber-700/40">
+          <div className="px-4 py-2 text-sm text-amber-700 bg-amber-50 border-b border-amber-200">
             {errorMsg.includes('permission') || errorMsg.includes('RLS') ? (
               <span>Akses dibatasi oleh RLS. Pastikan kebijakan RLS untuk tabel orders mengizinkan admin melihat semua data.</span>
             ) : (
@@ -241,24 +241,24 @@ const AdminOrders: React.FC = () => {
             )}
           </div>
         )}
-        <div className="grid grid-cols-12 text-xs uppercase text-gray-400 px-4 py-2 border-b border-pink-500/20">
-          <div className="col-span-3">Customer</div>
-          <div className="col-span-2">Jenis</div>
-          <div className="col-span-2">Jumlah</div>
-          <div className="col-span-2">Status</div>
-          <div className="col-span-3 text-right">Aksi</div>
+        <div className="grid grid-cols-12 text-xs uppercase text-gray-500 px-4 py-3 border-b border-gray-200 bg-gray-50">
+          <div className="col-span-3 font-medium">Customer</div>
+          <div className="col-span-2 font-medium">Jenis</div>
+          <div className="col-span-2 font-medium">Jumlah</div>
+          <div className="col-span-2 font-medium">Status</div>
+          <div className="col-span-3 text-right font-medium">Aksi</div>
         </div>
         {loading ? (
-          <div className="p-4 text-gray-400">Memuat…</div>
+          <div className="p-4 text-gray-500">Memuat…</div>
         ) : filtered.length === 0 ? (
-          <div className="p-4 text-gray-400">Belum ada order{statusFilter!=='all' ? ` dengan status ${statusFilter}` : ''}.</div>
+          <div className="p-4 text-gray-500">Belum ada order{statusFilter!=='all' ? ` dengan status ${statusFilter}` : ''}.</div>
         ) : filtered.map((r) => (
-          <div key={r.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-pink-500/10">
-            <div className="col-span-3 text-white">
+          <div key={r.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
+            <div className="col-span-3 text-gray-900">
               <div className="font-medium">{r.customer_name}</div>
-              <div className="text-xs text-gray-400">{r.customer_email} · {r.customer_phone}</div>
+              <div className="text-xs text-gray-500">{r.customer_email} · {r.customer_phone}</div>
             </div>
-            <div className="col-span-2 text-gray-300">
+            <div className="col-span-2 text-gray-700">
               <div className="capitalize">{r.order_type}</div>
               {/* Product quick link when available */}
               {((r as any).products || r.product_id) && (
@@ -267,7 +267,7 @@ const AdminOrders: React.FC = () => {
                     href={`/products/${(r as any).products?.id || r.product_id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-pink-400 hover:text-pink-300 underline decoration-dotted"
+                    className="text-pink-500 hover:text-pink-600 underline decoration-dotted"
                     title={(r as any).products?.name || 'Lihat produk'}
                   >
                     {(r as any).products?.name || 'Buka produk'}
@@ -275,10 +275,24 @@ const AdminOrders: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="col-span-2 text-gray-300">Rp {Number(r.amount||0).toLocaleString('id-ID')}</div>
-            <div className="col-span-2 text-gray-300">{r.status}</div>
+            <div className="col-span-2 text-gray-700 font-medium">Rp {Number(r.amount||0).toLocaleString('id-ID')}</div>
+            <div className="col-span-2">
+              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                r.status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
+                r.status === 'paid' ? 'bg-green-100 text-green-800' :
+                r.status === 'completed' ? 'bg-blue-100 text-blue-800' :
+                r.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                'bg-gray-100 text-gray-800'
+              }`}>
+                {r.status}
+              </span>
+            </div>
             <div className="col-span-3 text-right">
-              <select value={r.status} onChange={(e)=>updateStatus(r.id, e.target.value as any)} className="bg-black border border-white/20 rounded px-2 py-1 text-white">
+              <select 
+                value={r.status} 
+                onChange={(e)=>updateStatus(r.id, e.target.value as any)} 
+                className="bg-white border border-gray-300 rounded px-2 py-1 text-gray-900 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+              >
                 <option value="pending">pending</option>
                 <option value="paid">paid</option>
                 <option value="completed">completed</option>
@@ -291,25 +305,25 @@ const AdminOrders: React.FC = () => {
 
       {/* Pagination component (copied from AdminProducts) */}
       {!loading && totalPages > 1 && (
-        <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 mt-4">
+        <div className="bg-white border border-gray-200 rounded-xl p-4 mt-4 shadow-sm">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-4">
               <div>
-                <label className="block text-xs text-gray-400 mb-1">Items per halaman</label>
+                <label className="block text-xs text-gray-600 mb-1">Items per halaman</label>
                 <select
                   value={itemsPerPage}
                   onChange={(e) => {
                     setItemsPerPage(Number(e.target.value));
                     setCurrentPage(1);
                   }}
-                  className="bg-black border border-pink-500/40 rounded px-3 py-1 text-white text-sm"
+                  className="bg-white border border-gray-300 rounded px-3 py-1 text-gray-900 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 >
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                 </select>
               </div>
-              <div className="text-sm text-gray-400">
+              <div className="text-sm text-gray-600">
                 Menampilkan {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalOrders)} dari {totalOrders.toLocaleString()} orders
               </div>
             </div>
@@ -318,7 +332,7 @@ const AdminOrders: React.FC = () => {
               <button
                 onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                 disabled={currentPage === 1}
-                className="px-3 py-1 rounded border border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 ← Sebelumnya
               </button>
@@ -344,8 +358,8 @@ const AdminOrders: React.FC = () => {
                       onClick={() => setCurrentPage(page)}
                       className={`px-3 py-1 rounded text-sm ${
                         page === currentPage
-                          ? 'bg-pink-600 text-white'
-                          : 'border border-white/20 text-white hover:bg-white/10'
+                          ? 'bg-pink-500 text-white'
+                          : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                       }`}
                     >
                       {page}
@@ -357,7 +371,7 @@ const AdminOrders: React.FC = () => {
               <button
                 onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                 disabled={currentPage === totalPages}
-                className="px-3 py-1 rounded border border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Selanjutnya →
               </button>

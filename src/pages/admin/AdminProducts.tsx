@@ -355,10 +355,10 @@ const AdminProducts: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Produk</h1>
-          <p className="text-gray-400">Kelola daftar produk</p>
+          <h1 className="text-2xl font-bold text-gray-900">Kelola Produk</h1>
+          <p className="text-gray-600">Tambah, edit, dan kelola semua produk</p>
         </div>
-        <button onClick={startCreate} className="px-4 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700">
+        <button onClick={startCreate} className="px-4 py-2 rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors">
           Tambah Produk
         </button>
       </div>
@@ -366,27 +366,27 @@ const AdminProducts: React.FC = () => {
       {!showForm && (
         <>
           {/* Filters and Search */}
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-6 space-y-4">
+          <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4 shadow-sm">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {/* Search */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Cari Produk</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Cari Produk</label>
                 <input
                   type="text"
                   placeholder="Nama, deskripsi, level..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 />
               </div>
               
               {/* Game Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Filter Game</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Filter Game</label>
                 <select
                   value={selectedGame}
                   onChange={(e) => setSelectedGame(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 >
                   <option value="">Semua Game</option>
                   {games.map(game => (
@@ -397,11 +397,11 @@ const AdminProducts: React.FC = () => {
               
               {/* Tier Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Filter Tier</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Filter Tier</label>
                 <select
                   value={selectedTier}
                   onChange={(e) => setSelectedTier(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 >
                   <option value="">Semua Tier</option>
                   {tiers.map(tier => (
@@ -412,11 +412,11 @@ const AdminProducts: React.FC = () => {
               
               {/* Status Filter */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
                 <select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
-                  className="w-full px-3 py-2 bg-black border border-pink-500/40 rounded-lg text-white focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg text-gray-900 focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                 >
                   <option value="all">Semua</option>
                   <option value="active">Aktif</option>
@@ -449,17 +449,17 @@ const AdminProducts: React.FC = () => {
           </div>
 
           {/* Product List */}
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl overflow-hidden">
-            <div className="grid grid-cols-12 text-xs uppercase text-gray-400 px-4 py-2 border-b border-pink-500/20">
-              <div className="col-span-5">Nama</div>
-              <div className="col-span-2">Game</div>
-              <div className="col-span-2">Harga</div>
-              <div className="col-span-3 text-right">Aksi</div>
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+            <div className="grid grid-cols-12 text-xs uppercase text-gray-600 px-4 py-3 border-b border-gray-200 bg-gray-50">
+              <div className="col-span-5 font-medium">Nama</div>
+              <div className="col-span-2 font-medium">Game</div>
+              <div className="col-span-2 font-medium">Harga</div>
+              <div className="col-span-3 text-right font-medium">Aksi</div>
             </div>
             {loading ? (
-              <div className="p-4 text-gray-400">Memuat...</div>
+              <div className="p-4 text-gray-500">Memuat...</div>
             ) : paginatedProducts.length === 0 ? (
-              <div className="p-4 text-gray-400">
+              <div className="p-4 text-gray-500">
                 {filteredProducts.length === 0 && products.length > 0 
                   ? 'Tidak ada produk yang sesuai dengan filter.'
                   : 'Belum ada produk.'
@@ -467,23 +467,23 @@ const AdminProducts: React.FC = () => {
               </div>
             ) : (
               paginatedProducts.map(p => (
-              <div key={p.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-pink-500/10">
+              <div key={p.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
                 <div className="col-span-5 flex items-center gap-3">
                   <img src={p.image} alt={p.name} className="w-10 h-10 rounded object-cover" />
                   <div>
-                    <div className="text-white font-medium line-clamp-1">{p.name}</div>
-                    <div className="text-xs text-gray-500 line-clamp-1 flex items-center gap-2">
+                    <div className="text-gray-900 font-medium line-clamp-1">{p.name}</div>
+                    <div className="text-xs text-gray-600 line-clamp-1 flex items-center gap-2">
                       <span>{p.accountLevel || '-'}</span>
                       {((p as any).isActive === false || (p as any).archivedAt) && (
-                        <span className="px-2 py-0.5 rounded bg-yellow-900/50 text-amber-300 border border-amber-600/40">Diarsipkan</span>
+                        <span className="px-2 py-0.5 rounded bg-yellow-100 text-yellow-800 border border-yellow-200">Diarsipkan</span>
                       )}
                     </div>
                   </div>
                 </div>
-                <div className="col-span-2 text-gray-300">{p.gameTitleData?.name || p.gameTitle}</div>
-                <div className="col-span-2 text-gray-300">Rp {Number(p.price||0).toLocaleString('id-ID')}</div>
+                <div className="col-span-2 text-gray-700">{p.gameTitleData?.name || p.gameTitle}</div>
+                <div className="col-span-2 text-gray-900 font-medium">Rp {Number(p.price||0).toLocaleString('id-ID')}</div>
                 <div className="col-span-3 text-right">
-                  <button onClick={() => startEdit(p)} className="px-3 py-1.5 rounded border border-white/20 text-white hover:bg-white/10 mr-2">Edit</button>
+                  <button onClick={() => startEdit(p)} className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 mr-2">Edit</button>
                   {(p as any).isActive === false || (p as any).archivedAt ? (
                     <button onClick={async()=>{
                       if (!supabase) return; 
@@ -509,25 +509,25 @@ const AdminProducts: React.FC = () => {
         
         {/* Enhanced Pagination with Items Per Page */}
         {!loading && totalPages > 1 && (
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4">
+          <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm">
             <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
               <div className="flex items-center gap-4">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Items per halaman</label>
+                  <label className="block text-xs text-gray-600 mb-1">Items per halaman</label>
                   <select
                     value={itemsPerPage}
                     onChange={(e) => {
                       setItemsPerPage(Number(e.target.value));
                       setCurrentPage(1);
                     }}
-                    className="bg-black border border-pink-500/40 rounded px-3 py-1 text-white text-sm"
+                    className="bg-white border border-gray-300 rounded px-3 py-1 text-gray-900 text-sm focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
                   >
                     <option value={10}>10</option>
                     <option value={20}>20</option>
                     <option value={50}>50</option>
                   </select>
                 </div>
-                <div className="text-sm text-gray-400">
+                <div className="text-sm text-gray-600">
                   Menampilkan {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalProducts)} dari {totalProducts.toLocaleString()} produk
                 </div>
               </div>
@@ -536,7 +536,7 @@ const AdminProducts: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className="px-3 py-1 rounded border border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ← Sebelumnya
                 </button>
@@ -562,8 +562,8 @@ const AdminProducts: React.FC = () => {
                         onClick={() => setCurrentPage(page)}
                         className={`px-3 py-1 rounded text-sm ${
                           page === currentPage
-                            ? 'bg-pink-600 text-white'
-                            : 'border border-white/20 text-white hover:bg-white/10'
+                            ? 'bg-pink-500 text-white'
+                            : 'border border-gray-300 text-gray-700 hover:bg-gray-50'
                         }`}
                       >
                         {page}
@@ -575,7 +575,7 @@ const AdminProducts: React.FC = () => {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className="px-3 py-1 rounded border border-white/20 text-white hover:bg-white/10 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Selanjutnya →
                 </button>

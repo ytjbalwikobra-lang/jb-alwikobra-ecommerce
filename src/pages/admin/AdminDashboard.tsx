@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { TrendingUp, DollarSign, ShoppingBag, Users, Zap, Calendar, BarChart3, PieChart } from 'lucide-react';
+import { TrendingUp, DollarSign, ShoppingBag, Users, Zap, Calendar, BarChart3, PieChart, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 
 interface DashboardData {
   orders: { count: number; revenue: number };
@@ -22,19 +22,19 @@ const StatCard: React.FC<{
   color?: string;
   trend?: { value: number; label: string };
 }> = ({ label, value, hint, icon, color = 'pink', trend }) => (
-  <div className={`bg-black/60 border border-${color}-500/30 rounded-xl p-4 hover:border-${color}-400/50 transition-colors`}>
-    <div className="flex items-center justify-between mb-2">
-      <div className="text-sm text-gray-400">{label}</div>
-      {icon && <div className={`text-${color}-400`}>{icon}</div>}
+  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
+    <div className="flex items-center justify-between mb-4">
+      <div className="text-sm font-medium text-gray-600">{label}</div>
+      {icon && <div className={`text-${color}-500`}>{icon}</div>}
     </div>
-    <div className="text-2xl font-bold text-white mt-1">{value}</div>
+    <div className="text-2xl font-bold text-gray-900 mb-2">{value}</div>
     {trend && (
-      <div className={`text-xs mt-1 flex items-center gap-1 ${trend.value >= 0 ? 'text-green-400' : 'text-red-400'}`}>
-        <TrendingUp className="w-3 h-3" />
-        <span>{trend.value >= 0 ? '+' : ''}{trend.value}% {trend.label}</span>
+      <div className={`text-sm flex items-center gap-1 ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+        {trend.value >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+        <span>{Math.abs(trend.value)}% {trend.label}</span>
       </div>
     )}
-    {hint && <div className="text-xs text-gray-500 mt-1">{hint}</div>}
+    {hint && <div className="text-sm text-gray-500 mt-1">{hint}</div>}
   </div>
 );
 
@@ -43,28 +43,27 @@ const SimpleChart: React.FC<{
   title: string 
 }> = ({ data, title }) => {
   const maxRevenue = Math.max(...data.map(d => d.revenue));
-  const maxOrders = Math.max(...data.map(d => d.orders));
   
   return (
-    <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4">
-      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <BarChart3 className="w-5 h-5 text-pink-400" />
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+        <BarChart3 className="w-5 h-5 text-pink-500" />
         {title}
       </h3>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {data.map((item, index) => (
-          <div key={index} className="space-y-1">
+          <div key={index} className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-400">
+              <span className="text-gray-600 font-medium">
                 {new Date(item.date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
               </span>
-              <span className="text-white">
+              <span className="text-gray-900 font-medium">
                 {item.orders} pesanan • Rp {item.revenue.toLocaleString('id-ID')}
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-2">
+            <div className="w-full bg-gray-200 rounded-full h-3">
               <div 
-                className="bg-gradient-to-r from-pink-500 to-purple-500 h-2 rounded-full transition-all duration-500" 
+                className="bg-gradient-to-r from-pink-500 to-purple-500 h-3 rounded-full transition-all duration-700 ease-out" 
                 style={{ width: `${maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0}%` }}
               ></div>
             </div>
@@ -78,10 +77,10 @@ const SimpleChart: React.FC<{
 const StatusChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
   const total = Object.values(data).reduce((sum, count) => sum + count, 0);
   const statusColors: Record<string, string> = {
-    pending: 'text-yellow-400',
-    paid: 'text-green-400',
-    completed: 'text-blue-400',
-    cancelled: 'text-red-400'
+    pending: 'bg-yellow-100 text-yellow-800',
+    paid: 'bg-green-100 text-green-800',
+    completed: 'bg-blue-100 text-blue-800',
+    cancelled: 'bg-red-100 text-red-800'
   };
   
   const statusLabels: Record<string, string> = {
@@ -92,21 +91,22 @@ const StatusChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
   };
 
   return (
-    <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4">
-      <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <PieChart className="w-5 h-5 text-pink-400" />
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+        <PieChart className="w-5 h-5 text-pink-500" />
         Status Pesanan (7 Hari)
       </h3>
-      <div className="space-y-3">
+      <div className="space-y-4">
         {Object.entries(data).map(([status, count]) => (
-          <div key={status} className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${statusColors[status]?.replace('text-', 'bg-') || 'bg-gray-400'}`}></div>
-              <span className="text-gray-300">{statusLabels[status] || status}</span>
+          <div key={status} className="flex items-center justify-between p-3 rounded-lg bg-gray-50">
+            <div className="flex items-center gap-3">
+              <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[status] || 'bg-gray-100 text-gray-800'}`}>
+                {statusLabels[status] || status}
+              </span>
             </div>
             <div className="text-right">
-              <div className="text-white font-medium">{count}</div>
-              <div className="text-xs text-gray-400">
+              <div className="text-lg font-semibold text-gray-900">{count}</div>
+              <div className="text-sm text-gray-500">
                 {total > 0 ? Math.round((count / total) * 100) : 0}%
               </div>
             </div>
@@ -130,7 +130,6 @@ const AdminDashboard: React.FC = () => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        // Fetch dashboard data from consolidated admin API endpoint
         const response = await fetch('/api/admin?action=dashboard');
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -144,7 +143,6 @@ const AdminDashboard: React.FC = () => {
         setData(result.data);
       } catch (error) {
         console.error('Dashboard fetch error:', error);
-        // Set default values on error
         setData({
           orders: { count: 0, revenue: 0 },
           users: 0,
@@ -165,23 +163,28 @@ const AdminDashboard: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
+      <div className="space-y-6">
         <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-700 rounded w-1/3"></div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-24 bg-gray-700 rounded"></div>
+              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
             ))}
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="h-96 bg-gray-200 rounded-xl"></div>
+            <div className="h-96 bg-gray-200 rounded-xl"></div>
           </div>
         </div>
       </div>
     );
   }
+
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-2">Dashboard Admin</h1>
-        <p className="text-gray-400">Ringkasan data toko dan penjualan</p>
+    <div className="space-y-6">
+      {/* Welcome Section */}
+      <div className="bg-gradient-to-r from-pink-500 to-purple-600 rounded-xl text-white p-6">
+        <h1 className="text-2xl font-bold mb-2">Selamat Datang di Dashboard Admin</h1>
+        <p className="text-pink-100">Kelola toko online JB Alwikobra dengan mudah</p>
       </div>
 
       {/* Main Stats */}
@@ -190,26 +193,28 @@ const AdminDashboard: React.FC = () => {
           label="Produk Aktif" 
           value={String(data.products)} 
           hint="Total produk tersedia"
-          icon={<ShoppingBag className="w-5 h-5" />}
+          icon={<ShoppingBag className="w-6 h-6" />}
           color="blue"
         />
         <StatCard 
           label="Flash Sale Aktif" 
           value={String(data.flashSales)} 
           hint="Sedang berlangsung"
-          icon={<Zap className="w-5 h-5" />}
+          icon={<Zap className="w-6 h-6" />}
           color="yellow"
         />
         <StatCard 
           label="Pesanan 7 Hari" 
           value={String(data.orders.count)} 
-          icon={<Calendar className="w-5 h-5" />}
+          hint="Pesanan baru"
+          icon={<Calendar className="w-6 h-6" />}
           color="green"
         />
         <StatCard 
           label="Pendapatan 7 Hari" 
           value={`Rp ${data.orders.revenue.toLocaleString('id-ID')}`}
-          icon={<DollarSign className="w-5 h-5" />}
+          hint="Total revenue"
+          icon={<DollarSign className="w-6 h-6" />}
           color="pink"
         />
       </div>
@@ -223,14 +228,14 @@ const AdminDashboard: React.FC = () => {
               label="Total Pengguna" 
               value={String(data.users)} 
               hint="Pengguna terdaftar"
-              icon={<Users className="w-5 h-5" />}
+              icon={<Users className="w-6 h-6" />}
               color="purple"
             />
             <StatCard 
               label="Pesanan 30 Hari" 
               value={String(data.analytics.monthlyOrders)} 
               hint={`Pendapatan: Rp ${data.analytics.monthlyRevenue.toLocaleString('id-ID')}`}
-              icon={<TrendingUp className="w-5 h-5" />}
+              icon={<TrendingUp className="w-6 h-6" />}
               color="indigo"
             />
           </div>
@@ -245,28 +250,28 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Performance Insights */}
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4">
-            <h3 className="text-lg font-semibold text-white mb-4">💡 Insight Performa</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-              <div className="bg-green-900/20 border border-green-500/30 rounded-lg p-3">
-                <div className="text-green-400 font-medium mb-1">Rata-rata Pesanan/Hari</div>
-                <div className="text-white text-lg">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">💡 Insight Performa</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                <div className="text-green-700 font-semibold mb-2">Rata-rata Pesanan/Hari</div>
+                <div className="text-2xl font-bold text-green-900">
                   {data.analytics.dailyRevenue.length > 0 
                     ? Math.round(data.orders.count / 7) 
                     : 0} pesanan
                 </div>
               </div>
-              <div className="bg-blue-900/20 border border-blue-500/30 rounded-lg p-3">
-                <div className="text-blue-400 font-medium mb-1">Rata-rata Nilai Pesanan</div>
-                <div className="text-white text-lg">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="text-blue-700 font-semibold mb-2">Rata-rata Nilai Pesanan</div>
+                <div className="text-2xl font-bold text-blue-900">
                   Rp {data.orders.count > 0 
                     ? Math.round(data.orders.revenue / data.orders.count).toLocaleString('id-ID')
                     : 0}
                 </div>
               </div>
-              <div className="bg-purple-900/20 border border-purple-500/30 rounded-lg p-3">
-                <div className="text-purple-400 font-medium mb-1">Growth Rate</div>
-                <div className="text-white text-lg">
+              <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                <div className="text-purple-700 font-semibold mb-2">Growth Rate</div>
+                <div className="text-2xl font-bold text-purple-900">
                   {data.analytics.monthlyOrders > 0 && data.orders.count > 0
                     ? `${Math.round(((data.orders.count / 7 * 30) / data.analytics.monthlyOrders - 1) * 100)}%`
                     : 'N/A'

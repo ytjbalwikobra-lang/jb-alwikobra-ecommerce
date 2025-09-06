@@ -155,34 +155,39 @@ const AdminFlashSales: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">Flash Sale</h1>
-          <p className="text-gray-400">Kelola event flash sale</p>
+          <h1 className="text-2xl font-bold text-gray-900">Kelola Flash Sale</h1>
+          <p className="text-gray-600">Buat dan kelola event flash sale produk</p>
         </div>
-        <button onClick={startCreate} className="px-4 py-2 rounded-lg bg-pink-600 text-white hover:bg-pink-700">Buat Flash Sale</button>
+        <button onClick={startCreate} className="px-4 py-2 rounded-lg bg-pink-500 text-white hover:bg-pink-600 transition-colors">Buat Flash Sale</button>
       </div>
 
       {!showForm && (
-        <div className="bg-black/60 border border-pink-500/30 rounded-xl overflow-hidden">
-          <div className="grid grid-cols-12 text-xs uppercase text-gray-400 px-4 py-2 border-b border-pink-500/20">
-            <div className="col-span-4">Produk</div>
-            <div className="col-span-2">Harga</div>
-            <div className="col-span-2">Berakhir</div>
-            <div className="col-span-2">Status</div>
+        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
+          <div className="grid grid-cols-12 text-xs uppercase text-gray-600 px-4 py-3 border-b border-gray-200 bg-gray-50">
+            <div className="col-span-4 font-medium">Produk</div>
+            <div className="col-span-2 font-medium">Harga</div>
+            <div className="col-span-2 font-medium">Berakhir</div>
+            <div className="col-span-2 font-medium">Status</div>
             <div className="col-span-2 text-right">Aksi</div>
           </div>
           {loading ? (
-            <div className="p-4 text-gray-400">Memuat…</div>
+            <div className="p-4 text-gray-500">Memuat…</div>
           ) : flashSales.length === 0 ? (
-            <div className="p-4 text-gray-400">Belum ada flash sale.</div>
+            <div className="p-4 text-gray-500">Belum ada flash sale.</div>
           ) : (
             flashSales.map((row: any) => (
-              <div key={row.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-pink-500/10">
-                <div className="col-span-4 text-white line-clamp-1">{row.product?.name || row.productId}</div>
-                <div className="col-span-2 text-gray-300">Rp {Number((row.salePrice ?? row.sale_price) || 0).toLocaleString('id-ID')}</div>
-                <div className="col-span-2 text-gray-300">{(row.endTime || row.end_time)?.replace('T',' ').slice(0,16)}</div>
-                <div className="col-span-2">{(row.isActive ?? row.is_active) ? <span className="text-green-400">Aktif</span> : <span className="text-gray-400">Nonaktif</span>}</div>
+              <div key={row.id} className="grid grid-cols-12 items-center px-4 py-3 border-b border-gray-100 hover:bg-gray-50">
+                <div className="col-span-4 text-gray-900 line-clamp-1 font-medium">{row.product?.name || row.productId}</div>
+                <div className="col-span-2 text-gray-700 font-medium">Rp {Number((row.salePrice ?? row.sale_price) || 0).toLocaleString('id-ID')}</div>
+                <div className="col-span-2 text-gray-600">{(row.endTime || row.end_time)?.replace('T',' ').slice(0,16)}</div>
+                <div className="col-span-2">
+                  {(row.isActive ?? row.is_active) ? 
+                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Aktif</span> : 
+                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Nonaktif</span>
+                  }
+                </div>
                 <div className="col-span-2 text-right">
-                  <button onClick={()=>startEdit(row)} className="px-3 py-1.5 rounded border border-white/20 text-white hover:bg-white/10 mr-2">Edit</button>
+                  <button onClick={()=>startEdit(row)} className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 mr-2">Edit</button>
                   <button onClick={()=>handleDelete(row.id)} className="px-3 py-1.5 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10">Hapus</button>
                 </div>
               </div>
