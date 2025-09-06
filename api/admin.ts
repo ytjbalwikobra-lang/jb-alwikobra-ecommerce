@@ -65,7 +65,7 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     try {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('total_amount, created_at')
+        .select('amount, created_at, status')
         .gte('created_at', sevenDaysAgo.toISOString());
 
       if (ordersError) {
@@ -125,7 +125,53 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       flashSalesCount = 0;
     }
 
-    const totalRevenue = orders?.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0) || 0;
+    const totalRevenue = orders?.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0) || 0;
+
+    // Get additional analytics data
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    // Monthly orders data for chart
+    let monthlyOrders: any[] = [];
+    try {
+      const { data: monthlyData, error: monthlyError } = await supabase
+        .from('orders')
+        .select('amount, created_at, status')
+        .gte('created_at', thirtyDaysAgo.toISOString())
+        .order('created_at', { ascending: true });
+
+      if (!monthlyError) {
+        monthlyOrders = monthlyData || [];
+      }
+    } catch (error) {
+      console.warn('Monthly orders query failed:', error);
+    }
+
+    // Status distribution
+    const statusDistribution = orders?.reduce((acc, order) => {
+      acc[order.status] = (acc[order.status] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>) || {};
+
+    // Daily revenue for last 7 days
+    const dailyRevenue: Array<{date: string; revenue: number; orders: number}> = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dayStart = new Date(date.setHours(0, 0, 0, 0));
+      const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+      
+      const dayOrders = orders?.filter(order => {
+        const orderDate = new Date(order.created_at);
+        return orderDate >= dayStart && orderDate <= dayEnd;
+      }) || [];
+      
+      const dayRevenue = dayOrders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0);
+      
+      dailyRevenue.push({
+        date: dayStart.toISOString().split('T')[0],
+        revenue: dayRevenue,
+        orders: dayOrders.length
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -136,7 +182,13 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
         },
         users: usersCount || 0,
         products: productsCount || 0,
-        flashSales: flashSalesCount || 0
+        flashSales: flashSalesCount || 0,
+        analytics: {
+          statusDistribution,
+          dailyRevenue,
+          monthlyOrders: monthlyOrders.length,
+          monthlyRevenue: monthlyOrders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0)
+        }
       }
     });
   } catch (error) {
