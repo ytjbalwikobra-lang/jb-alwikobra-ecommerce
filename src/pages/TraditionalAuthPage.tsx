@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 import { useToast } from '../components/Toast.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
+import PasswordInput from '../components/PasswordInput.tsx';
 
 const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'verify' | 'complete'>('login');
@@ -237,17 +238,12 @@ const AuthPage: React.FC = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Password
-                      </label>
-                      <input
-                        type="password"
-                        value={emailLoginData.password}
-                        onChange={(e) => setEmailLoginData({ ...emailLoginData, password: e.target.value })}
-                        className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                        placeholder="Masukkan password"
-                        required
-                      />
+                    <PasswordInput
+                      value={emailLoginData.password}
+                      onChange={(value) => setEmailLoginData({ ...emailLoginData, password: value })}
+                      placeholder="Masukkan password"
+                      required
+                    />
                     </div>
                   </>
                 )}
@@ -267,19 +263,12 @@ const AuthPage: React.FC = () => {
                       />
                     </div>
 
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Password
-                      </label>
-                      <input
-                        type="password"
-                        value={phoneLoginData.password}
-                        onChange={(e) => setPhoneLoginData({ ...phoneLoginData, password: e.target.value })}
-                        className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                        placeholder="Masukkan password"
-                        required
-                      />
-                    </div>
+                    <PasswordInput
+                      value={phoneLoginData.password}
+                      onChange={(value) => setPhoneLoginData({ ...phoneLoginData, password: value })}
+                      placeholder="Masukkan password"
+                      required
+                    />
                   </>
                 )}
 
@@ -326,33 +315,20 @@ const AuthPage: React.FC = () => {
                 </p>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  value={signupData.password}
-                  onChange={(e) => setSignupData({ ...signupData, password: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  placeholder="Minimal 6 karakter"
-                  required
-                />
-              </div>
+              <PasswordInput
+                value={signupData.password}
+                onChange={(value) => setSignupData({ ...signupData, password: value })}
+                placeholder="Minimal 6 karakter"
+                required
+              />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Konfirmasi Password
-                </label>
-                <input
-                  type="password"
-                  value={signupData.confirmPassword}
-                  onChange={(e) => setSignupData({ ...signupData, confirmPassword: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                  placeholder="Ulangi password"
-                  required
-                />
-              </div>
+              <PasswordInput
+                value={signupData.confirmPassword}
+                onChange={(value) => setSignupData({ ...signupData, confirmPassword: value })}
+                placeholder="Ulangi password"
+                label="Konfirmasi Password"
+                required
+              />
 
               <button
                 type="submit"

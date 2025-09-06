@@ -86,16 +86,17 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   return (
     <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
-      {/* Consistent 3:2 aspect ratio for all screen sizes */}
-      <div className="relative w-full" style={{ paddingTop: '66.6667%' }}>
-        <ResponsiveImage
+      {/* Fixed 3:2 aspect ratio for all screen sizes */}
+      <div className="relative w-full aspect-[3/2]">
+        <img
           src={active.image}
           alt={active.title || 'Banner'}
           className="absolute inset-0 w-full h-full object-cover"
-          priority={true}
-          quality={90}
-          aspectRatio={3/2}
-          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 90vw, 80vw"
+          onError={(e) => {
+            console.error('Banner image failed to load:', active.image);
+            // Fallback to a default image or placeholder
+            e.currentTarget.src = 'https://images.unsplash.com/photo-1602367289840-74b3dfb3d7e8?w=1200&h=800&fit=crop';
+          }}
         />
 
         {/* Gradient overlay for better text readability */}
