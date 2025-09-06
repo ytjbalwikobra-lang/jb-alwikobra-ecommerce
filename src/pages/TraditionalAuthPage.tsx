@@ -3,7 +3,6 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 import { useToast } from '../components/Toast.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
-import SmartPhoneInput from '../components/SmartPhoneInput.tsx';
 import PasswordInput from '../components/PasswordInput.tsx';
 
 const AuthPage: React.FC = () => {
@@ -256,7 +255,7 @@ const AuthPage: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         Nomor HP
                       </label>
-                      <SmartPhoneInput
+                      <PhoneInput
                         value={phoneLoginData.phone}
                         onChange={(value) => setPhoneLoginData({ ...phoneLoginData, phone: value })}
                         placeholder="08xxx, +62xxx, +65xxx, +60xxx..."
@@ -301,7 +300,7 @@ const AuthPage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Nomor WhatsApp
                 </label>
-                <SmartPhoneInput
+                <PhoneInput
                   value={signupData.phone}
                   onChange={(value) => setSignupData({ 
                     ...signupData, 
