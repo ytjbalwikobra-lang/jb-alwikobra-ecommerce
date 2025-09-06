@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 import { useToast } from '../components/Toast.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
+import SmartPhoneInput from '../components/SmartPhoneInput.tsx';
 import PasswordInput from '../components/PasswordInput.tsx';
 
 const AuthPage: React.FC = () => {
@@ -255,10 +256,10 @@ const AuthPage: React.FC = () => {
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         Nomor HP
                       </label>
-                      <PhoneInput
+                      <SmartPhoneInput
                         value={phoneLoginData.phone}
                         onChange={(value) => setPhoneLoginData({ ...phoneLoginData, phone: value })}
-                        placeholder="Masukkan nomor WhatsApp"
+                        placeholder="08xxx, +62xxx, +65xxx, +60xxx..."
                         required
                       />
                     </div>
@@ -300,18 +301,17 @@ const AuthPage: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Nomor WhatsApp
                 </label>
-                <PhoneInput
+                <SmartPhoneInput
                   value={signupData.phone}
                   onChange={(value) => setSignupData({ 
                     ...signupData, 
                     phone: value
                   })}
-                  placeholder="Masukkan nomor WhatsApp"
+                  placeholder="08xxx, +62xxx, +65xxx, +60xxx..."
                   required
-                  defaultCountry="ID"
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Kode verifikasi akan dikirim ke nomor ini
+                  Verification code will be sent to this number (Supports Asian countries)
                 </p>
               </div>
 

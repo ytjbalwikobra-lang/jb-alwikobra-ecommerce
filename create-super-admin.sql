@@ -14,7 +14,7 @@ INSERT INTO users (
   profile_completed
 ) VALUES (
   '6282242417788',  -- Indonesian phone format (08xxx -> 62xxx)
-  '$2b$10$wCfPC4CdjfSSc.lW8Nc5FOoCYCijk8cZgjbFqP.9bJJqrRCVTW60m', -- Hashed password for: $#jbAlwikobra2025
+  '$2b$10$HUb4IlzqtXc8GsVfnNUO6O8B2krRFBvkhyykiA124USRu8xsKmnkO', -- Correct hashed password for: $#jbAlwikobra2025
   true,             -- Phone verified
   true              -- Profile completed  
 )
