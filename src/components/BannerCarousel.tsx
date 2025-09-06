@@ -86,33 +86,17 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   return (
     <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
-      {/* Mobile-optimized aspect ratio using CSS */}
-      <div className="relative w-full">
-        {/* Mobile: 16:9 ratio */}
-        <div className="block md:hidden w-full" style={{ paddingTop: '56.25%' }}>
-          <ResponsiveImage
-            src={active.image}
-            alt={active.title || 'Banner'}
-            className="absolute inset-0 w-full h-full object-cover"
-            priority={true}
-            quality={90}
-            aspectRatio={16/9}
-            sizes="100vw"
-          />
-        </div>
-        
-        {/* Desktop: 3:2 ratio */}
-        <div className="hidden md:block w-full" style={{ paddingTop: '66.6667%' }}>
-          <ResponsiveImage
-            src={active.image}
-            alt={active.title || 'Banner'}
-            className="absolute inset-0 w-full h-full object-cover"
-            priority={true}
-            quality={90}
-            aspectRatio={3/2}
-            sizes="(max-width: 1024px) 90vw, 80vw"
-          />
-        </div>
+      {/* Consistent 3:2 aspect ratio for all screen sizes */}
+      <div className="relative w-full" style={{ paddingTop: '66.6667%' }}>
+        <ResponsiveImage
+          src={active.image}
+          alt={active.title || 'Banner'}
+          className="absolute inset-0 w-full h-full object-cover"
+          priority={true}
+          quality={90}
+          aspectRatio={3/2}
+          sizes="(max-width: 768px) 100vw, (max-width: 1024px) 90vw, 80vw"
+        />
 
         {/* Gradient overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
