@@ -3,8 +3,10 @@ import { SettingsService } from '../../services/settingsService.ts';
 import { WebsiteSettings } from '../../types/index.ts';
 import { Save, Loader2, Image as ImageIcon } from 'lucide-react';
 import PhoneInput from '../../components/PhoneInput.tsx';
+import { useToast } from '../../components/Toast.tsx';
 
 const AdminSettings: React.FC = () => {
+  const { showToast } = useToast();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<WebsiteSettings | null>(null);
@@ -39,12 +41,12 @@ const AdminSettings: React.FC = () => {
   const save = async () => {
     // Validate phone numbers before saving
     if (!phoneValidation.contactPhone && form.contactPhone) {
-      alert('Nomor telepon kontak tidak valid. Pastikan format sudah benar.');
+      showToast('Nomor telepon kontak tidak valid. Pastikan format sudah benar.', 'error');
       return;
     }
     
     if (!phoneValidation.whatsapp && form.whatsappNumber) {
-      alert('Nomor WhatsApp tidak valid. Pastikan format sudah benar.');
+      showToast('Nomor WhatsApp tidak valid. Pastikan format sudah benar.', 'error');
       return;
     }
     
@@ -53,7 +55,7 @@ const AdminSettings: React.FC = () => {
     setSaving(false);
     if (updated) {
       setSettings(updated);
-      alert('Pengaturan tersimpan');
+      showToast('Pengaturan berhasil disimpan', 'success');
     }
   };
 
@@ -78,7 +80,7 @@ const AdminSettings: React.FC = () => {
               value={form.contactPhone}
               onChange={(value) => setForm((p:any) => ({...p, contactPhone: value}))}
               onValidationChange={(isValid) => setPhoneValidation(prev => ({...prev, contactPhone: isValid}))}
-              placeholder="Nomor telepon kontak"
+              placeholder="Masukkan Nomor WhatsApp"
               className="mt-1 bg-black/60 border-white/10"
             />
           </div>
@@ -88,7 +90,7 @@ const AdminSettings: React.FC = () => {
               value={form.whatsappNumber}
               onChange={(value) => setForm((p:any) => ({...p, whatsappNumber: value}))}
               onValidationChange={(isValid) => setPhoneValidation(prev => ({...prev, whatsapp: isValid}))}
-              placeholder="Nomor WhatsApp bisnis"
+              placeholder="Masukkan Nomor WhatsApp"
               className="mt-1 bg-black/60 border-white/10"
             />
           </div>

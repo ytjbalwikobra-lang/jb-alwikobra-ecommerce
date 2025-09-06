@@ -30,10 +30,12 @@ import { getCurrentUserProfile, isLoggedIn, getAuthUserId } from '../services/au
 import { useWishlist } from '../contexts/WishlistContext.tsx';
 import Footer from '../components/Footer.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
+import { useToast } from '../components/Toast.tsx';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
+  const { showToast } = useToast();
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const location = useLocation();
@@ -90,7 +92,7 @@ const ProductDetailPage: React.FC = () => {
       } else {
         // Fallback: Copy to clipboard
         await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
-        alert('Link produk telah disalin ke clipboard!');
+        showToast('Link produk telah disalin ke clipboard!', 'success');
       }
     } catch (error) {
       // Additional fallback: Manual copy
@@ -101,7 +103,7 @@ const ProductDetailPage: React.FC = () => {
       textArea.select();
       document.execCommand('copy');
       document.body.removeChild(textArea);
-      alert('Link produk telah disalin ke clipboard!');
+      showToast('Link produk telah disalin ke clipboard!', 'success');
     }
   };
 
@@ -241,28 +243,28 @@ const ProductDetailPage: React.FC = () => {
     
     // Validate required fields
     if (!customer.name.trim()) {
-      alert('Nama lengkap wajib diisi.');
+      showToast('Nama lengkap wajib diisi.', 'error');
       return;
     }
     
     if (!customer.email.trim()) {
-      alert('Email wajib diisi.');
+      showToast('Email wajib diisi.', 'error');
       return;
     }
     
     if (!customer.phone.trim()) {
-      alert('Nomor WhatsApp wajib diisi.');
+      showToast('Nomor WhatsApp wajib diisi.', 'error');
       return;
     }
     
     if (!isPhoneValid) {
-      alert('Nomor WhatsApp tidak valid. Pastikan format sudah benar.');
+      showToast('Nomor WhatsApp tidak valid. Pastikan format sudah benar.', 'error');
       return;
     }
     
     if (checkoutType === 'purchase') {
       if (!acceptedTerms) {
-        alert('Harap setujui Syarat & Ketentuan terlebih dahulu.');
+        showToast('Harap setujui Syarat & Ketentuan terlebih dahulu.', 'error');
         return;
       }
       if (creatingInvoice) return; // guard double submit
@@ -276,7 +278,7 @@ const ProductDetailPage: React.FC = () => {
         // Validate product ID before sending
         if (!product.id) {
           console.error('[ProductDetail] ERROR: product.id is missing or invalid:', product.id);
-          alert('Error: Product ID tidak valid. Silakan refresh halaman.');
+          showToast('Error: Product ID tidak valid. Silakan refresh halaman.', 'error');
           return;
         }
         
@@ -325,7 +327,7 @@ const ProductDetailPage: React.FC = () => {
         }
       } catch (e: any) {
         console.error('[ProductDetail] Invoice creation failed:', e);
-        alert(`Gagal membuat invoice Xendit: ${e?.message || e}`);
+        showToast(`Gagal membuat invoice: ${e?.message || e}`, 'error');
       } finally {
         setCreatingInvoice(false);
       }
@@ -721,7 +723,7 @@ const ProductDetailPage: React.FC = () => {
                     value={customer.phone}
                     onChange={(value) => setCustomer({ ...customer, phone: value })}
                     onValidationChange={setIsPhoneValid}
-                    placeholder="Masukkan nomor WhatsApp"
+                    placeholder="Masukkan Nomor WhatsApp"
                     required
                   />
                 </div>
@@ -731,7 +733,7 @@ const ProductDetailPage: React.FC = () => {
                     <div className="flex items-center space-x-2 text-gray-300">
                       <Info size={16} />
                       <span className="text-sm">
-                        Pembelian wajib melalui Xendit. Akun akan dikirim via email setelah pembayaran dikonfirmasi.
+                        Pembayaran melalui sistem pembayaran aman dan terjamin. Informasi detail akan di kirim via WhatsApp setelah pembayaran berhasil.
                       </span>
                     </div>
                   </div>
@@ -786,7 +788,7 @@ const ProductDetailPage: React.FC = () => {
                           : 'bg-gray-700 text-gray-400 cursor-not-allowed'
                       }`}
                     >
-                      Bayar dengan Xendit
+                      Bayar Sekarang
                     </button>
                   ) : (
                     <button

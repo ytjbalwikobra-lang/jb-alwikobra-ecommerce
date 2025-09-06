@@ -23,6 +23,8 @@ import PhoneInput from '../components/PhoneInput.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 import { useWishlist } from '../contexts/WishlistContext.tsx';
+import { useConfirmation } from '../components/ConfirmationModal.tsx';
+import { useToast } from '../components/Toast.tsx';
 import { supabase } from '../services/supabase.ts';
 
 interface UserProfile {
@@ -38,6 +40,8 @@ const ProfilePage: React.FC = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { wishlistItems } = useWishlist();
+  const { confirm } = useConfirmation();
+  const { showToast } = useToast();
   const [profile, setProfile] = useState<UserProfile>({
     name: user?.name || '',
     email: user?.email || '',
@@ -50,8 +54,18 @@ const ProfilePage: React.FC = () => {
   const [isValidPhone, setIsValidPhone] = useState(false);
 
   const handleLogout = async () => {
-    if (confirm('Yakin ingin keluar dari akun?')) {
+    const confirmed = await confirm({
+      title: 'Konfirmasi Logout',
+      message: 'Yakin ingin keluar dari akun Anda?',
+      type: 'warning',
+      confirmText: 'Ya, Keluar',
+      cancelText: 'Batal',
+      showCancel: true
+    });
+
+    if (confirmed) {
       await logout();
+      showToast('Berhasil logout', 'success');
       navigate('/');
     }
   };
@@ -103,20 +117,30 @@ const ProfilePage: React.FC = () => {
     }
   };
 
-  const saveProfile = () => {
+  const saveProfile = async () => {
     if (!profile.name.trim() || !profile.email.trim()) {
-      alert('Nama dan email wajib diisi');
+      showToast('Nama dan email wajib diisi', 'error');
       return;
     }
     
     if (profile.whatsapp && !isValidPhone) {
-      alert('Silakan masukkan nomor WhatsApp yang valid');
+      showToast('Silakan masukkan nomor WhatsApp yang valid', 'error');
       return;
     }
 
-    localStorage.setItem('userProfile', JSON.stringify(profile));
-    setIsEditing(false);
-    alert('Profil berhasil disimpan');
+    const confirmed = await confirm({
+      title: 'Simpan Perubahan',
+      message: 'Yakin ingin menyimpan perubahan profil?',
+      type: 'info',
+      confirmText: 'Ya, Simpan',
+      cancelText: 'Batal'
+    });
+
+    if (confirmed) {
+      localStorage.setItem('userProfile', JSON.stringify(profile));
+      setIsEditing(false);
+      showToast('Profil berhasil disimpan', 'success');
+    }
   };
 
   const profileMenuItems = [
@@ -297,7 +321,7 @@ const ProfilePage: React.FC = () => {
                       value={profile.whatsapp}
                       onChange={(value) => setProfile({...profile, whatsapp: value})}
                       onValidationChange={setIsValidPhone}
-                      placeholder="Contoh: 812345678901"
+                      placeholder="Masukkan Nomor WhatsApp"
                       className="w-full"
                     />
                   </div>

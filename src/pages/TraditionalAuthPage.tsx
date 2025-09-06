@@ -258,7 +258,7 @@ const AuthPage: React.FC = () => {
                       <PhoneInput
                         value={phoneLoginData.phone}
                         onChange={(value) => setPhoneLoginData({ ...phoneLoginData, phone: value })}
-                        placeholder="08xxx, +62xxx, +65xxx, +60xxx..."
+                        placeholder="Masukkan Nomor WhatsApp"
                         required
                       />
                     </div>
@@ -306,7 +306,7 @@ const AuthPage: React.FC = () => {
                     ...signupData, 
                     phone: value
                   })}
-                  placeholder="08xxx, +62xxx, +65xxx, +60xxx..."
+                  placeholder="Masukkan Nomor WhatsApp"
                   required
                 />
                 <p className="text-xs text-gray-400 mt-1">

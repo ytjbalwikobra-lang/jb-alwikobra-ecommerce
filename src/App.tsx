@@ -9,6 +9,7 @@ import Footer from './components/Footer.tsx';
 import './App.css';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
+import { ConfirmationProvider } from './components/ConfirmationModal.tsx';
 import { AuthProvider } from './contexts/TraditionalAuthContext.tsx';
 import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import { FaviconService } from './services/faviconService.ts';
@@ -116,9 +117,10 @@ function App() {
       <AuthProvider>
         <WishlistProvider>
           <ToastProvider>
-            <Router>
-              <ScrollToTop />
-              <Routes>
+            <ConfirmationProvider>
+              <Router>
+                <ScrollToTop />
+                <Routes>
                 {/* Admin branch without global header/footer */}
                 <Route element={<RequireAdmin />}>
                   <Route path="/admin" element={
@@ -227,6 +229,7 @@ function App() {
               <Analytics />
               <SpeedInsights />
             </Router>
+            </ConfirmationProvider>
           </ToastProvider>
         </WishlistProvider>
       </AuthProvider>
