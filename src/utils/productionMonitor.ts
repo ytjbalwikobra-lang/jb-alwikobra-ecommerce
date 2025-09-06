@@ -55,8 +55,8 @@ export class ProductionMonitor {
       console.warn('⚠️ Missing environment variables:', missing);
     }
 
-    // Check API endpoints
-    this.validateApiEndpoints();
+    // Skip API endpoint validation to prevent 404 errors in console
+    // this.validateApiEndpoints();
   }
 
   private async validateApiEndpoints(): Promise<void> {

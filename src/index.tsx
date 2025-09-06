@@ -6,11 +6,25 @@ import { injectCriticalCSS, preloadCriticalResources } from './utils/criticalCSS
 import { initWebVitalsMonitoring } from './utils/webVitalsMonitor.ts';
 import { FontOptimizer } from './utils/fontOptimizer.ts';
 
+// Suppress React DevTools warning in development
+if (process.env.NODE_ENV === 'development') {
+  // Silence React DevTools download suggestion
+  if (typeof window !== 'undefined') {
+    (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      isDisabled: false,
+      supportsFiber: true,
+      inject: () => {},
+      onCommitFiberRoot: () => {},
+      onCommitFiberUnmount: () => {},
+    };
+  }
+}
+
 // Initialize performance monitoring
 initWebVitalsMonitoring();
 
-// Initialize font optimization
-FontOptimizer.preloadCriticalFonts();
+// Font optimization disabled to prevent preload warnings
+// FontOptimizer.preloadCriticalFonts();
 
 // Inject critical CSS before any rendering
 injectCriticalCSS();

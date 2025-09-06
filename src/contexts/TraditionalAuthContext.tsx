@@ -107,13 +107,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: data.error || 'Login failed' };
       }
 
+      // Map backend field names to frontend
+      const mappedUser = {
+        ...data.user,
+        isAdmin: data.user.is_admin,
+        phoneVerified: data.user.phone_verified,
+        profileCompleted: data.user.profile_completed
+      };
+
       // Store session data
       localStorage.setItem('session_token', data.session_token);
-      localStorage.setItem('user_data', JSON.stringify(data.user));
+      localStorage.setItem('user_data', JSON.stringify(mappedUser));
       localStorage.setItem('session_expires', data.expires_at);
 
       // Update state
-      setUser(data.user);
+      setUser(mappedUser);
       setSession({
         expiresAt: data.expires_at,
         lastActivity: new Date().toISOString()
@@ -121,9 +129,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { 
         success: true, 
-        user: data.user, 
+        user: mappedUser, 
         sessionToken: data.session_token,
-        profileCompleted: data.user.profile_completed
+        profileCompleted: mappedUser.profileCompleted
       };
     } catch (error) {
       console.error('Login error:', error);
@@ -177,13 +185,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: data.error || 'Verification failed' };
       }
 
+      // Map backend field names to frontend
+      const mappedUser = {
+        ...data.user,
+        isAdmin: data.user.is_admin,
+        phoneVerified: data.user.phone_verified,
+        profileCompleted: data.user.profile_completed
+      };
+
       // Store session data
       localStorage.setItem('session_token', data.session_token);
-      localStorage.setItem('user_data', JSON.stringify(data.user));
+      localStorage.setItem('user_data', JSON.stringify(mappedUser));
       localStorage.setItem('session_expires', data.expires_at);
 
       // Update state
-      setUser(data.user);
+      setUser(mappedUser);
       setSession({
         expiresAt: data.expires_at,
         lastActivity: new Date().toISOString()
@@ -191,7 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { 
         success: true, 
-        user: data.user, 
+        user: mappedUser, 
         sessionToken: data.session_token,
         nextStep: data.next_step
       };
@@ -230,14 +246,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return { error: data.error || 'Profile completion failed' };
       }
 
-      // Update user data with completed profile
-      const updatedUser = { ...user, ...data.user, profile_completed: true };
-      localStorage.setItem('user_data', JSON.stringify(updatedUser));
-      setUser(updatedUser);
+      // Map backend field names to frontend and update user data with completed profile
+      const mappedUser = {
+        ...user,
+        ...data.user,
+        isAdmin: data.user.is_admin,
+        phoneVerified: data.user.phone_verified,
+        profileCompleted: true
+      };
+      localStorage.setItem('user_data', JSON.stringify(mappedUser));
+      setUser(mappedUser);
 
       return { 
         success: true, 
-        user: updatedUser
+        user: mappedUser
       };
     } catch (error) {
       console.error('Profile completion error:', error);
@@ -312,9 +334,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.user) {
+          // Map backend field names to frontend
+          const mappedUser = {
+            ...data.user,
+            isAdmin: data.user.is_admin,
+            phoneVerified: data.user.phone_verified,
+            profileCompleted: data.user.profile_completed
+          };
           // Update user data with latest from server
-          localStorage.setItem('user_data', JSON.stringify(data.user));
-          setUser(data.user);
+          localStorage.setItem('user_data', JSON.stringify(mappedUser));
+          setUser(mappedUser);
         }
         return true;
       }

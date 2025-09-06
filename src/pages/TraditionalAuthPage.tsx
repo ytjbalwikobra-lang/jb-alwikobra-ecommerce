@@ -81,7 +81,8 @@ const AuthPage: React.FC = () => {
 
       // Redirect to intended page or home
       const redirect = searchParams.get('redirect');
-      navigate(redirect || '/', { replace: true });
+      const decodedRedirect = redirect ? decodeURIComponent(redirect) : '/';
+      navigate(decodedRedirect, { replace: true });
       
     } catch (error) {
       showToast('Terjadi kesalahan. Silakan coba lagi.', 'error');
@@ -173,7 +174,8 @@ const AuthPage: React.FC = () => {
       
       // Redirect to intended page or home
       const redirect = searchParams.get('redirect');
-      navigate(redirect || '/', { replace: true });
+      const decodedRedirect = redirect ? decodeURIComponent(redirect) : '/';
+      navigate(decodedRedirect, { replace: true });
       
     } catch (error) {
       showToast('Terjadi kesalahan. Silakan coba lagi.', 'error');

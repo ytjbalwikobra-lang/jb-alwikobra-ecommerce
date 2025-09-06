@@ -2,6 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-first font sizing - like native apps */
+html {
+  font-size: 14px; /* Smaller base font for mobile */
+  scroll-behavior: smooth;
+  overflow-x: hidden; /* Prevent horizontal scroll */
+}
+
+@media (min-width: 640px) {
+  html {
+    font-size: 15px; /* Slightly larger on small tablets */
+  }
+}
+
+@media (min-width: 768px) {
+  html {
+    font-size: 16px; /* Standard size on tablets and up */
+  }
+}
+
 body {
   margin: 0;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -12,6 +31,9 @@ body {
   color: #f5f5f7;
   background-color: #000;
   background-image: none;
+  font-size: 1rem; /* Uses the responsive html font-size */
+  line-height: 1.5; /* Better mobile readability */
+  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 code {
@@ -23,15 +45,6 @@ code {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-  overflow-x: hidden; /* Prevent horizontal scroll */
-}
-
-body {
-  overflow-x: hidden; /* Prevent horizontal scroll */
 }
 
 /* Prevent container overflow */

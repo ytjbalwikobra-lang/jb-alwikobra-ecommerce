@@ -18,23 +18,17 @@ class FontOptimizer {
     { family: 'Inter', weight: 700, display: 'swap' }
   ];
 
-  // Non-critical fonts to load lazily (reduced to prevent loading errors)
+  // Non-critical fonts to load lazily (disabled to prevent errors)
   static readonly OPTIONAL_FONTS: FontDescriptor[] = [
-    { family: 'Inter', weight: 500, display: 'optional' }
+    // Temporarily disabled to prevent font loading errors
+    // { family: 'Inter', weight: 500, display: 'optional' }
   ];
 
-  // Preload critical fonts
+  // Preload critical fonts (disabled to prevent preload warnings)
   static preloadCriticalFonts(): void {
-    if (typeof document === 'undefined') return;
-
-    // Only preload if fonts are actually used in the current page
-    const hasInterFont = document.querySelector('[style*="Inter"], [class*="font-inter"], .font-inter');
-    
-    if (hasInterFont) {
-      this.CRITICAL_FONTS.forEach(font => {
-        this.preloadFont(font);
-      });
-    }
+    // Disabled to prevent "resource was preloaded but not used" warnings
+    // Fonts will load naturally through CSS
+    return;
   }
 
   // Preload a specific font
@@ -73,11 +67,12 @@ class FontOptimizer {
 
   // Generate optimized font URL
   private static generateFontUrl(font: FontDescriptor): string {
-    // For Google Fonts (example)
+    // For Google Fonts with proper URL encoding
     const baseUrl = 'https://fonts.googleapis.com/css2';
     const params = new URLSearchParams();
     
-    const fontSpec = `${font.family}:wght@${font.weight}`;
+    // Properly encode the font family and weight specification
+    const fontSpec = `${encodeURIComponent(font.family)}:wght@${font.weight}`;
     params.set('family', fontSpec);
     params.set('display', font.display || 'swap');
     

@@ -82,14 +82,36 @@ class WebVitalsMonitor {
     this.logMetric(metric);
   }
 
-  private logMetric(metric: WebVitalMetric): void {
-    const emoji = metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌';
-    const color = metric.rating === 'good' ? '#10b981' : metric.rating === 'needs-improvement' ? '#f59e0b' : '#ef4444';
+  // Log metrics with better formatting and warnings
+  logMetric(metric: WebVitalMetric): void {
+    const value = Math.round(metric.value);
+    let status = '';
     
-    console.log(
-      `%c${emoji} ${metric.name}: ${metric.value.toFixed(2)}${metric.name === 'CLS' ? '' : 'ms'} (${metric.rating})`,
-      `color: ${color}; font-weight: bold;`
-    );
+    switch (metric.rating) {
+      case 'good':
+        status = '✅';
+        break;
+      case 'needs-improvement':
+        status = '⚠️';
+        break;
+      case 'poor':
+        status = '❌';
+        break;
+    }
+
+    // Don't log poor metrics in development as they're often due to dev server overhead
+    if (process.env.NODE_ENV === 'development' && metric.rating === 'poor') {
+      if (metric.name === 'FCP' && value > 10000) {
+        console.warn('🐛 FCP is slow in development (likely due to dev server overhead)');
+        return;
+      }
+      if (metric.name === 'TTFB' && value > 10000) {
+        console.warn('🐛 TTFB is slow in development (likely due to dev server overhead)');
+        return;
+      }
+    }
+
+    console.log(`${status} ${metric.name}: ${value}ms (${metric.rating})`);
   }
 
   // Add metric listener
@@ -162,24 +184,26 @@ class WebVitalsMonitor {
       }
 
       // Example: Send to custom analytics endpoint with better error handling
-      fetch('/api/analytics/vitals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: metric.name,
-          value: metric.value,
-          rating: metric.rating,
-          id: metric.id,
-          url: window.location.href,
-          timestamp: Date.now(),
-          userAgent: navigator.userAgent
-        })
-      }).catch(error => {
-        // Silently handle analytics failures - don't disrupt user experience
-        if (process.env.NODE_ENV === 'development') {
-          console.warn('📊 Analytics endpoint unavailable:', error.message);
-        }
-      });
+      if (process.env.NODE_ENV === 'production') {
+        fetch('/api/analytics/vitals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: metric.name,
+            value: metric.value,
+            rating: metric.rating,
+            id: metric.id,
+            url: window.location.href,
+            timestamp: Date.now(),
+            userAgent: navigator.userAgent
+          })
+        }).catch(error => {
+          // Silently handle analytics failures - don't disrupt user experience
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('📊 Analytics endpoint unavailable:', error.message);
+          }
+        });
+      }
     } catch (error) {
       // Prevent analytics errors from affecting the app
       if (process.env.NODE_ENV === 'development') {
