@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
 
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY!;
 const jwtSecret = process.env.JWT_SECRET || 'your-jwt-secret-change-this';
 
 // Use service key for admin operations
