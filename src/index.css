@@ -47,6 +47,90 @@ code {
   box-sizing: border-box;
 }
 
+/* GLOBAL ADMIN DARK THEME SETTINGS */
+.admin-theme {
+  background-color: #000 !important;
+  color: #ffffff !important;
+}
+
+.admin-theme * {
+  border-color: rgba(236, 72, 153, 0.3) !important; /* Pink border */
+}
+
+.admin-theme input,
+.admin-theme select,
+.admin-theme textarea {
+  background-color: #1f2937 !important; /* Gray-800 */
+  color: #ffffff !important;
+  border-color: #4b5563 !important; /* Gray-600 */
+}
+
+.admin-theme input:focus,
+.admin-theme select:focus,
+.admin-theme textarea:focus {
+  border-color: #ec4899 !important; /* Pink-500 */
+  box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.1) !important;
+}
+
+.admin-theme .bg-white {
+  background-color: #111827 !important; /* Gray-900 */
+}
+
+.admin-theme .text-gray-900 {
+  color: #ffffff !important;
+}
+
+.admin-theme .text-gray-700 {
+  color: #d1d5db !important; /* Gray-300 */
+}
+
+.admin-theme .text-gray-600 {
+  color: #9ca3af !important; /* Gray-400 */
+}
+
+.admin-theme .text-gray-500 {
+  color: #6b7280 !important; /* Gray-500 */
+}
+
+.admin-theme .border-gray-200 {
+  border-color: rgba(236, 72, 153, 0.3) !important; /* Pink border */
+}
+
+.admin-theme .border-gray-300 {
+  border-color: #4b5563 !important; /* Gray-600 */
+}
+
+.admin-theme .bg-gray-50 {
+  background-color: #1f2937 !important; /* Gray-800 */
+}
+
+.admin-theme .bg-gray-100 {
+  background-color: #374151 !important; /* Gray-700 */
+}
+
+.admin-theme .bg-gray-200 {
+  background-color: #4b5563 !important; /* Gray-600 */
+}
+
+/* SCROLL FIX - FORCE FULL PAGE SCROLL */
+.admin-scroll-container {
+  height: 100vh !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+}
+
+.admin-content {
+  min-height: calc(100vh - 4rem) !important; /* Account for header */
+  padding-bottom: 2rem !important;
+}
+
+/* Force scroll on all admin pages */
+.admin-page {
+  height: auto !important;
+  min-height: 100vh !important;
+  overflow: visible !important;
+}
+
 /* Prevent container overflow */
 .max-w-7xl {
   max-width: min(80rem, 100vw);

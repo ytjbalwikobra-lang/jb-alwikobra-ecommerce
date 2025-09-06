@@ -39,7 +39,7 @@ const AdminLayout: React.FC = () => {
   };
 
   return (
-    <div className="h-screen bg-black flex overflow-hidden">
+    <div className="admin-theme admin-scroll-container">
       {/* Sidebar */}
       <div className={`${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -98,9 +98,9 @@ const AdminLayout: React.FC = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col admin-content">
         {/* Top Bar */}
-        <header className="bg-black border-b border-pink-500/30 h-16 flex items-center justify-between px-4 lg:px-6">
+        <header className="bg-black border-b border-pink-500/30 h-16 flex items-center justify-between px-4 lg:px-6 flex-shrink-0">
           {/* Left: Menu Button + Page Title */}
           <div className="flex items-center space-x-4">
             <button
@@ -177,7 +177,7 @@ const AdminLayout: React.FC = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-y-auto bg-black">
+        <main className="flex-1 admin-page">
           <div className="p-6">
             <Outlet />
           </div>

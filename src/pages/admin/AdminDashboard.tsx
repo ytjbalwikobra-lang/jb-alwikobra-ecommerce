@@ -22,19 +22,19 @@ const StatCard: React.FC<{
   color?: string;
   trend?: { value: number; label: string };
 }> = ({ label, value, hint, icon, color = 'pink', trend }) => (
-  <div className="bg-gray-900 rounded-xl shadow-sm border border-pink-500/30 p-6 hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
     <div className="flex items-center justify-between mb-4">
-      <div className="text-sm font-medium text-gray-300">{label}</div>
+      <div className="text-sm font-medium text-gray-600">{label}</div>
       {icon && <div className={`text-${color}-400`}>{icon}</div>}
     </div>
-    <div className="text-2xl font-bold text-white mb-2">{value}</div>
+    <div className="text-2xl font-bold text-gray-900 mb-2">{value}</div>
     {trend && (
-      <div className={`text-sm flex items-center gap-1 ${trend.value >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+      <div className={`text-sm flex items-center gap-1 ${trend.value >= 0 ? 'text-green-600' : 'text-red-600'}`}>
         {trend.value >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
         <span>{Math.abs(trend.value)}% {trend.label}</span>
       </div>
     )}
-    {hint && <div className="text-sm text-gray-400 mt-1">{hint}</div>}
+    {hint && <div className="text-sm text-gray-500 mt-1">{hint}</div>}
   </div>
 );
 
@@ -45,23 +45,23 @@ const SimpleChart: React.FC<{
   const maxRevenue = Math.max(...data.map(d => d.revenue));
   
   return (
-    <div className="bg-gray-900 rounded-xl shadow-sm border border-pink-500/30 p-6">
-      <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-        <BarChart3 className="w-5 h-5 text-pink-400" />
+    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+        <BarChart3 className="w-5 h-5 text-pink-500" />
         {title}
       </h3>
       <div className="space-y-4">
         {data.map((item, index) => (
           <div key={index} className="space-y-2">
             <div className="flex justify-between text-sm">
-              <span className="text-gray-300 font-medium">
+              <span className="text-gray-600 font-medium">
                 {new Date(item.date).toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' })}
               </span>
-              <span className="text-white font-medium">
+              <span className="text-gray-900 font-medium">
                 {item.orders} pesanan • Rp {item.revenue.toLocaleString('id-ID')}
               </span>
             </div>
-            <div className="w-full bg-gray-700 rounded-full h-3">
+            <div className="w-full bg-gray-200 rounded-full h-3">
               <div 
                 className="bg-gradient-to-r from-pink-500 to-purple-500 h-3 rounded-full transition-all duration-700 ease-out" 
                 style={{ width: `${maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0}%` }}
@@ -77,10 +77,10 @@ const SimpleChart: React.FC<{
 const StatusChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
   const total = Object.values(data).reduce((sum, count) => sum + count, 0);
   const statusColors: Record<string, string> = {
-    pending: 'bg-yellow-900/30 text-yellow-300 border border-yellow-500/30',
-    paid: 'bg-green-900/30 text-green-300 border border-green-500/30',
-    completed: 'bg-blue-900/30 text-blue-300 border border-blue-500/30',
-    cancelled: 'bg-red-900/30 text-red-300 border border-red-500/30'
+    pending: 'bg-yellow-100 text-yellow-800',
+    paid: 'bg-green-100 text-green-800',
+    completed: 'bg-blue-100 text-blue-800',
+    cancelled: 'bg-red-100 text-red-800'
   };
   
   const statusLabels: Record<string, string> = {
@@ -167,12 +167,12 @@ const AdminDashboard: React.FC = () => {
         <div className="animate-pulse space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[...Array(4)].map((_, i) => (
-              <div key={i} className="h-32 bg-gray-800 rounded-xl"></div>
+              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="h-96 bg-gray-800 rounded-xl"></div>
-            <div className="h-96 bg-gray-800 rounded-xl"></div>
+            <div className="h-96 bg-gray-200 rounded-xl"></div>
+            <div className="h-96 bg-gray-200 rounded-xl"></div>
           </div>
         </div>
       </div>
