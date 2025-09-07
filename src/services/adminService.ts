@@ -21,6 +21,9 @@ class AdminService {
       });
     } else {
       console.warn('⚠️ Admin service requires REACT_APP_SUPABASE_SERVICE_ROLE_KEY environment variable');
+      console.warn('⚠️ Admin functionality will be limited without service role key');
+      // Set to null explicitly to prevent any undefined behavior
+      this.adminClient = null;
     }
   }
 

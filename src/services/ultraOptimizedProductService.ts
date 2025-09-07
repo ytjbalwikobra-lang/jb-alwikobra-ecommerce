@@ -1,6 +1,6 @@
 // Ultra-optimized ProductService with minimal data fetching
 import { supabase } from './supabase.ts';
-import { Product, Tier, GameTitle } from '../types/index.ts';
+import { Product, Tier, GameTitle, ProductTier } from '../types/index.ts';
 import { clientCache } from './clientCacheService.ts';
 
 interface ProductFilters {
@@ -41,10 +41,10 @@ export class UltraOptimizedProductService {
         let query = supabase
           .from('products')
           .select(`
-            id, name, price, original_price, account_level, images,
+            id, name, description, price, original_price, account_level, images,
             is_active, archived_at, created_at, game_title_id, tier_id,
-            tiers!inner(id, name, color),
-            game_titles!inner(id, name, icon)
+            tiers!inner(id, name, slug, color, background_gradient),
+            game_titles!inner(id, name, slug, icon, color)
           `, { count: 'exact' });
 
         // Apply filters
@@ -77,30 +77,67 @@ export class UltraOptimizedProductService {
         if (error) throw error;
 
         // Map to Product interface with minimal processing
-        const products: Product[] = (productData || []).map(product => ({
-          id: product.id,
-          name: product.name,
-          description: '', // Don't fetch description unless needed
-          price: product.price,
-          originalPrice: product.original_price,
-          image: product.images?.[0] || '',
-          images: product.images || [],
-          category: '', // Legacy field
-          gameTitle: product.game_titles?.name || '',
-          tier: 'reguler', // Default
-          tierId: product.tier_id,
-          gameTitleId: product.game_title_id,
-          tierData: product.tiers,
-          gameTitleData: product.game_titles,
-          accountLevel: product.account_level || '',
-          isFlashSale: false,
-          hasRental: false,
-          stock: 1,
-          isActive: product.is_active !== false,
-          archivedAt: product.archived_at,
-          createdAt: product.created_at,
-          updatedAt: product.created_at,
-        }));
+        const products: Product[] = (productData || []).map(product => {
+          // Handle game_titles - always array from join
+          let gameTitle = '';
+          let gameTitleData: GameTitle | undefined;
+          
+          if (product.game_titles && Array.isArray(product.game_titles) && product.game_titles.length > 0) {
+            const gt = product.game_titles[0];
+            gameTitle = gt?.name || '';
+            gameTitleData = {
+              id: gt?.id || '',
+              name: gt?.name || '',
+              slug: gt?.slug || '',
+              icon: gt?.icon || '',
+              color: gt?.color || '#000000',
+              isPopular: false
+            };
+          }
+
+          // Handle tiers - always array from join
+          let tierData: Tier | undefined;
+          
+          if (product.tiers && Array.isArray(product.tiers) && product.tiers.length > 0) {
+            const tier = product.tiers[0];
+            tierData = {
+              id: tier?.id || '',
+              name: tier?.name || '',
+              slug: tier?.slug || '',
+              color: tier?.color || '',
+              backgroundGradient: tier?.background_gradient || '',
+              isActive: true,
+              sortOrder: 0,
+              createdAt: '',
+              updatedAt: ''
+            };
+          }
+
+          return {
+            id: product.id,
+            name: product.name,
+            description: product.description || '',
+            price: product.price,
+            originalPrice: product.original_price,
+            image: product.images?.[0] || '',
+            images: product.images || [],
+            category: '', // Legacy field
+            gameTitle,
+            tier: 'reguler' as ProductTier,
+            tierId: product.tier_id,
+            gameTitleId: product.game_title_id,
+            tierData,
+            gameTitleData,
+            accountLevel: product.account_level || '',
+            isFlashSale: false,
+            hasRental: false,
+            stock: 1,
+            isActive: product.is_active !== false,
+            archivedAt: product.archived_at,
+            createdAt: product.created_at,
+            updatedAt: product.created_at,
+          };
+        });
 
         return {
           data: products,
@@ -155,7 +192,17 @@ export class UltraOptimizedProductService {
           return [];
         }
 
-        return data || [];
+        return (data || []).map(tier => ({
+          id: tier.id,
+          name: tier.name,
+          slug: tier.slug || '',
+          color: tier.color || '',
+          backgroundGradient: tier.background_gradient || '',
+          isActive: true,
+          sortOrder: 0,
+          createdAt: '',
+          updatedAt: ''
+        }));
       },
       this.METADATA_TTL
     );
@@ -179,7 +226,14 @@ export class UltraOptimizedProductService {
           return [];
         }
 
-        return data || [];
+        return (data || []).map(game => ({
+          id: game.id,
+          name: game.name,
+          slug: game.slug || '',
+          icon: game.icon || '',
+          color: '#000000',
+          isPopular: false
+        }));
       },
       this.METADATA_TTL
     );
@@ -198,8 +252,8 @@ export class UltraOptimizedProductService {
             id, name, description, price, original_price, account_level, 
             account_details, images, is_active, archived_at, created_at,
             game_title_id, tier_id,
-            tiers(id, name, slug, color, background_gradient),
-            game_titles(id, name, slug, icon)
+            tiers!left(id, name, slug, color, background_gradient),
+            game_titles!left(id, name, slug, icon, color)
           `)
           .eq('id', id)
           .single();
@@ -210,6 +264,39 @@ export class UltraOptimizedProductService {
         }
 
         // Map to full Product interface
+        let gameTitle = '';
+        let gameTitleData: GameTitle | undefined;
+        
+        if (data.game_titles && Array.isArray(data.game_titles) && data.game_titles.length > 0) {
+          const gt = data.game_titles[0];
+          gameTitle = gt.name || '';
+          gameTitleData = {
+            id: gt.id || '',
+            name: gt.name || '',
+            slug: gt.slug || '',
+            icon: gt.icon || '',
+            color: gt.color || '#000000',
+            isPopular: false
+          };
+        }
+
+        let tierData: Tier | undefined;
+        
+        if (data.tiers && Array.isArray(data.tiers) && data.tiers.length > 0) {
+          const tier = data.tiers[0];
+          tierData = {
+            id: tier.id || '',
+            name: tier.name || '',
+            slug: tier.slug || '',
+            color: tier.color || '',
+            backgroundGradient: tier.background_gradient || '',
+            isActive: true,
+            sortOrder: 0,
+            createdAt: '',
+            updatedAt: ''
+          };
+        }
+
         return {
           id: data.id,
           name: data.name,
@@ -219,12 +306,12 @@ export class UltraOptimizedProductService {
           image: data.images?.[0] || '',
           images: data.images || [],
           category: '',
-          gameTitle: data.game_titles?.name || '',
-          tier: 'reguler',
+          gameTitle,
+          tier: 'reguler' as ProductTier,
           tierId: data.tier_id,
           gameTitleId: data.game_title_id,
-          tierData: data.tiers,
-          gameTitleData: data.game_titles,
+          tierData,
+          gameTitleData,
           accountLevel: data.account_level || '',
           accountDetails: data.account_details || '',
           isFlashSale: false,

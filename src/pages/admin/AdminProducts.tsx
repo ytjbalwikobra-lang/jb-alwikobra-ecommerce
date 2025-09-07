@@ -1,5 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Package } from 'lucide-react';
+import { 
+  Plus, 
+  Edit, 
+  Trash2, 
+  Package, 
+  Filter, 
+  Search,
+  ChevronLeft,
+  ChevronRight 
+} from 'lucide-react';
 import { adminService } from '../../services/adminService.ts';
 import { AdminButton } from '../../components/admin/AdminButton.tsx';
 import AdminCard from '../../components/admin/AdminCard.tsx';
@@ -7,7 +16,7 @@ import { AdminInput, AdminSelect, AdminTextarea } from '../../components/admin/A
 import { AdminTable } from '../../components/admin/AdminTable.tsx';
 import { AdminModal, AdminConfirmModal } from '../../components/admin/AdminModal.tsx';
 import ImageUploader from '../../components/admin/AdminImageUploader.tsx';
-import { AdminBadge, AdminStatusBadge } from '../../components/admin/AdminBadge.tsx';
+import { AdminPillBadge, AdminPillStatusBadge } from '../../components/admin/AdminPillBadge.tsx';
 
 interface Product {
   id: string;
@@ -83,6 +92,17 @@ const AdminProducts: React.FC = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
+      
+      // Check if admin service is available
+      const testResult = await adminService.testConnection();
+      if (!testResult.success) {
+        console.error('Admin service not available:', testResult.message);
+        setProducts([]);
+        setTotalCount(0);
+        setHasMore(false);
+        return;
+      }
+      
       const result = await adminService.getProducts({
         page: currentPage,
         perPage: itemsPerPage,
@@ -97,6 +117,9 @@ const AdminProducts: React.FC = () => {
       setHasMore((result.count || 0) > currentPage * itemsPerPage);
     } catch (error) {
       console.error('Error loading products:', error);
+      setProducts([]);
+      setTotalCount(0);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
@@ -261,172 +284,267 @@ const AdminProducts: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-white">Products Management</h1>
-          <p className="text-gray-400">Manage your product catalog</p>
+      <AdminCard>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+              Products Management
+            </h1>
+            <p className="text-gray-400 mt-1">Manage your product catalog with ease</p>
+          </div>
+          <AdminButton onClick={() => handleOpenModal()}>
+            <Plus className="w-4 h-4 mr-2" />
+            Add Product
+          </AdminButton>
         </div>
-        <AdminButton onClick={() => handleOpenModal()} icon={Plus}>
-          Add Product
-        </AdminButton>
-      </div>
+      </AdminCard>
 
       {/* Filters */}
       <AdminCard>
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-orange-400" />
-            <h3 className="text-lg font-semibold text-white">Filters</h3>
+        <div className="space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-orange-500/20 border border-orange-400/40 rounded-lg shadow-lg shadow-orange-400/25">
+              <Filter className="w-5 h-5 text-orange-300" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+                Advanced Filters
+              </h3>
+              <p className="text-gray-400 text-sm">Filter products by various criteria</p>
+            </div>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-300 mb-2">
-                Search
+                Search Products
               </label>
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <div className="relative group">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 group-focus-within:text-orange-400 transition-colors" />
                 <AdminInput
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search products..."
-                  className="pl-10"
+                  placeholder="Search by name, description..."
+                  className="pl-10 bg-gray-800/60 border-gray-600/60 focus:border-orange-400/60 focus:ring-orange-400/30"
                 />
               </div>
             </div>
 
-            <AdminSelect
-              label="Category"
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              <option value="">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat.value} value={cat.value}>{cat.label}</option>
-              ))}
-            </AdminSelect>
+            <div className="space-y-2">
+              <AdminSelect
+                label="Category"
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="bg-gray-800/60 border-gray-600/60 focus:border-orange-400/60 focus:ring-orange-400/30"
+              >
+                <option value="">All Categories</option>
+                {categories.map(cat => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
+              </AdminSelect>
+            </div>
 
-            <AdminInput
-              label="Game"
-              value={gameFilter}
-              onChange={(e) => setGameFilter(e.target.value)}
-              placeholder="Filter by game..."
-            />
+            <div className="space-y-2">
+              <AdminInput
+                label="Game Title"
+                value={gameFilter}
+                onChange={(e) => setGameFilter(e.target.value)}
+                placeholder="Filter by game..."
+                className="bg-gray-800/60 border-gray-600/60 focus:border-orange-400/60 focus:ring-orange-400/30"
+              />
+            </div>
 
-            <AdminSelect
-              label="Status"
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="">All Status</option>
-              {statusOptions.map(status => (
-                <option key={status.value} value={status.value}>{status.label}</option>
-              ))}
-            </AdminSelect>
+            <div className="space-y-2">
+              <AdminSelect
+                label="Status"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="bg-gray-800/60 border-gray-600/60 focus:border-orange-400/60 focus:ring-orange-400/30"
+              >
+                <option value="">All Status</option>
+                {statusOptions.map(status => (
+                  <option key={status.value} value={status.value}>{status.label}</option>
+                ))}
+              </AdminSelect>
+            </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-orange-500/20">
+            <div className="flex items-center gap-2">
+              <AdminPillBadge variant="info" size="sm">
+                {totalCount} products total
+              </AdminPillBadge>
+              {(searchTerm || categoryFilter || gameFilter || statusFilter) && (
+                <AdminPillBadge variant="warning" size="sm">
+                  Filtered results
+                </AdminPillBadge>
+              )}
+            </div>
           </div>
         </div>
       </AdminCard>
 
       {/* Products Table */}
       <AdminCard>
-        <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-semibold text-white">Products</h3>
-            <div className="text-sm text-gray-400">
-              {totalCount} products total
+        <div className="space-y-6">
+          {/* Header with actions */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-orange-500/20 border border-orange-400/40 rounded-lg shadow-lg shadow-orange-400/25">
+                <Package className="w-5 h-5 text-orange-300" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent">
+                  Products Management
+                </h3>
+                <div className="flex items-center gap-2 mt-1">
+                  <AdminPillBadge variant="success" size="sm">
+                    {products.length} shown
+                  </AdminPillBadge>
+                  <AdminPillBadge variant="info" size="sm">
+                    {totalCount} total
+                  </AdminPillBadge>
+                </div>
+              </div>
             </div>
+            
+            <AdminButton
+              onClick={() => setIsModalOpen(true)}
+              className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 border-orange-400/40 shadow-lg shadow-orange-500/25"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Product
+            </AdminButton>
           </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
-              <thead className="bg-gradient-to-r from-orange-600 to-orange-700">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Image</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Product Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Category</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="bg-gray-800 divide-y divide-gray-700">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-400">Loading...</td>
+          {loading ? (
+            <div className="text-center py-12">
+              <div className="inline-flex items-center gap-3 px-6 py-3 bg-gray-800/60 border border-gray-600/60 rounded-lg">
+                <div className="animate-spin rounded-full h-5 w-5 border-2 border-orange-400 border-t-transparent"></div>
+                <span className="text-gray-300">Loading products...</span>
+              </div>
+            </div>
+          ) : products.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="inline-flex flex-col items-center gap-3 px-8 py-6 bg-gray-800/40 border border-gray-600/40 rounded-lg">
+                <Package className="w-12 h-12 text-gray-500" />
+                <div>
+                  <h4 className="text-lg font-medium text-gray-300 mb-1">No Products Found</h4>
+                  <p className="text-gray-500 text-sm">
+                    {searchTerm || categoryFilter || gameFilter || statusFilter 
+                      ? 'Try adjusting your filters' 
+                      : 'Start by adding your first product'
+                    }
+                  </p>
+                </div>
+                {!(searchTerm || categoryFilter || gameFilter || statusFilter) && (
+                  <AdminButton
+                    onClick={() => setIsModalOpen(true)}
+                    size="sm"
+                    className="mt-2 bg-orange-500/20 border-orange-400/40 text-orange-300 hover:bg-orange-500/30"
+                  >
+                    <Plus className="w-4 h-4 mr-1" />
+                    Add First Product
+                  </AdminButton>
+                )}
+              </div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-orange-500/20">
+                    <th className="text-left py-4 px-3 text-sm font-semibold text-gray-300">Product</th>
+                    <th className="text-left py-4 px-3 text-sm font-semibold text-gray-300">Category</th>
+                    <th className="text-left py-4 px-3 text-sm font-semibold text-gray-300">Price</th>
+                    <th className="text-left py-4 px-3 text-sm font-semibold text-gray-300">Status</th>
+                    <th className="text-right py-4 px-3 text-sm font-semibold text-gray-300">Actions</th>
                   </tr>
-                ) : products.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-6 py-4 text-center text-gray-400">No products found</td>
-                  </tr>
-                ) : (
-                  products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-700">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="w-12 h-12 bg-gray-700 rounded-lg overflow-hidden">
-                          {product.image || product.images?.[0] ? (
-                            <img
-                              src={product.image || product.images?.[0]}
-                              alt={product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                              <Package className="w-6 h-6 text-gray-500" />
-                            </div>
-                          )}
+                </thead>
+                <tbody className="divide-y divide-gray-700/50">
+                  {products.map((product) => (
+                    <tr key={product.id} className="hover:bg-gray-800/40 transition-colors group">
+                      <td className="py-4 px-3">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gray-700/60 rounded-lg overflow-hidden border border-gray-600/40 group-hover:border-orange-400/40 transition-colors">
+                            {product.image || product.images?.[0] ? (
+                              <img
+                                src={product.image || product.images?.[0]}
+                                alt={product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Package className="w-5 h-5 text-gray-500" />
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-white group-hover:text-orange-300 transition-colors">
+                              {product.name}
+                            </h4>
+                            <p className="text-sm text-gray-400 line-clamp-1">
+                              {product.description}
+                            </p>
+                            {product.game_title && (
+                              <AdminPillBadge variant="info" size="sm" className="mt-1">
+                                {product.game_title}
+                              </AdminPillBadge>
+                            )}
+                          </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-white font-medium">{product.name}</div>
-                        <div className="text-gray-400 text-sm">{product.game_title}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <AdminBadge variant="secondary">
+                      <td className="py-4 px-3">
+                        <AdminPillBadge variant="secondary" size="sm">
                           {categories.find(c => c.value === product.category)?.label || product.category}
-                        </AdminBadge>
+                        </AdminPillBadge>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className="text-orange-400 font-semibold">
+                      <td className="py-4 px-3">
+                        <span className="font-semibold text-orange-400">
                           {formatPrice(product.price)}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
+                      <td className="py-4 px-3">
                         {(() => {
-                          const validStatus = ['active', 'inactive', 'pending', 'approved', 'rejected', 'completed', 'cancelled'];
+                          const validStatus = ['active', 'inactive', 'pending', 'approved', 'rejected', 'completed', 'cancelled', 'draft'];
                           const status = validStatus.includes(product.status || '') ? product.status as any : 'active';
-                          return <AdminStatusBadge status={status} />;
+                          return <AdminPillStatusBadge status={status} />;
                         })()}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex gap-2">
-                          <button
+                      <td className="py-4 px-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <AdminButton
                             onClick={() => handleOpenModal(product)}
-                            className="p-2 text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 rounded-lg transition-colors"
+                            size="sm"
+                            variant="ghost"
+                            className="text-orange-400 hover:bg-orange-500/20 border-orange-400/40"
                             title="Edit Product"
                           >
                             <Edit className="w-4 h-4" />
-                          </button>
-                          <button
+                          </AdminButton>
+                          <AdminButton
                             onClick={() => handleOpenDeleteModal(product)}
-                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
+                            size="sm"
+                            variant="ghost"
+                            className="text-red-400 hover:bg-red-500/20 border-red-400/40"
                             title="Delete Product"
                           >
                             <Trash2 className="w-4 h-4" />
-                          </button>
+                          </AdminButton>
                         </div>
                       </td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex justify-between items-center pt-4 border-t border-gray-700">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 pt-4 border-t border-orange-500/20">
               <div className="text-sm text-gray-400">
-                Page {currentPage} of {totalPages}
+                Showing page {currentPage} of {totalPages}
               </div>
               <div className="flex gap-2">
                 <AdminButton
@@ -434,7 +552,9 @@ const AdminProducts: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
+                  className="bg-gray-800/60 border-gray-600/60 hover:border-orange-400/60"
                 >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
                   Previous
                 </AdminButton>
                 <AdminButton
@@ -442,8 +562,10 @@ const AdminProducts: React.FC = () => {
                   size="sm"
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
+                  className="bg-gray-800/60 border-gray-600/60 hover:border-orange-400/60"
                 >
                   Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
                 </AdminButton>
               </div>
             </div>
