@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/Toast.tsx';
 import { RefreshCw, Filter, RotateCcw } from 'lucide-react';
+import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
 
 type OrderRow = {
   id: string;
@@ -282,20 +283,17 @@ const AdminOrders: React.FC = () => {
                 </div>
                 <div style={{padding: '12px', color: '#ffffff', fontWeight: '500'}}>Rp {Number(r.amount||0).toLocaleString('id-ID')}</div>
                 <div style={{padding: '12px'}}>
-                  <span style={{
-                    display: 'inline-flex',
-                    padding: '4px 8px',
-                    borderRadius: '9999px',
-                    fontSize: '12px',
-                    fontWeight: '500',
-                    ...(r.status === 'pending' ? {background: '#fbbf24', color: '#000000'} :
-                       r.status === 'paid' ? {background: '#10b981', color: '#ffffff'} :
-                       r.status === 'completed' ? {background: '#3b82f6', color: '#ffffff'} :
-                       r.status === 'cancelled' ? {background: '#ef4444', color: '#ffffff'} :
-                       {background: '#6b7280', color: '#ffffff'})
-                  }}>
+                  <AdminPillBadge 
+                    variant={
+                      r.status === 'pending' ? 'warning' :
+                      r.status === 'paid' ? 'success' :
+                      r.status === 'completed' ? 'info' :
+                      r.status === 'cancelled' ? 'danger' :
+                      'secondary'
+                    }
+                  >
                     {r.status}
-                  </span>
+                  </AdminPillBadge>
                 </div>
               </div>
             ))}

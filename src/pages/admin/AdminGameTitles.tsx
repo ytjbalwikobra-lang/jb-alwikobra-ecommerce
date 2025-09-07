@@ -4,7 +4,8 @@ import { ProductService } from '../../services/productService.ts';
 import { supabase } from '../../services/supabase.ts';
 import { useToast } from '../../components/Toast.tsx';
 import { gameLogoStorage } from '../../services/storageService.ts';
-import { Plus, Pencil, Trash2, RefreshCw, Upload, X } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, Upload, X, Edit2 } from 'lucide-react';
+import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
 
 type FormState = {
   id?: string;
@@ -284,10 +285,26 @@ const AdminGameTitles: React.FC = () => {
               {gt.description && <div className="text-xs text-gray-400 line-clamp-1">{gt.description}</div>}
             </div>
             <div className="col-span-3 text-gray-300">{gt.slug}</div>
-            <div className="col-span-2 text-gray-300">{gt.isActive ? 'Aktif' : 'Nonaktif'}</div>
+            <div className="col-span-2">
+              <AdminPillBadge variant={gt.isActive ? 'success' : 'secondary'}>
+                {gt.isActive ? 'Aktif' : 'Nonaktif'}
+              </AdminPillBadge>
+            </div>
             <div className="col-span-3 text-right">
-              <button className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-white/20 rounded text-white hover:bg-white/5 mr-2" onClick={()=>startEdit(gt)}><Pencil size={14}/> Edit</button>
-              <button className="inline-flex items-center gap-1 text-xs px-2 py-1 border border-red-500/40 text-red-300 rounded hover:bg-red-500/10" onClick={()=>remove(gt.id)}><Trash2 size={14}/> Hapus</button>
+              <button 
+                className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors mr-2" 
+                onClick={() => startEdit(gt)}
+                title="Edit Game Title"
+              >
+                <Edit2 className="w-4 h-4" />
+              </button>
+              <button 
+                className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors" 
+                onClick={() => remove(gt.id)}
+                title="Hapus Game Title"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
         ))}

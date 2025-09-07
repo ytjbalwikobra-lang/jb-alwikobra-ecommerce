@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { getAuthUserId } from '../../services/authService.ts';
 import { useToast } from '../../components/Toast.tsx';
 import { RefreshCw, Search, User, Shield, Clock } from 'lucide-react';
+import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
+import { adminService } from '../../services/adminService.ts';
 
 type ProfileRow = { 
   id: string; 
@@ -29,32 +31,27 @@ const AdminUsers: React.FC = () => {
 
   const load = async () => {
     try {
-      // Fetch users from consolidated admin API endpoint
-      const response = await fetch('/api/admin?action=users');
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Fetch users from adminService instead of API endpoint
+      const result = await adminService.getUsers();
+      
+      if (result.error) {
+        throw new Error(result.error.message || 'Failed to fetch users');
       }
       
-      const result = await response.json();
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to fetch users');
-      }
-      
-      const usersData = result.data.users || [];
+      const usersData = result.data || [];
       
       // Transform the data to match the ProfileRow interface
-  const transformedRows: ProfileRow[] = usersData.map((user: any) => ({
+      const transformedRows: ProfileRow[] = usersData.map((user: any) => ({
         id: user.id,
         name: user.name,
         is_admin: user.is_admin || false,
         email: user.email || '',
         phone: user.phone || '',
-        is_active: user.is_active !== false, // Default to true if not specified
+        is_active: user.is_active || true,
         phone_verified: user.phone_verified || false,
         created_at: user.created_at || new Date().toISOString(),
         updated_at: user.updated_at || new Date().toISOString(),
         last_login_at: user.last_login_at || null,
-        // Add computed role based on is_admin
         role: user.is_admin ? 'admin' : 'user'
       }));
       
@@ -142,13 +139,12 @@ const AdminUsers: React.FC = () => {
     return 'bg-gray-900/50 text-gray-300 border-gray-600/40';
   };
 
-  // Helper function to format dates
-  const formatDate = (dateString?: string | null) => {
-    if (!dateString) return 'Never';
+  const formatDate = (dateString: string | null | undefined) => {
+    if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: 'short',
       year: 'numeric',
+      month: 'short',
+      day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
@@ -215,11 +211,9 @@ const AdminUsers: React.FC = () => {
         <div className="grid grid-cols-12 text-xs uppercase text-gray-400 px-4 py-3 border-b border-pink-500/20">
           <div className="col-span-3">Pengguna</div>
           <div className="col-span-2">Kontak</div>
-          <div className="col-span-1">Peran</div>
-          <div className="col-span-1">Last Login</div>
-          <div className="col-span-1">Profile Complete</div>
+          <div className="col-span-2">Peran</div>
           <div className="col-span-2">Bergabung</div>
-          <div className="col-span-1">Status</div>
+          <div className="col-span-2">Last Login</div>
           <div className="col-span-1 text-right">Aksi</div>
         </div>
         
@@ -279,85 +273,51 @@ const AdminUsers: React.FC = () => {
               </div>
               
               {/* Role */}
-              <div className="col-span-1">
-                <span className={`px-2 py-1 rounded text-xs border ${getRoleBadgeColor(r.role || 'user')}`}>
-                  {r.is_admin ? 'Admin' : 'User'}
-                </span>
-              </div>
-              
-              {/* Last Login */}
-              <div className="col-span-1 text-sm text-gray-300">
-                {r.last_login_at ? (
-                  <div className="text-xs">
-                    {formatDate(r.last_login_at)}
-                  </div>
-                ) : (
-                  <span className="text-gray-500 text-xs">Never</span>
-                )}
-              </div>
-
-              {/* Profile Complete */}
-              <div className="col-span-1">
-                <span className={`px-2 py-1 rounded text-xs border ${
-                  (r.name && r.email) ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
-                }`}>
-                  {(r.name && r.email) ? 'Complete' : 'Incomplete'}
-                </span>
+              <div className="col-span-2">
+                <AdminPillBadge 
+                  variant={
+                    r.is_admin ? 'danger' :
+                    r.phone_verified ? 'success' :
+                    'secondary'
+                  }
+                >
+                  {r.is_admin ? 'admin' : r.phone_verified ? 'verified' : 'user'}
+                </AdminPillBadge>
               </div>
               
               {/* Created At */}
               <div className="col-span-2 text-sm text-gray-300">
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1">
                   <Clock size={12} />
                   {formatDate(r.created_at)}
                 </div>
               </div>
-
-              {/* Status */}
-              <div className="col-span-1">
-                <span className={`px-2 py-1 rounded text-xs border ${
-                  r.is_active ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-red-500/20 text-red-400 border-red-500/30'
-                }`}>
-                  {r.is_active ? 'Active' : 'Inactive'}
-                </span>
+              
+              {/* Last Login */}
+              <div className="col-span-2 text-sm text-gray-300">
+                {r.last_login_at ? (
+                  <div className="flex items-center gap-1">
+                    <Clock size={12} />
+                    {formatDate(r.last_login_at)}
+                  </div>
+                ) : (
+                  <span className="text-gray-500">Never</span>
+                )}
               </div>
               
               {/* Actions */}
               <div className="col-span-1 text-right">
-                <button
-                  onClick={async () => {
-                    try {
-                      const newAdminStatus = !r.is_admin;
-                      // Call API to update is_admin status
-                      const response = await fetch('/api/admin?action=update-user-role', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                          userId: r.id, 
-                          isAdmin: newAdminStatus 
-                        })
-                      });
-                      
-                      if (!response.ok) {
-                        throw new Error('Failed to update user role');
-                      }
-                      
-                      // Refresh data
-                      await load();
-                      push(`User ${newAdminStatus ? 'promoted to admin' : 'demoted from admin'}`, 'success');
-                    } catch (error) {
-                      push('Failed to update user role', 'error');
-                    }
-                  }}
-                  className={`px-2 py-1 rounded text-xs border ${
-                    r.is_admin 
-                      ? 'bg-red-500/20 text-red-400 border-red-500/30 hover:bg-red-500/30' 
-                      : 'bg-green-500/20 text-green-400 border-green-500/30 hover:bg-green-500/30'
-                  }`}
-                  title={r.is_admin ? 'Remove admin role' : 'Grant admin role'}
+                <select
+                  value={r.role}
+                  onChange={(e)=>updateRole(r.id, e.target.value)}
+                  className="bg-black border border-white/20 rounded px-2 py-1 text-white text-sm hover:bg-white/5"
+                  title="Change user role"
                 >
-                  {r.is_admin ? 'Remove Admin' : 'Make Admin'}
-                </button>
+                  <option value="user">user</option>
+                  <option value="admin">admin</option>
+                  <option value="super admin">super admin</option>
+                  <option value="owner">owner</option>
+                </select>
               </div>
             </div>
           ))

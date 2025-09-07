@@ -387,6 +387,36 @@ class AdminService {
     }
   }
 
+  async getUsers(): Promise<{ data: any[]; error: any }> {
+    if (!this.isAdminClient()) {
+      return { 
+        data: [], 
+        error: { message: 'Admin client not available. Service role key required.' }
+      };
+    }
+
+    try {
+      console.log('🔧 AdminService: Fetching users with last_login_at');
+
+      const { data, error } = await this.adminClient
+        .from('users')
+        .select('id, name, email, phone, phone_verified, is_admin, is_active, created_at, updated_at, last_login_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('❌ AdminService: Users fetch error:', error);
+        return { data: [], error };
+      }
+
+      console.log('✅ AdminService: Users fetched successfully:', data?.length);
+      return { data: data || [], error: null };
+
+    } catch (error) {
+      console.error('💥 AdminService: Unexpected error:', error);
+      return { data: [], error };
+    }
+  }
+
   // Get dashboard statistics
   async getDashboardStats() {
     try {
@@ -394,32 +424,131 @@ class AdminService {
         return {
           success: false,
           data: {
-            orders: { count: 0, revenue: 0, averageValue: 0 },
-            users: 0,
-            flashSales: 0
+            totalProducts: 0,
+            flashSales: 0,
+            totalOrders: 0,
+            totalRevenue: 0,
+            averageOrders: 0,
+            totalUsers: 0,
+            dailyOrders: 0,
+            orderStatuses: { paid: 0, pending: 0, cancelled: 0 },
+            conversionRate: 0
           }
         };
       }
 
-      // For now, return mock data since we don't have orders/users tables set up
-      // In the future, these would be real queries
+      // Real dashboard queries from database
+      const [
+        productsResult,
+        flashSalesResult,
+        ordersResult,
+        revenueResult,
+        usersResult,
+        dailyOrdersResult,
+        orderStatusesResult
+      ] = await Promise.all([
+        // a. Total Produk = Count dari produk yang tersedia
+        this.adminClient
+          .from('products')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .is('archived_at', null),
+
+        // b. Flash Sales = Count dari produk yang aktif di flash sale
+        this.adminClient
+          .from('flash_sales')
+          .select('id', { count: 'exact', head: true })
+          .eq('is_active', true)
+          .gte('end_time', new Date().toISOString()),
+
+        // c. Total Pesanan = Count dari semua pesanan yang masuk
+        this.adminClient
+          .from('orders')
+          .select('id', { count: 'exact', head: true }),
+
+        // d. Total Pendapatan = Sum dari semua order dengan status paid
+        this.adminClient
+          .from('orders')
+          .select('amount')
+          .eq('status', 'paid'),
+
+        // f. Total pengguna = Sum dari tabel users dengan yang sudah terverifikasi
+        this.adminClient
+          .from('users')
+          .select('id', { count: 'exact', head: true })
+          .eq('phone_verified', true),
+
+        // g. Pendapatan harian = Count order dengan status paid hari ini
+        this.adminClient
+          .from('orders')
+          .select('id', { count: 'exact', head: true })
+          .eq('status', 'paid')
+          .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
+          .lt('created_at', new Date(new Date().setHours(23, 59, 59, 999)).toISOString()),
+
+        // h. Status Pesanan = Count dari tabel orders berdasarkan status
+        this.adminClient
+          .from('orders')
+          .select('status')
+      ]);
+
+      // Calculate totals
+      const totalProducts = productsResult.count || 0;
+      const flashSales = flashSalesResult.count || 0;
+      const totalOrders = ordersResult.count || 0;
+      
+      // Calculate total revenue
+      const totalRevenue = revenueResult.data?.reduce((sum, order) => 
+        sum + (parseFloat(order.amount) || 0), 0) || 0;
+      
+      // e. Rata-rata pesanan = Average dari semua order dengan status paid
+      const paidOrders = revenueResult.data?.length || 0;
+      const averageOrders = paidOrders > 0 ? totalRevenue / paidOrders : 0;
+      
+      const totalUsers = usersResult.count || 0;
+      const dailyOrders = dailyOrdersResult.count || 0;
+
+      // Calculate order statuses
+      const orderStatuses = { paid: 0, pending: 0, cancelled: 0 };
+      orderStatusesResult.data?.forEach(order => {
+        if (order.status === 'paid') orderStatuses.paid++;
+        else if (order.status === 'pending') orderStatuses.pending++;
+        else if (order.status === 'cancelled') orderStatuses.cancelled++;
+      });
+
+      // i. Insight performa = tingkat konversi (paid orders / total orders * 100)
+      const conversionRate = totalOrders > 0 ? (orderStatuses.paid / totalOrders * 100) : 0;
+
       return {
         success: true,
         data: {
-          orders: { count: 25, revenue: 1250000, averageValue: 50000 },
-          users: 150,
-          flashSales: 5
+          totalProducts,
+          flashSales,
+          totalOrders,
+          totalRevenue,
+          averageOrders,
+          totalUsers,
+          dailyOrders,
+          orderStatuses,
+          conversionRate
         }
       };
 
     } catch (error) {
       console.error('Error getting dashboard stats:', error);
+      // Return fallback mock data on error
       return {
         success: false,
         data: {
-          orders: { count: 0, revenue: 0, averageValue: 0 },
-          users: 0,
-          flashSales: 0
+          totalProducts: 0,
+          flashSales: 0,
+          totalOrders: 0,
+          totalRevenue: 0,
+          averageOrders: 0,
+          totalUsers: 0,
+          dailyOrders: 0,
+          orderStatuses: { paid: 0, pending: 0, cancelled: 0 },
+          conversionRate: 0
         }
       };
     }

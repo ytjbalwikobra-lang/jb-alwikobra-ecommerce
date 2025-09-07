@@ -1,8 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Edit2, Trash2 } from 'lucide-react';
 import { Product } from '../../types/index.ts';
 import { ProductService } from '../../services/productService.ts';
 import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
 import { useToast } from '../../components/Toast.tsx';
+import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
 
 type FSForm = {
   id?: string;
@@ -181,14 +183,27 @@ const AdminFlashSales: React.FC = () => {
                 <div className="col-span-2 text-gray-700 font-medium">Rp {Number((row.salePrice ?? row.sale_price) || 0).toLocaleString('id-ID')}</div>
                 <div className="col-span-2 text-gray-600">{(row.endTime || row.end_time)?.replace('T',' ').slice(0,16)}</div>
                 <div className="col-span-2">
-                  {(row.isActive ?? row.is_active) ? 
-                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-500 text-black">Aktif</span> : 
-                    <span className="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800">Nonaktif</span>
-                  }
+                  <AdminPillBadge 
+                    variant={(row.isActive ?? row.is_active) ? 'success' : 'secondary'}
+                  >
+                    {(row.isActive ?? row.is_active) ? 'Aktif' : 'Nonaktif'}
+                  </AdminPillBadge>
                 </div>
                 <div className="col-span-2 text-right">
-                  <button onClick={()=>startEdit(row)} className="px-3 py-1.5 rounded border border-gray-300 text-gray-700 hover:bg-gray-50 mr-2">Edit</button>
-                  <button onClick={()=>handleDelete(row.id)} className="px-3 py-1.5 rounded border border-red-500/40 text-red-300 hover:bg-red-500/10">Hapus</button>
+                  <button 
+                    onClick={() => startEdit(row)} 
+                    className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors mr-2"
+                    title="Edit Flash Sale"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDelete(row.id)} 
+                    className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                    title="Hapus Flash Sale"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
               </div>
             ))

@@ -84,8 +84,7 @@ const AdminProducts: React.FC = () => {
 
   const statusOptions = [
     { value: 'active', label: 'Active' },
-    { value: 'inactive', label: 'Inactive' },
-    { value: 'draft', label: 'Draft' }
+    { value: 'archived', label: 'Archived' }
   ];
 
   // Load products
@@ -139,13 +138,22 @@ const AdminProducts: React.FC = () => {
   const handleOpenModal = (product?: Product) => {
     if (product) {
       setEditingProduct(product);
+      
+      // Determine status from isActive and archivedAt
+      let status = 'active';
+      if (product.archivedAt) {
+        status = 'archived';
+      } else if (product.isActive === false) {
+        status = 'inactive'; // Note: this shouldn't happen based on our logic, but keep for safety
+      }
+      
       setFormData({
         name: product.name,
-        game_title: product.game_title,
+        game_title: product.gameTitle,
         price: product.price,
         description: product.description || '',
         category: product.category || 'digital_game',
-        status: product.status || 'active',
+        status: status,
         images: product.images || []
       });
     } else {
@@ -210,10 +218,17 @@ const AdminProducts: React.FC = () => {
     try {
       setSubmitting(true);
 
+      // Transform status to is_active and archived_at based on database logic
       const productData = {
         ...formData,
-        image: formData.images[0] || null
+        image: formData.images[0] || null,
+        // Convert status to database fields
+        is_active: formData.status === 'active',
+        archived_at: formData.status === 'archived' ? new Date().toISOString() : null
       };
+
+      // Remove the old status field as we're using is_active and archived_at
+      delete (productData as any).status;
 
       if (editingProduct) {
         const result = await adminService.updateProduct(editingProduct.id, productData);
@@ -514,9 +529,17 @@ const AdminProducts: React.FC = () => {
                       </td>
                       <td className="py-4 px-3">
                         {(() => {
-                          const validStatus = ['active', 'inactive', 'pending', 'approved', 'rejected', 'completed', 'cancelled', 'draft'];
-                          const status = validStatus.includes(product.status || '') ? product.status as any : 'active';
-                          return <AdminPillStatusBadge status={status} />;
+                          // Determine status based on isActive and archivedAt
+                          const isActive = product.isActive ?? true;
+                          const archivedAt = product.archivedAt;
+                          
+                          if (archivedAt) {
+                            return <AdminPillStatusBadge status="cancelled" />; // Use cancelled for archived
+                          } else if (isActive) {
+                            return <AdminPillStatusBadge status="active" />;
+                          } else {
+                            return <AdminPillStatusBadge status="inactive" />;
+                          }
                         })()}
                       </td>
                       <td className="py-4 px-3">

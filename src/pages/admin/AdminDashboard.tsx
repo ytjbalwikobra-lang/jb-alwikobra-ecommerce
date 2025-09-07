@@ -53,6 +53,7 @@ interface DashboardData {
       revenueTrend: number;
       userTrend: number;
     };
+    conversionRate?: number;
   };
 }
 
@@ -398,51 +399,64 @@ const AdminDashboard: React.FC = () => {
         cacheKey,
         async () => {
           try {
-            // Get products count
-            const productsResult = await adminService.getProducts({ page: 1, perPage: 1 });
-            const productsCount = productsResult.count || 0;
+            // Get dashboard stats from adminService
+            const statsResult = await adminService.getDashboardStats();
             
-            // Use adminService for all data instead of API fallback
-            let ordersData = { count: 0, revenue: 0, averageValue: 0 };
-            let usersCount = 0;
-            let flashSalesCount = 0;
-            
-            try {
-              // Try to get additional stats via adminService
-              const statsResult = await adminService.getDashboardStats();
-              if (statsResult.success) {
-                ordersData = statsResult.data.orders || ordersData;
-                usersCount = statsResult.data.users || 0;
-                flashSalesCount = statsResult.data.flashSales || 0;
-              }
-            } catch (apiError) {
-              console.warn('Dashboard stats API unavailable, using defaults:', apiError);
-              // Use reasonable defaults based on products
-              ordersData = { 
-                count: Math.floor(productsCount * 0.1), 
-                revenue: productsCount * 50000, 
-                averageValue: 50000 
-              };
-              usersCount = Math.floor(productsCount * 0.5);
-              flashSalesCount = Math.floor(productsCount * 0.2);
-            }
-            
-            return {
-              orders: ordersData,
-              users: usersCount,
-              products: productsCount,
-              flashSales: flashSalesCount,
-              analytics: {
-                statusDistribution: {
-                  'active': Math.round(productsCount * 0.7),
-                  'inactive': Math.round(productsCount * 0.2),
-                  'draft': Math.round(productsCount * 0.1)
+            if (statsResult.success) {
+              const stats = statsResult.data;
+              
+              return {
+                orders: { 
+                  count: stats.totalOrders, 
+                  revenue: stats.totalRevenue, 
+                  averageValue: stats.averageOrders 
                 },
-                dailyRevenue: [],
-                monthlyOrders: ordersData.count,
-                monthlyRevenue: ordersData.revenue
-              }
-            };
+                users: stats.totalUsers,
+                products: stats.totalProducts,
+                flashSales: stats.flashSales,
+                analytics: {
+                  statusDistribution: {
+                    'paid': stats.orderStatuses.paid,
+                    'pending': stats.orderStatuses.pending,
+                    'cancelled': stats.orderStatuses.cancelled
+                  } as Record<string, number>,
+                  dailyRevenue: [], // Would be populated with historical data in future
+                  monthlyOrders: stats.dailyOrders,
+                  monthlyRevenue: stats.totalRevenue,
+                  trends: {
+                    orderTrend: 0, // Would be calculated from historical data
+                    revenueTrend: 0,
+                    userTrend: 0
+                  },
+                  conversionRate: stats.conversionRate
+                }
+              };
+            } else {
+              // Fallback to product-based estimates
+              const productsResult = await adminService.getProducts({ page: 1, perPage: 1 });
+              const productsCount = productsResult.count || 0;
+              
+              return {
+                orders: { 
+                  count: Math.floor(productsCount * 0.1), 
+                  revenue: productsCount * 50000, 
+                  averageValue: 50000 
+                },
+                users: Math.floor(productsCount * 0.5),
+                products: productsCount,
+                flashSales: Math.floor(productsCount * 0.2),
+                analytics: {
+                  statusDistribution: {
+                    'active': Math.round(productsCount * 0.7),
+                    'inactive': Math.round(productsCount * 0.2),
+                    'draft': Math.round(productsCount * 0.1)
+                  } as Record<string, number>,
+                  dailyRevenue: [],
+                  monthlyOrders: Math.floor(productsCount * 0.1),
+                  monthlyRevenue: productsCount * 50000
+                }
+              };
+            }
           } catch (error) {
             console.warn('Using fallback dashboard data:', error);
             return {
@@ -452,10 +466,10 @@ const AdminDashboard: React.FC = () => {
               flashSales: 0,
               analytics: {
                 statusDistribution: {
-                  'active': 0,
-                  'inactive': 0,
-                  'draft': 0
-                },
+                  'paid': 0,
+                  'pending': 0,
+                  'cancelled': 0
+                } as Record<string, number>,
                 dailyRevenue: [],
                 monthlyOrders: 0,
                 monthlyRevenue: 0
