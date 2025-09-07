@@ -1045,26 +1045,30 @@ class AdminService {
       // Calculate totals (dynamic by range)
       const totalProducts = productsResult.count || 0;
       const flashSales = flashSalesResult.count || 0;
-      const orders = ordersInRangeResult.data || [];
+      const orders = (ordersInRangeResult.data || []).map((o: any) => ({
+        ...o,
+        amount: typeof o.amount === 'string' ? parseFloat(o.amount) : (typeof o.amount === 'number' ? o.amount : 0)
+      }));
       const totalOrders = orders.length;
 
-      // Calculate revenue for paid orders within range
-      const paidOrdersList = orders.filter((o: any) => o.status === 'paid');
-      const totalRevenue = paidOrdersList.reduce((sum: number, o: any) => sum + (parseFloat(o.amount) || 0), 0);
-      const averageOrders = paidOrdersList.length > 0 ? totalRevenue / paidOrdersList.length : 0;
+  // Calculate revenue for paid/completed orders within range
+  const paidOrdersList = orders.filter((o: any) => o.status === 'paid' || o.status === 'completed');
+  const totalRevenue = paidOrdersList.reduce((sum: number, o: any) => sum + (o.amount || 0), 0);
+  const averageOrders = paidOrdersList.length > 0 ? totalRevenue / paidOrdersList.length : 0;
 
       const totalUsers = usersResult.count || 0;
       // dailyOrders: paid orders today within range if today is included, otherwise 0
       const today = new Date();
       const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
       const dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23,59,59,999).toISOString();
-      const dailyOrders = orders.filter((o: any) => o.status === 'paid' && o.created_at >= dayStart && o.created_at <= dayEnd).length;
+  const dailyOrders = orders.filter((o: any) => (o.status === 'paid' || o.status === 'completed') && o.created_at >= dayStart && o.created_at <= dayEnd).length;
 
       // Calculate order statuses
-      const orderStatuses = { paid: 0, pending: 0, canceled: 0 } as any;
+      const orderStatuses = { paid: 0, pending: 0, canceled: 0, completed: 0 } as any;
       orders.forEach((order: any) => {
         if (order.status === 'paid') orderStatuses.paid++;
         else if (order.status === 'pending') orderStatuses.pending++;
+        else if (order.status === 'completed') orderStatuses.completed++;
         else if (order.status === 'cancelled' || order.status === 'canceled') orderStatuses.canceled++;
       });
 
@@ -1087,7 +1091,7 @@ class AdminService {
         const d = new Date(o.created_at);
         const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
         const cur = dailyMap.get(key) || { revenue: 0, orders: 0 };
-        dailyMap.set(key, { revenue: cur.revenue + (parseFloat(o.amount) || 0), orders: cur.orders + 1 });
+        dailyMap.set(key, { revenue: cur.revenue + (o.amount || 0), orders: cur.orders + 1 });
       }
       const dailyRevenue = Array.from(dailyMap.entries()).map(([k, v]) => ({ date: k, revenue: v.revenue, orders: v.orders }));
 

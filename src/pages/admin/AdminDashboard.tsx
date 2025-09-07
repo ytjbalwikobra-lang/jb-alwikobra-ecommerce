@@ -475,6 +475,7 @@ const AdminDashboard: React.FC = () => {
                   statusDistribution: {
                     paid: stats.orderStatuses.paid,
                     pending: stats.orderStatuses.pending,
+                    completed: stats.orderStatuses.completed ?? 0,
                     canceled: stats.orderStatuses.canceled
                   } as Record<string, number>,
                   dailyRevenue: stats.dailyRevenue || [],
@@ -664,7 +665,7 @@ const AdminDashboard: React.FC = () => {
         />
         <StatCard 
           label="Total Pendapatan" 
-          value={`Rp ${data.orders.revenue.toLocaleString('id-ID')}`}
+          value={`Rp ${(Number.isFinite(data.orders.revenue) ? data.orders.revenue : 0).toLocaleString('id-ID')}`}
           hint="Revenue periode ini"
           icon={<DollarSign className="w-6 h-6" />}
           color="orange"
@@ -727,9 +728,7 @@ const AdminDashboard: React.FC = () => {
               <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
                 <div className="text-blue-400 font-semibold mb-2">Tingkat Konversi</div>
                 <div className="text-2xl font-bold text-white">
-                  {data.orders.count > 0 && data.users > 0
-                    ? Math.round((data.orders.count / data.users) * 100)
-                    : 0}%
+                  {Math.round((data.analytics?.conversionRate || 0))}%
                 </div>
               </div>
               <div className="bg-purple-900/30 border border-purple-700 rounded-lg p-4">

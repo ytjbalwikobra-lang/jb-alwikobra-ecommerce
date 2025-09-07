@@ -7,6 +7,7 @@ interface ImageUploaderProps {
   max?: number;
   accept?: string;
   className?: string;
+  theme?: 'light' | 'dark';
 }
 
 const ImageUploader: React.FC<ImageUploaderProps> = ({ 
@@ -14,7 +15,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   onChange, 
   max = 15,
   accept = "image/*",
-  className = ""
+  className = "",
+  theme = 'light'
 }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const dragIndex = useRef<number | null>(null);
@@ -125,8 +127,8 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer
           transition-all duration-200
           ${dragOver 
-            ? 'border-orange-400 bg-orange-50 dark:bg-orange-900/20' 
-            : 'border-gray-600 hover:border-orange-500 bg-gray-800/50'
+            ? (theme === 'dark' ? 'border-orange-400 bg-orange-900/20' : 'border-orange-400 bg-orange-50') 
+            : (theme === 'dark' ? 'border-gray-600 hover:border-orange-500 bg-gray-800/50' : 'border-gray-300 hover:border-orange-500 bg-white')
           }
           ${uploading ? 'pointer-events-none opacity-50' : ''}
         `}
@@ -153,14 +155,14 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
             </div>
-            <p className="text-gray-300">
+            <p className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
               Uploading {progress.done} of {progress.total} images...
             </p>
-            <div className="w-full bg-gray-700 rounded-full h-2">
-              <div 
+            <div className={`w-full ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-200'} rounded-full h-2`}>
+              <div
                 className="bg-orange-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${(progress.done / progress.total) * 100}%` }}
-              ></div>
+              />
             </div>
           </div>
         ) : (
@@ -170,10 +172,10 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
               </svg>
             </div>
-            <div className="text-gray-300">
+            <div className={`${theme === 'dark' ? 'text-gray-300' : 'text-gray-700'}`}>
               <p className="text-lg font-medium">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-400">PNG, JPG, GIF up to 10MB each</p>
-              <p className="text-xs text-gray-500 mt-1">
+              <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>PNG, JPG, GIF up to 10MB each</p>
+              <p className={`text-xs mt-1 ${theme === 'dark' ? 'text-gray-500' : 'text-gray-500'}`}>
                 {images.length} of {max} images uploaded
               </p>
             </div>
@@ -187,7 +189,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
           {images.map((url, index) => (
             <div
               key={`${url}-${index}`}
-              className="relative group bg-gray-800 rounded-lg overflow-hidden border border-gray-700"
+              className={`relative group rounded-lg overflow-hidden border ${theme === 'dark' ? 'bg-gray-800 border-gray-700' : 'bg-white border-gray-200'}`}
               draggable
               onDragStart={onDragStart(index)}
               onDragOver={onDragOver}
@@ -222,7 +224,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
               </div>
               
               {/* Drag Handle */}
-              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 bg-gray-800 text-gray-300 p-1 rounded cursor-move">
+              <div className={`absolute top-2 right-2 opacity-0 group-hover:opacity-100 ${theme === 'dark' ? 'bg-gray-800 text-gray-300' : 'bg-white/90 text-gray-700 border border-gray-200'} p-1 rounded cursor-move`}>
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
                 </svg>
@@ -234,7 +236,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       
       {/* Helper Text */}
       {images.length > 0 && (
-        <p className="text-sm text-gray-400 text-center">
+        <p className={`text-sm ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'} text-center`}>
           Drag images to reorder • Click the trash icon to remove
         </p>
       )}

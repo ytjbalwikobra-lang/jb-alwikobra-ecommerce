@@ -6,6 +6,7 @@ import { useToast } from '../../components/Toast.tsx';
 import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
 import { AdminButton } from '../../components/admin/AdminButton.tsx';
 import { AdminPillBadge, AdminPillStatusBadge } from '../../components/admin/AdminPillBadge.tsx';
+import AdminImageUploader from '../../components/admin/AdminImageUploader.tsx';
 
 // Form data interface sesuai spesifikasi yang benar
 interface ProductFormData {
@@ -671,6 +672,27 @@ const AdminProducts: React.FC = () => {
 
               <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Upload Gambar (Maks 15) dengan Preview & Reorder */}
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Gambar Produk (maks 15)
+                    </label>
+                    <AdminImageUploader
+                      images={formData.images}
+                      onChange={(imgs) => {
+                        const next = imgs.slice(0, 15);
+                        setFormData({ ...formData, images: next });
+                      }}
+                      max={15}
+                      theme="light"
+                    />
+                    {formData.images.length > 0 && (
+                      <p className="mt-2 text-xs text-gray-500">
+                        Gambar pertama akan menjadi gambar utama produk.
+                      </p>
+                    )}
+                  </div>
+
                   {/* Judul Game - Required */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
