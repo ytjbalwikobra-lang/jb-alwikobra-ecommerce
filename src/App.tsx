@@ -35,6 +35,8 @@ const SettingsPage = React.lazy(() => import('./pages/SettingsPage.tsx'));
 const OrderHistoryPage = React.lazy(() => import('./pages/OrderHistoryPage.tsx'));
 const TermsPage = React.lazy(() => import('./pages/TermsPage.tsx'));
 const FeedPage = React.lazy(() => import('./pages/FeedPage.tsx'));
+const NoAccessPage = React.lazy(() => import('./pages/NoAccessPage.tsx'));
+const PaymentSuccessPage = React.lazy(() => import('./pages/PaymentSuccessPage.tsx'));
 
 // Lazy load admin pages (biggest performance impact)
 const AdminLayout = React.lazy(() => import('./layouts/AdminLayout.tsx'));
@@ -219,6 +221,8 @@ function App() {
                           <Route path="/settings" element={<SettingsPage />} />
                           <Route path="/terms" element={<TermsPage />} />
                           <Route path="/payment-status" element={<PaymentStatusPage />} />
+                          <Route path="/payment-success" element={<PaymentSuccessPage />} />
+                          <Route path="/no-access" element={<NoAccessPage />} />
                           <Route path="/orders" element={<OrderHistoryPage />} />
                           <Route path="*" element={
                             <div className="min-h-screen flex items-center justify-center">
