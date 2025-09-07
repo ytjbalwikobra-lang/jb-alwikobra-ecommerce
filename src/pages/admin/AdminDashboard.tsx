@@ -510,7 +510,7 @@ const AdminDashboard: React.FC = () => {
         }
       }, 120000);
       
-      return () => clearInterval(interval);
+      return () => clearInterval(interval as any);
     }
   }, [timePeriod, refreshing, fetchDashboardData]);
 

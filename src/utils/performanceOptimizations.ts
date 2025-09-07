@@ -6,10 +6,12 @@ import { StrictMode } from 'react';
 // Preload critical chunks for better perceived performance
 export const preloadCriticalChunks = () => {
   // Preload the most commonly visited pages after HomePage
-  const criticalChunks = [
-    () => import('./pages/ProductsPage.tsx'),
-    () => import('./pages/AuthPage.tsx'),
-  ];
+  import { lazy } from 'react';
+
+// Remove incorrect imports and use existing pages
+const HomePage = lazy(() => import('../pages/HomePage.tsx'));
+const ProductsPage = lazy(() => import('../pages/ProductsPage.tsx'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage.tsx'));
   
   // Use requestIdleCallback for better performance
   if ('requestIdleCallback' in window) {

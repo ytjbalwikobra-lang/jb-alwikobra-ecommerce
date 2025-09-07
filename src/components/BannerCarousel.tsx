@@ -77,7 +77,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   useEffect(() => {
     const id = setInterval(() => setIndex((i) => (i + 1) % (count || 1)), 5000);
-    return () => clearInterval(id);
+    return () => clearInterval(id as any);
   }, [count]);
 
   if (count === 0) return null;

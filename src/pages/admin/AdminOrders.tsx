@@ -113,7 +113,7 @@ const AdminOrders: React.FC = () => {
       load();
     }, 30000); // Refresh every 30 seconds
     
-    return () => clearInterval(interval);
+    return () => clearInterval(interval as any);
   }, [currentPage, itemsPerPage, statusFilter, orderTypeFilter, searchTerm]);
 
   // Since we're using server-side filtering and pagination, just use rows directly
