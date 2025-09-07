@@ -677,15 +677,21 @@ const ProductDetailPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Related Products */}
-        {related.length > 0 && (
+        {/* Related Products (hidden on flash sale detail) */}
+        {!cameFromFlashSaleCard && related.length > 0 && (
           <div className="mt-12">
             <h2 className="text-2xl font-bold text-white mb-4">Produk Terkait</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {related.map(rp => (
                 <Link key={rp.id} to={`/products/${rp.id}`} className="block group">
                   <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5">
-                    <img src={rp.image || rp.images?.[0]} alt={rp.name} className="w-full h-40 object-cover group-hover:scale-105 transition-transform" />
+                    <div className="relative aspect-[4/5] overflow-hidden">
+                      <img
+                        src={rp.image || rp.images?.[0]}
+                        alt={rp.name}
+                        className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform"
+                      />
+                    </div>
                     <div className="p-3">
                       <div className="font-semibold">{rp.name}</div>
                       <div className="text-pink-400">{formatCurrency(rp.originalPrice && rp.originalPrice > 0 ? rp.originalPrice : rp.price)}</div>

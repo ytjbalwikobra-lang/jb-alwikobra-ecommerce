@@ -1,4 +1,5 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
 import { adminService } from '../../services/adminService.ts';
 import { WebsiteSettings } from '../../types/index.ts';
 import { Save, Loader2, Image as ImageIcon } from 'lucide-react';
@@ -7,6 +8,7 @@ import { useToast } from '../../components/Toast.tsx';
 
 const AdminSettings: React.FC = () => {
   const { showToast } = useToast();
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<WebsiteSettings | null>(null);
@@ -75,9 +77,17 @@ const AdminSettings: React.FC = () => {
     }
   }, [showToast]);
 
+  // Reload settings on mount and when location.key changes to force fresh state
   useEffect(() => {
-    loadSettings();
-  }, [loadSettings]);
+    // Reset local state to avoid stale form when remounted via Router
+    setSettings(null);
+    setForm({});
+    setLogoFile(null);
+    setFaviconFile(null);
+    setLogoPreview('');
+    setFaviconPreview('');
+  loadSettings();
+  }, [location.key]);
 
   const save = useCallback(async () => {
     // Validate phone numbers before saving
@@ -164,7 +174,7 @@ const AdminSettings: React.FC = () => {
   if (loading) return <div className="flex items-center gap-2 text-gray-400"><Loader2 className="animate-spin" size={18} /> Memuat...</div>;
 
   return (
-    <div className="space-y-6">
+  <div key={location.key} className="space-y-6">
       <h1 className="text-xl font-bold">Pengaturan Website</h1>
       <div className="bg-black/40 border border-pink-500/20 rounded-xl p-4 space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
