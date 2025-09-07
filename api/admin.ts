@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { compressResponse } from './_utils/compressionUtils.ts';
+// import { compressResponse } from './_utils/compressionUtils.ts';
 
 // Admin service role client
 const supabaseUrl = process.env.REACT_APP_SUPABASE_URL!;
@@ -63,7 +63,7 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
           .rpc('get_daily_revenue', { days_back: 7 });
 
         const analytics = rpcData.analytics || {};
-        return compressResponse(req, res, {
+        return res.json({
           success: true,
           data: {
             orders: {
@@ -232,7 +232,7 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       });
     }
 
-    return compressResponse(req, res, {
+    return res.json({
       success: true,
       data: {
         orders: {
@@ -316,7 +316,7 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
 
     if (countError) throw countError;
 
-    return compressResponse(req, res, {
+    return res.json({
       success: true,
       data: {
         orders: orders || [],

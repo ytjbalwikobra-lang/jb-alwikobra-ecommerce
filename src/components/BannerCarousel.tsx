@@ -94,10 +94,20 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
           className="absolute inset-0 w-full h-full object-cover"
           onError={(e) => {
             console.error('Banner image failed to load:', active.image);
-            // Fallback to a default image or placeholder
-            e.currentTarget.src = 'https://images.unsplash.com/photo-1602367289840-74b3dfb3d7e8?w=1200&h=800&fit=crop';
+            // Fallback to a solid color placeholder
+            e.currentTarget.style.display = 'none';
+            const placeholder = e.currentTarget.parentElement?.querySelector('.fallback-placeholder') as HTMLElement;
+            if (placeholder) {
+              placeholder.style.display = 'flex';
+            }
           }}
         />
+        <div className="fallback-placeholder hidden absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 items-center justify-center" style={{display: 'none'}}>
+          <div className="text-white text-center">
+            <h3 className="text-2xl font-bold">{active.title}</h3>
+            {active.subtitle && <p className="text-lg mt-2">{active.subtitle}</p>}
+          </div>
+        </div>
 
         {/* Gradient overlay for better text readability */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
