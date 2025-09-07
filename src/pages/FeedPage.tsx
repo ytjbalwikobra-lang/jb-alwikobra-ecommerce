@@ -44,6 +44,7 @@ const FeedPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [filter, setFilter] = useState<'all'|'announcement'|'review'>('all');
   const limit = 10;
   const isGuest = !user;
   const isAdmin = !!user?.isAdmin;
@@ -59,13 +60,13 @@ const FeedPage: React.FC = () => {
 
   const load = async (p = 1) => {
     setLoading(true);
-    const { data, total } = await feedService.list(p, limit);
+    const { data, total } = await feedService.list(p, limit, filter);
     setPosts(data || []);
     setTotal(total || 0);
     setLoading(false);
   };
 
-  useEffect(() => { load(1); /* eslint-disable-next-line */ }, []);
+  useEffect(() => { load(1); /* eslint-disable-next-line */ }, [filter]);
 
   // Create bars
   const [newPost, setNewPost] = useState<{title:string;content:string;type:'post'|'announcement'}>({ title: '', content: '', type: 'post' });
@@ -185,6 +186,25 @@ const FeedPage: React.FC = () => {
     load(page);
   };
 
+  // Linkify content
+  const linkify = (text: string) => {
+    if (!text) return '';
+    // Escape HTML to prevent injection
+    const escapeHtml = (s: string) => s
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#39;');
+    const escaped = escapeHtml(text);
+    const urlRegex = /((https?:\/\/)?([\w-]+\.)+[\w]{2,}(\S*)?)/gi;
+    return escaped.replace(urlRegex, (match) => {
+      const hasProtocol = match.startsWith('http://') || match.startsWith('https://');
+      const href = hasProtocol ? match : `https://${match}`;
+      return `<a href="${href}" target="_blank" rel="noopener noreferrer" class="text-pink-400 underline hover:text-pink-300">${match}</a>`;
+    });
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-4">
       <div className="flex items-center justify-between">
@@ -198,7 +218,27 @@ const FeedPage: React.FC = () => {
           )}
         </div>
       </div>
-      {posts.map(post => (
+      {/* Filter buttons */}
+      <div className="flex items-center gap-2">
+        {(['all','announcement','review'] as const).map(t => (
+          <button key={t} onClick={()=>{ setFilter(t); setPage(1); }} className={`px-3 py-1 rounded border ${filter===t ? 'border-pink-500 text-pink-400' : 'border-white/10 text-gray-300'} hover:bg-white/5 capitalize`}>
+            {t === 'all' ? 'Semua' : t === 'announcement' ? 'Pengumuman' : 'Review'}
+          </button>
+        ))}
+      </div>
+      {/* Skeleton while loading */}
+      {loading && (
+        <div className="space-y-3">
+          {Array.from({length: 3}).map((_,i)=> (
+            <div key={i} className="border border-white/10 rounded-xl p-4 bg-black/40 animate-pulse">
+              <div className="h-4 w-1/3 bg-white/10 rounded" />
+              <div className="mt-3 h-6 w-2/3 bg-white/10 rounded" />
+              <div className="mt-2 h-20 w-full bg-white/5 rounded" />
+            </div>
+          ))}
+        </div>
+      )}
+      {!loading && posts.map(post => (
         <div key={post.id} className={`${post.type === 'announcement' ? 'bg-yellow-900/20 border-yellow-400/30' : 'bg-black/50 border-white/10'} border rounded-xl p-4`}>
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-400 flex items-center gap-2">
@@ -208,6 +248,9 @@ const FeedPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               {post.type === 'announcement' && <span className="text-[10px] px-2 py-0.5 rounded-full border bg-yellow-500/20 text-yellow-200 border-yellow-400/30">Announcement</span>}
+              {user && user.isAdmin && (
+                <button onClick={async ()=>{ if (post.is_pinned) { await feedService.unpin(post.id); } else { await feedService.pin(post.id); } load(page); }} className={`px-2 py-1 text-xs rounded border ${post.is_pinned ? 'border-green-500 text-green-400' : 'border-white/10 text-gray-300'} hover:bg-white/5`}>{post.is_pinned ? 'Unpin' : 'Pin'}</button>
+              )}
               {(user && (
                 (post.type === 'review' && user.id === post.user_id) ||
                 (post.type !== 'review' && user.isAdmin)
@@ -227,7 +270,7 @@ const FeedPage: React.FC = () => {
           </div>
           <h3 className="text-lg font-semibold mt-2">{post.title}</h3>
           {post.type === 'review' && <RatingStars value={post.rating} />}
-          <p className="text-gray-300 mt-2 whitespace-pre-wrap">{post.content}</p>
+          <p className="text-gray-300 mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: linkify(post.content) }} />
           {post.image_url && <img src={post.image_url} alt="post" className="mt-3 rounded-lg border border-white/10" />}
           {post.products?.name && (
             <div className="mt-3 text-sm text-gray-400">Untuk produk: <span className="text-gray-200">{post.products.name}</span></div>

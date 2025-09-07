@@ -686,6 +686,16 @@ const AdminProducts: React.FC = () => {
                       max={15}
                       theme="light"
                     />
+                    {/* Show preview grid even before interaction for edit mode */}
+                    {editingProduct && formData.images.length > 0 && (
+                      <div className="mt-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        {formData.images.map((url, idx) => (
+                          <div key={`${url}-${idx}`} className="border rounded-lg overflow-hidden">
+                            <img src={url} alt={`Preview ${idx+1}`} className="w-full h-32 object-cover" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
                     {formData.images.length > 0 && (
                       <p className="mt-2 text-xs text-gray-500">
                         Gambar pertama akan menjadi gambar utama produk.

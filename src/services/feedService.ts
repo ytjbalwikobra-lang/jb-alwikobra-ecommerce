@@ -40,8 +40,10 @@ async function uploadImagePreferNative(file: File, folder = 'feed'): Promise<str
 }
 
 export const feedService = {
-  async list(page = 1, limit = 10) {
-    const res = await fetch(`/api/feed?action=list&page=${page}&limit=${limit}`);
+  async list(page = 1, limit = 10, type: 'all'|'announcement'|'review' = 'all') {
+    const params = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (type && type !== 'all') params.set('type', type);
+    const res = await fetch(`/api/feed?action=list&${params.toString()}`);
     return res.json();
   },
   async createPost(payload: { title: string; content: string; imageFile?: File | null; type?: 'post'|'announcement' }) {
@@ -142,6 +144,14 @@ export const feedService = {
   },
   async markNotificationsRead() {
     const res = await fetch('/api/feed?action=notifications-read', { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` } });
+    return res.json();
+  },
+  async pin(post_id: string) {
+    const res = await fetch('/api/feed?action=pin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` }, body: JSON.stringify({ post_id }) });
+    return res.json();
+  },
+  async unpin(post_id: string) {
+    const res = await fetch('/api/feed?action=unpin', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` }, body: JSON.stringify({ post_id }) });
     return res.json();
   }
 };

@@ -44,6 +44,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     switch (action) {
+      case 'pin':
+        return await pinPost(req, res, me);
+      case 'unpin':
+        return await unpinPost(req, res, me);
       case 'upload-image':
         return await uploadImage(req, res, me);
       case 'list':
@@ -111,12 +115,16 @@ async function listFeed(req: VercelRequest, res: VercelResponse, me: any) {
   const page = parseInt((req.query.page as string) || '1');
   const limit = parseInt((req.query.limit as string) || '10');
   const offset = (page - 1) * limit;
+  const type = (req.query.type as string) || 'all'; // all | announcement | review
 
   // Get total count for pagination
-  const { count: totalCount, error: countError } = await supabase
+  let countQuery = supabase
     .from('feed_posts')
     .select('id', { count: 'exact', head: true })
     .eq('is_deleted', false);
+  if (type === 'announcement') countQuery = countQuery.eq('type', 'announcement');
+  if (type === 'review') countQuery = countQuery.eq('type', 'review');
+  const { count: totalCount, error: countError } = await countQuery;
   if (countError) return res.status(500).json({ error: 'Failed to count feed' });
 
   let q = supabase
@@ -126,7 +134,11 @@ async function listFeed(req: VercelRequest, res: VercelResponse, me: any) {
       users:users!feed_posts_user_id_fkey ( id, name, is_admin ),
       products:products!feed_posts_product_id_fkey ( id, name, image )
     `)
-    .eq('is_deleted', false)
+    .eq('is_deleted', false);
+  if (type === 'announcement') q = q.eq('type', 'announcement');
+  if (type === 'review') q = q.eq('type', 'review');
+  q = q
+    .order('is_pinned', { ascending: false })
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -155,6 +167,26 @@ async function listFeed(req: VercelRequest, res: VercelResponse, me: any) {
       liked_by_me: !!likedBy[p.id]
     }))
   });
+}
+
+async function pinPost(req: VercelRequest, res: VercelResponse, me: any) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!me || !me.is_admin) return res.status(403).json({ error: 'Admin only' });
+  const { post_id } = req.body || {};
+  if (!post_id) return res.status(400).json({ error: 'post_id required' });
+  const { error } = await supabase.from('feed_posts').update({ is_pinned: true }).eq('id', post_id);
+  if (error) return res.status(500).json({ error: 'Failed to pin post' });
+  return res.json({ success: true });
+}
+
+async function unpinPost(req: VercelRequest, res: VercelResponse, me: any) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!me || !me.is_admin) return res.status(403).json({ error: 'Admin only' });
+  const { post_id } = req.body || {};
+  if (!post_id) return res.status(400).json({ error: 'post_id required' });
+  const { error } = await supabase.from('feed_posts').update({ is_pinned: false }).eq('id', post_id);
+  if (error) return res.status(500).json({ error: 'Failed to unpin post' });
+  return res.json({ success: true });
 }
 
 async function createPost(req: VercelRequest, res: VercelResponse, me: any) {

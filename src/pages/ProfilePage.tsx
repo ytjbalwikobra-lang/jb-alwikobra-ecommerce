@@ -137,9 +137,27 @@ const ProfilePage: React.FC = () => {
     });
 
     if (confirmed) {
-      localStorage.setItem('userProfile', JSON.stringify(profile));
-      setIsEditing(false);
-      showToast('Profil berhasil disimpan', 'success');
+      try {
+        // Persist to database using admin API or direct client based on session
+        const token = localStorage.getItem('session_token') || '';
+        const res = await fetch('/api/auth?action=update-profile', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ name: profile.name, email: profile.email, phone: profile.whatsapp })
+        });
+        if (!res.ok) throw new Error('Gagal menyimpan profil');
+        const data = await res.json();
+        if (!data?.success) throw new Error(data?.error || 'Gagal menyimpan profil');
+        // Update local auth user and storage
+        const updatedUser = { ...(user as any), name: data.user?.name ?? profile.name, email: data.user?.email ?? profile.email, phone: data.user?.phone ?? profile.whatsapp };
+        localStorage.setItem('user_data', JSON.stringify(updatedUser));
+        setProfile(p=>({ ...p }));
+        setIsEditing(false);
+        showToast('Profil berhasil disimpan', 'success');
+      } catch (e:any) {
+        console.error('Save profile error:', e);
+        showToast(e.message || 'Gagal menyimpan profil', 'error');
+      }
     }
   };
 

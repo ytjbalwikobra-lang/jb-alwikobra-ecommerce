@@ -62,11 +62,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleTestWhatsApp(req, res);
       case 'send-welcome':
         return await handleSendWelcome(req, res);
+      case 'update-profile':
+        return await handleUpdateProfile(req, res);
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
   } catch (error) {
     console.error('Auth API error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleUpdateProfile(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'PUT' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const auth = req.headers['authorization'] || '';
+    const token = Array.isArray(auth) ? auth[0] : auth;
+    const bearer = token.startsWith('Bearer ') ? token.slice(7) : null;
+    if (!bearer) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Resolve user by session token
+    const { data: session } = await supabase
+      .from('user_sessions')
+      .select('user_id, expires_at, is_active')
+      .eq('session_token', bearer)
+      .single();
+    if (!session || session.is_active === false || (session.expires_at && new Date(session.expires_at) < new Date())) {
+      return res.status(401).json({ error: 'Invalid session' });
+    }
+
+    const { name, email, phone } = req.body as any;
+    const update: any = {};
+    if (typeof name === 'string') update.name = name;
+    if (typeof email === 'string') update.email = email;
+    if (typeof phone === 'string') update.phone = phone;
+    if (Object.keys(update).length === 0) return res.status(400).json({ error: 'No fields to update' });
+
+    const { data: user, error } = await supabase
+      .from('users')
+      .update(update)
+      .eq('id', session.user_id)
+      .select('*')
+      .single();
+    if (error) return res.status(500).json({ error: 'Failed to update profile' });
+
+    const { password_hash, login_attempts, locked_until, ...safeUser } = user as any;
+    return res.status(200).json({ success: true, user: safeUser });
+  } catch (error) {
+    console.error('Update profile error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }
