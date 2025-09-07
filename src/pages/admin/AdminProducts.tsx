@@ -3,6 +3,7 @@ import { Trash2, Edit, Plus, X, Upload, Search, Filter } from 'lucide-react';
 import { Product, GameTitle, Tier } from '../../types/index.ts';
 import { adminService } from '../../services/adminService.ts';
 import { useToast } from '../../components/Toast.tsx';
+import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
 import { AdminButton } from '../../components/admin/AdminButton.tsx';
 import { AdminPillBadge, AdminPillStatusBadge } from '../../components/admin/AdminPillBadge.tsx';
 
@@ -215,12 +216,15 @@ const AdminProducts: React.FC = () => {
       setSubmitting(true);
 
       // Transform form data to product data
+      // Derive game_title text from selected game_title_id for DB NOT NULL column
+      const selectedGame = gameTitles.find(gt => gt.id === formData.game_title_id);
       const productData = {
         name: formData.name,
         description: formData.description,
         price: formData.price,
         category: formData.category,
         game_title_id: formData.game_title_id,
+        game_title: selectedGame ? selectedGame.name : '',
         tier_id: formData.tier_id,
         account_level: formData.account_level,
         account_details: formData.account_details,
@@ -758,14 +762,14 @@ const AdminProducts: React.FC = () => {
                       Harga <span className="text-red-500">*</span>
                     </label>
                     <input
-                      type="number"
-                      value={formData.price}
-                      onChange={(e) => setFormData({ ...formData, price: parseInt(e.target.value) || 0 })}
+                      type="text"
+                      inputMode="numeric"
+                      value={formData.price ? formatNumberID(formData.price) : ''}
+                      onChange={(e) => setFormData({ ...formData, price: parseNumberID(e.target.value) })}
                       className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent ${
                         formErrors.price ? 'border-red-500' : 'border-gray-300'
                       }`}
                       placeholder="0"
-                      min="0"
                     />
                     {formErrors.price && (
                       <p className="mt-1 text-sm text-red-600">{formErrors.price}</p>
@@ -909,16 +913,16 @@ const AdminProducts: React.FC = () => {
                               )}
                             </div>
                             
-                            <div>
+              <div>
                               <input
-                                type="number"
-                                placeholder="Harga"
-                                value={option.price}
-                                onChange={(e) => updateRentalOption(index, 'price', parseInt(e.target.value) || 0)}
+                type="text"
+                inputMode="numeric"
+                placeholder="Harga"
+                value={option.price ? formatNumberID(option.price) : ''}
+                onChange={(e) => updateRentalOption(index, 'price', parseNumberID(e.target.value))}
                                 className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent text-sm ${
                                   formErrors[`rental_${index}_price`] ? 'border-red-500' : 'border-gray-300'
                                 }`}
-                                min="0"
                               />
                               {formErrors[`rental_${index}_price`] && (
                                 <p className="mt-1 text-xs text-red-600">{formErrors[`rental_${index}_price`]}</p>

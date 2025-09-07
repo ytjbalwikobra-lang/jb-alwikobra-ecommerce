@@ -325,14 +325,14 @@ const StatusChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
     pending: 'bg-yellow-900/50 text-yellow-300 border border-yellow-700',
     paid: 'bg-green-900/50 text-green-300 border border-green-700',
     completed: 'bg-blue-900/50 text-blue-300 border border-blue-700',
-    cancelled: 'bg-red-900/50 text-red-300 border border-red-700'
+    canceled: 'bg-red-900/50 text-red-300 border border-red-700'
   };
   
   const statusLabels: Record<string, string> = {
     pending: 'Menunggu',
     paid: 'Dibayar',
     completed: 'Selesai',
-    cancelled: 'Dibatalkan'
+    canceled: 'Dibatalkan'
   };
 
   return (

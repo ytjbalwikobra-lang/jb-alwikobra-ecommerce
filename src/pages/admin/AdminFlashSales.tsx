@@ -68,13 +68,21 @@ const AdminFlashSales: React.FC = () => {
     setShowForm(true);
   };
   const startEdit = (row: any) => {
+    // Helper to format from ISO to datetime-local string
+    const fmtIsoToLocal = (iso?: string) => {
+      if (!iso) return '';
+      const d = new Date(iso);
+      // shift to local and trim seconds
+      const local = new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,16);
+      return local;
+    };
     setForm({
       id: row.id,
       product_id: row.productId || row.product_id,
       sale_price: row.salePrice || row.sale_price,
       original_price: row.originalPrice || row.original_price,
-      start_time: row.startTime || row.start_time,
-      end_time: row.endTime || row.end_time,
+      start_time: fmtIsoToLocal(row.startTime || row.start_time),
+      end_time: fmtIsoToLocal(row.endTime || row.end_time),
       stock: row.stock,
       is_active: row.isActive ?? row.is_active,
     });
