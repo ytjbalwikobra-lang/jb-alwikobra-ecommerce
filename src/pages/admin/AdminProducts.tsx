@@ -1,17 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Package, Eye, EyeOff } from 'lucide-react';
-import { adminService } from '../../services/adminService';
-import { AdminButton } from '../../components/admin/AdminButton';
-import { AdminCard } from '../../components/admin/AdminCard';
-import { AdminInput } from '../../components/admin/AdminInput';
-import { AdminSelect } from '../../components/admin/AdminSelect';
-import { AdminTextarea } from '../../components/admin/AdminTextarea';
-import { AdminTable } from '../../components/admin/AdminTable';
-import { AdminModal } from '../../components/admin/AdminModal';
-import { AdminConfirmModal } from '../../components/admin/AdminConfirmModal';
-import { AdminImageUploader } from '../../components/admin/AdminImageUploader';
-import { AdminBadge } from '../../components/admin/AdminBadge';
-import { AdminStatusBadge } from '../../components/admin/AdminStatusBadge';
+import { Plus, Search, Filter, Edit, Trash2, Package } from 'lucide-react';
+import { adminService } from '../../services/adminService.ts';
+import { AdminButton } from '../../components/admin/AdminButton.tsx';
+import AdminCard from '../../components/admin/AdminCard.tsx';
+import { AdminInput, AdminSelect, AdminTextarea } from '../../components/admin/AdminFormComponents.tsx';
+import { AdminTable } from '../../components/admin/AdminTable.tsx';
+import { AdminModal, AdminConfirmModal } from '../../components/admin/AdminModal.tsx';
+import ImageUploader from '../../components/admin/AdminImageUploader.tsx';
+import { AdminBadge, AdminStatusBadge } from '../../components/admin/AdminBadge.tsx';
 
 interface Product {
   id: string;
@@ -87,18 +83,18 @@ const AdminProducts: React.FC = () => {
   const loadProducts = async () => {
     try {
       setLoading(true);
-      const result = await adminService.getProducts(
-        currentPage,
-        itemsPerPage,
-        searchTerm,
-        categoryFilter,
-        gameFilter,
-        statusFilter
-      );
+      const result = await adminService.getProducts({
+        page: currentPage,
+        perPage: itemsPerPage,
+        search: searchTerm,
+        category: categoryFilter,
+        gameTitle: gameFilter,
+        status: statusFilter
+      });
       
-      setProducts(result.data);
-      setTotalCount(result.count);
-      setHasMore(result.hasMore);
+      setProducts(result.data || []);
+      setTotalCount(result.count || 0);
+      setHasMore((result.count || 0) > currentPage * itemsPerPage);
     } catch (error) {
       console.error('Error loading products:', error);
     } finally {
@@ -236,7 +232,15 @@ const AdminProducts: React.FC = () => {
 
   const handleImageUpload = async (files: File[]): Promise<string[]> => {
     try {
-      const uploadedUrls = await adminService.uploadImages(files);
+      const uploadedUrls: string[] = [];
+      
+      for (const file of files) {
+        const result = await adminService.uploadImage(file, 'products');
+        if (result.data?.publicUrl) {
+          uploadedUrls.push(result.data.publicUrl);
+        }
+      }
+      
       return uploadedUrls;
     } catch (error) {
       console.error('Error uploading images:', error);
@@ -251,85 +255,6 @@ const AdminProducts: React.FC = () => {
       minimumFractionDigits: 0
     }).format(price);
   };
-
-  const columns = [
-    {
-      key: 'image',
-      title: 'Image',
-      render: (product: Product) => (
-        <div className="w-12 h-12 bg-gray-700 rounded-lg overflow-hidden">
-          {product.image || product.images?.[0] ? (
-            <img
-              src={product.image || product.images?.[0]}
-              alt={product.name}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-6 h-6 text-gray-500" />
-            </div>
-          )}
-        </div>
-      )
-    },
-    {
-      key: 'name',
-      title: 'Product Name',
-      render: (product: Product) => (
-        <div>
-          <div className="text-white font-medium">{product.name}</div>
-          <div className="text-gray-400 text-sm">{product.game_title}</div>
-        </div>
-      )
-    },
-    {
-      key: 'category',
-      title: 'Category',
-      render: (product: Product) => (
-        <AdminBadge variant="secondary">
-          {categories.find(c => c.value === product.category)?.label || product.category}
-        </AdminBadge>
-      )
-    },
-    {
-      key: 'price',
-      title: 'Price',
-      render: (product: Product) => (
-        <span className="text-orange-400 font-semibold">
-          {formatPrice(product.price)}
-        </span>
-      )
-    },
-    {
-      key: 'status',
-      title: 'Status',
-      render: (product: Product) => (
-        <AdminStatusBadge status={product.status || 'active'} />
-      )
-    },
-    {
-      key: 'actions',
-      title: 'Actions',
-      render: (product: Product) => (
-        <div className="flex gap-2">
-          <button
-            onClick={() => handleOpenModal(product)}
-            className="p-2 text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 rounded-lg transition-colors"
-            title="Edit Product"
-          >
-            <Edit className="w-4 h-4" />
-          </button>
-          <button
-            onClick={() => handleOpenDeleteModal(product)}
-            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
-            title="Delete Product"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      )
-    }
-  ];
 
   const totalPages = Math.ceil(totalCount / itemsPerPage);
 
@@ -374,11 +299,12 @@ const AdminProducts: React.FC = () => {
               label="Category"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              options={[
-                { value: '', label: 'All Categories' },
-                ...categories
-              ]}
-            />
+            >
+              <option value="">All Categories</option>
+              {categories.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </AdminSelect>
 
             <AdminInput
               label="Game"
@@ -391,11 +317,12 @@ const AdminProducts: React.FC = () => {
               label="Status"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              options={[
-                { value: '', label: 'All Status' },
-                ...statusOptions
-              ]}
-            />
+            >
+              <option value="">All Status</option>
+              {statusOptions.map(status => (
+                <option key={status.value} value={status.value}>{status.label}</option>
+              ))}
+            </AdminSelect>
           </div>
         </div>
       </AdminCard>
@@ -410,12 +337,90 @@ const AdminProducts: React.FC = () => {
             </div>
           </div>
 
-          <AdminTable
-            columns={columns}
-            data={products}
-            loading={loading}
-            emptyMessage="No products found"
-          />
+          <div className="overflow-x-auto">
+            <table className="min-w-full bg-gray-800 border border-gray-700 rounded-lg overflow-hidden">
+              <thead className="bg-gradient-to-r from-orange-600 to-orange-700">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Image</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Product Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Category</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-gray-800 divide-y divide-gray-700">
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-gray-400">Loading...</td>
+                  </tr>
+                ) : products.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="px-6 py-4 text-center text-gray-400">No products found</td>
+                  </tr>
+                ) : (
+                  products.map((product) => (
+                    <tr key={product.id} className="hover:bg-gray-700">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="w-12 h-12 bg-gray-700 rounded-lg overflow-hidden">
+                          {product.image || product.images?.[0] ? (
+                            <img
+                              src={product.image || product.images?.[0]}
+                              alt={product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Package className="w-6 h-6 text-gray-500" />
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-white font-medium">{product.name}</div>
+                        <div className="text-gray-400 text-sm">{product.game_title}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <AdminBadge variant="secondary">
+                          {categories.find(c => c.value === product.category)?.label || product.category}
+                        </AdminBadge>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-orange-400 font-semibold">
+                          {formatPrice(product.price)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {(() => {
+                          const validStatus = ['active', 'inactive', 'pending', 'approved', 'rejected', 'completed', 'cancelled'];
+                          const status = validStatus.includes(product.status || '') ? product.status as any : 'active';
+                          return <AdminStatusBadge status={status} />;
+                        })()}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleOpenModal(product)}
+                            className="p-2 text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 rounded-lg transition-colors"
+                            title="Edit Product"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleOpenDeleteModal(product)}
+                            className="p-2 text-red-400 hover:text-red-300 hover:bg-red-400/10 rounded-lg transition-colors"
+                            title="Delete Product"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
 
           {/* Pagination */}
           {totalPages > 1 && (
@@ -451,7 +456,7 @@ const AdminProducts: React.FC = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={editingProduct ? 'Edit Product' : 'Add New Product'}
-        maxWidth="4xl"
+        size="xl"
       >
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Form Fields */}
@@ -485,17 +490,23 @@ const AdminProducts: React.FC = () => {
               label="Category"
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              options={categories}
               required
-            />
+            >
+              {categories.map(cat => (
+                <option key={cat.value} value={cat.value}>{cat.label}</option>
+              ))}
+            </AdminSelect>
 
             <AdminSelect
               label="Status"
               value={formData.status}
               onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              options={statusOptions}
               required
-            />
+            >
+              {statusOptions.map(status => (
+                <option key={status.value} value={status.value}>{status.label}</option>
+              ))}
+            </AdminSelect>
 
             <AdminTextarea
               label="Description"
@@ -509,11 +520,10 @@ const AdminProducts: React.FC = () => {
 
           {/* Image Upload */}
           <div className="space-y-4">
-            <AdminImageUploader
+            <ImageUploader
               images={formData.images}
-              onImagesChange={(images) => setFormData({ ...formData, images })}
-              onUpload={handleImageUpload}
-              maxImages={5}
+              onChange={(images) => setFormData({ ...formData, images })}
+              max={5}
             />
           </div>
         </div>

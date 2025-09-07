@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { adminService } from '../services/adminService';
+import { adminService } from '../../services/adminService.ts';
 
 interface ImageUploaderProps {
   images: string[];

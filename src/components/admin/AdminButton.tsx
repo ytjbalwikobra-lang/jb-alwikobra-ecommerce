@@ -57,4 +57,5 @@ const AdminButton: React.FC<AdminButtonProps> = ({
   );
 };
 
+export { AdminButton };
 export default AdminButton;
