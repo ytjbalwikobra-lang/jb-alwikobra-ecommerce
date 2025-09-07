@@ -32,6 +32,12 @@
     
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+  <!-- Performance: Preconnect to common image CDN -->
+  <link rel="preconnect" href="https://images.unsplash.com" crossorigin>
+  <link rel="dns-prefetch" href="//images.unsplash.com">
+  <!-- Preload hero/banner candidate -->
+  <link rel="preload" as="image" href="https://images.unsplash.com/photo-1602367289840-74b3dfb3d7e8?w=1200&auto=format,compress&fit=crop" imagesrcset="https://images.unsplash.com/photo-1602367289840-74b3dfb3d7e8?w=640 640w, https://images.unsplash.com/photo-1602367289840-74b3dfb3d7e8?w=1200 1200w" imagesizes="100vw" fetchpriority="high">
     
     <!-- Structured Data -->
     <script type="application/ld+json">

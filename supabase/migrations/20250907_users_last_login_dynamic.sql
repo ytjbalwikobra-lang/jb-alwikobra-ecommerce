@@ -22,6 +22,10 @@ CREATE TABLE IF NOT EXISTS public.user_sessions (
   last_seen_at timestamptz
 );
 
+-- Add last_seen_at column if table already existed earlier
+ALTER TABLE IF EXISTS public.user_sessions
+  ADD COLUMN IF NOT EXISTS last_seen_at timestamptz;
+
 -- Ensure FK to users
 DO $$
 BEGIN

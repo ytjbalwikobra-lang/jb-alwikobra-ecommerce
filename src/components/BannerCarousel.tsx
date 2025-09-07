@@ -92,6 +92,10 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
           src={active.image}
           alt={active.title || 'Banner'}
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
+          fetchPriority="high"
+          loading="eager"
+          width={1200}
+          height={800}
           onError={(e) => {
             // Silently handle error for production by using fallback
             if (process.env.NODE_ENV === 'development') {

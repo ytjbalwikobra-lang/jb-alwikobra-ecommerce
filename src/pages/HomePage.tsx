@@ -14,6 +14,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import BannerCarousel from '../components/BannerCarousel.tsx';
+import ResponsiveImage from '../components/ResponsiveImage.tsx';
 
 const HomePage: React.FC = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
@@ -162,11 +163,12 @@ const HomePage: React.FC = () => {
             </div>
 
       <HorizontalScroller ariaLabel="Produk Flash Sale" itemGapClass="gap-4">
-              {flashSaleProducts.slice(0, 10).map((product) => (
+        {flashSaleProducts.slice(0, 10).map((product, idx) => (
         <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start">
                   <ProductCard
                     product={product}
                     showFlashSaleTimer={true}
+      priority={idx < 2}
           className="w-full h-auto"
                   />
                 </div>

@@ -6,10 +6,13 @@ interface ResponsiveImageProps {
   className?: string;
   sizes?: string;
   priority?: boolean;
+  fetchPriority?: 'high' | 'low' | 'auto';
   quality?: number;
   placeholder?: 'blur' | 'empty';
   blurDataURL?: string;
   aspectRatio?: number;
+  width?: number;
+  height?: number;
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -102,10 +105,13 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = React.memo(({
   className = '',
   sizes = '100vw',
   priority = false,
+  fetchPriority = 'auto',
   quality = 80,
   placeholder = 'blur',
   blurDataURL,
   aspectRatio,
+  width,
+  height,
   onLoad,
   onError
 }) => {
@@ -232,7 +238,10 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = React.memo(({
             sizes={sizes}
             alt={alt}
             loading={priority ? 'eager' : 'lazy'}
+            fetchPriority={priority ? 'high' : fetchPriority}
             decoding="async"
+            width={width || (aspectRatio ? 1200 : undefined)}
+            height={height || (aspectRatio ? Math.round(1200 / (1 / (aspectRatio || 1))) : undefined)}
             onLoad={handleLoad}
             onError={handleError}
             className={`w-full h-full object-cover transition-opacity duration-500 ease-out ${

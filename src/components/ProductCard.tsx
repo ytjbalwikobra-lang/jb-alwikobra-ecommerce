@@ -11,13 +11,15 @@ interface ProductCardProps {
   showFlashSaleTimer?: boolean;
   fromCatalogPage?: boolean;
   className?: string;
+  priority?: boolean;
 }
 
 const ProductCard: React.FC<ProductCardProps> = React.memo(({ 
   product, 
   showFlashSaleTimer = false,
   fromCatalogPage = false,
-  className = ''
+  className = '',
+  priority = false
 }) => {
   const timeRemaining = product.flashSaleEndTime
     ? calculateTimeRemaining(product.flashSaleEndTime)
@@ -152,7 +154,8 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
             src={images[0]}
             alt={product.name}
             className="w-full h-full"
-            priority={showFlashSaleTimer} // Prioritize flash sale images
+            priority={priority || showFlashSaleTimer}
+            fetchPriority={priority || showFlashSaleTimer ? 'high' : 'auto'}
             quality={85}
             aspectRatio={4/5}
             sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
