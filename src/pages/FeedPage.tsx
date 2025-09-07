@@ -113,12 +113,19 @@ const FeedPage: React.FC = () => {
   const toggleLike = async (post: any) => {
     if (isGuest) return;
     const liked = post.liked_by_me;
-    if (liked) {
-      const r = await feedService.unlike(post.id);
-      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: false, likes_count: r.likes } : p));
-    } else {
-      const r = await feedService.like(post.id);
-      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: true, likes_count: r.likes } : p));
+    // optimistic update
+    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: !liked, likes_count: (p.likes_count || 0) + (liked ? -1 : 1) } : p));
+    try {
+      if (liked) {
+        const r = await feedService.unlike(post.id);
+        if (typeof r.likes === 'number') setPosts(prev => prev.map(p => p.id === post.id ? { ...p, likes_count: r.likes, liked_by_me: false } : p));
+      } else {
+        const r = await feedService.like(post.id);
+        if (typeof r.likes === 'number') setPosts(prev => prev.map(p => p.id === post.id ? { ...p, likes_count: r.likes, liked_by_me: true } : p));
+      }
+    } catch (e) {
+      // revert on error
+      setPosts(prev => prev.map(p => p.id === post.id ? { ...p, liked_by_me: liked, likes_count: (p.likes_count || 0) + (liked ? 1 : -1) } : p));
     }
   };
 
@@ -240,26 +247,41 @@ const FeedPage: React.FC = () => {
       )}
       {!loading && posts.map(post => (
         <div key={post.id} className={`${post.type === 'announcement' ? 'bg-yellow-900/20 border-yellow-400/30' : 'bg-black/50 border-white/10'} border rounded-xl p-4`}>
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-400 flex items-center gap-2">
+          <div className="flex items-start justify-between">
+            <div className="flex gap-3">
               {/* Avatar */}
-              <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center">
                 {post.users?.avatar_url ? (
                   <img src={post.users.avatar_url} alt={post.users?.name||'avatar'} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-xs text-white/70">
+                  <span className="text-sm text-white/70">
                     {(post.users?.name||'U').slice(0,1).toUpperCase()}
                   </span>
                 )}
               </div>
-              <span>{post.users?.name || 'User'}</span>
-              <RolePill isAdmin={post.users?.is_admin} />
-              <span>· {new Date(post.created_at).toLocaleString('id-ID')}</span>
+              <div>
+                <div className="text-sm text-gray-300 flex items-center gap-2">
+                  <span className="font-medium text-white">{post.users?.name || 'User'}</span>
+                  <RolePill isAdmin={post.users?.is_admin} />
+                </div>
+                <div className="text-xs text-gray-400 mt-0.5">{new Date(post.created_at).toLocaleString('id-ID')}</div>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {post.type === 'announcement' && <span className="text-[10px] px-2 py-0.5 rounded-full border bg-yellow-500/20 text-yellow-200 border-yellow-400/30">Announcement</span>}
               {user && user.isAdmin && (
-                <button onClick={async ()=>{ if (post.is_pinned) { await feedService.unpin(post.id); } else { await feedService.pin(post.id); } load(page); }} className={`px-2 py-1 text-xs rounded border ${post.is_pinned ? 'border-green-500 text-green-400' : 'border-white/10 text-gray-300'} hover:bg-white/5`}>{post.is_pinned ? 'Unpin' : 'Pin'}</button>
+                <button onClick={async ()=>{
+                  // optimistic pin toggle
+                  setPosts(prev => prev.map(p => p.id === post.id ? { ...p, is_pinned: !post.is_pinned } : p));
+                  try {
+                    if (post.is_pinned) { await feedService.unpin(post.id); } else { await feedService.pin(post.id); }
+                    // reload to respect ordering
+                    load(page);
+                  } catch {
+                    // revert on error
+                    setPosts(prev => prev.map(p => p.id === post.id ? { ...p, is_pinned: post.is_pinned } : p));
+                  }
+                }} className={`px-2 py-1 text-xs rounded border ${post.is_pinned ? 'border-green-500 text-green-400' : 'border-white/10 text-gray-300'} hover:bg-white/5`}>{post.is_pinned ? 'Unpin' : 'Pin'}</button>
               )}
               {(user && (
                 (post.type === 'review' && user.id === post.user_id) ||
@@ -304,17 +326,21 @@ const FeedPage: React.FC = () => {
               <div className="space-y-3">
                 {(comments[post.id] || []).filter(c => !c.parent_comment_id).map(c => (
                   <div key={c.id} className="bg-black/40 border border-white/5 rounded p-3">
-                    <div className="text-sm text-gray-400 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center">
+                    <div className="flex items-start gap-2">
+                      <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center mt-0.5">
                         {c.users?.avatar_url ? (
                           <img src={c.users.avatar_url} alt={c.users?.name||'avatar'} className="w-full h-full object-cover" />
                         ) : (
-                          <span className="text-[10px] text-white/70">{(c.users?.name||'U').slice(0,1).toUpperCase()}</span>
+                          <span className="text-[11px] text-white/70">{(c.users?.name||'U').slice(0,1).toUpperCase()}</span>
                         )}
                       </div>
-                      <span>{c.users?.name || 'User'}</span>
-                      <RolePill isAdmin={c.users?.is_admin} />
-                      <span>· {new Date(c.created_at).toLocaleString('id-ID')}</span>
+                      <div>
+                        <div className="text-sm text-gray-300 flex items-center gap-2">
+                          <span className="font-medium text-white">{c.users?.name || 'User'}</span>
+                          <RolePill isAdmin={c.users?.is_admin} />
+                        </div>
+                        <div className="text-xs text-gray-500">{new Date(c.created_at).toLocaleString('id-ID')}</div>
+                      </div>
                     </div>
                     <div className="text-gray-200 mt-1 whitespace-pre-wrap">{c.content}</div>
                     {!isGuest && (
@@ -328,17 +354,21 @@ const FeedPage: React.FC = () => {
                     {/* Replies */}
                     {(comments[post.id] || []).filter(r => r.parent_comment_id === c.id).map(r => (
                       <div key={r.id} className="mt-2 ml-4 border-l border-white/10 pl-3">
-                        <div className="text-xs text-gray-400 flex items-center gap-2">
-                          <div className="w-5 h-5 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center">
+                        <div className="flex items-start gap-2">
+                          <div className="w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center mt-[2px]">
                             {r.users?.avatar_url ? (
                               <img src={r.users.avatar_url} alt={r.users?.name||'avatar'} className="w-full h-full object-cover" />
                             ) : (
-                              <span className="text-[9px] text-white/70">{(r.users?.name||'U').slice(0,1).toUpperCase()}</span>
+                              <span className="text-[10px] text-white/70">{(r.users?.name||'U').slice(0,1).toUpperCase()}</span>
                             )}
                           </div>
-                          <span>{r.users?.name || 'User'}</span>
-                          <RolePill isAdmin={r.users?.is_admin} />
-                          <span>· {new Date(r.created_at).toLocaleString('id-ID')}</span>
+                          <div>
+                            <div className="text-xs text-gray-300 flex items-center gap-2">
+                              <span className="text-white">{r.users?.name || 'User'}</span>
+                              <RolePill isAdmin={r.users?.is_admin} />
+                            </div>
+                            <div className="text-[10px] text-gray-500">{new Date(r.created_at).toLocaleString('id-ID')}</div>
+                          </div>
                         </div>
                         <div className="text-gray-300 mt-1 whitespace-pre-wrap">{r.content}</div>
                       </div>

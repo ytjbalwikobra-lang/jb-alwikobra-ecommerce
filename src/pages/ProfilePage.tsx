@@ -26,7 +26,7 @@ import { useWishlist } from '../contexts/WishlistContext.tsx';
 import { useConfirmation } from '../components/ConfirmationModal.tsx';
 import { useToast } from '../components/Toast.tsx';
 import { supabase } from '../services/supabase.ts';
-import { uploadFile } from '../services/storageService.ts';
+// import { uploadFile } from '../services/storageService.ts';
 
 interface UserProfile {
   name: string;
@@ -144,19 +144,32 @@ const ProfilePage: React.FC = () => {
 
     if (confirmed) {
       try {
-        // Upload avatar first if selected
-  let avatar_url: string | undefined;
+        // Upload avatar first if selected (via server to bypass RLS)
+        let avatar_url: string | undefined;
         if (avatarFile) {
           try {
-            const url = await uploadFile(avatarFile, 'avatars');
-            if (url) avatar_url = url;
+            const toBase64 = (file: File) => new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve((reader.result as string).split(',')[1] || '');
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+            const token = localStorage.getItem('session_token') || '';
+            const resUpload = await fetch('/api/auth?action=upload-avatar', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+              body: JSON.stringify({ name: avatarFile.name, contentType: avatarFile.type || 'image/jpeg', dataBase64: await toBase64(avatarFile) })
+            });
+            const dataUpload = await resUpload.json();
+            if (!resUpload.ok || !dataUpload?.publicUrl) throw new Error(dataUpload?.error || 'Upload gagal');
+            avatar_url = dataUpload.publicUrl as string;
           } catch (e) {
             console.error('Avatar upload failed:', e);
             showToast('Upload avatar gagal, coba lagi', 'error');
           }
         }
         // Persist to database using admin API or direct client based on session
-        const token = localStorage.getItem('session_token') || '';
+  const token = localStorage.getItem('session_token') || '';
         const res = await fetch('/api/auth?action=update-profile', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

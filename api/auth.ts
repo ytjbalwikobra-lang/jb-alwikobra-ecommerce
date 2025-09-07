@@ -64,6 +64,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleSendWelcome(req, res);
       case 'update-profile':
         return await handleUpdateProfile(req, res);
+      case 'upload-avatar':
+        return await handleUploadAvatar(req, res);
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
@@ -118,6 +120,50 @@ async function handleUpdateProfile(req: VercelRequest, res: VercelResponse) {
     return res.status(200).json({ success: true, user: safeUser });
   } catch (error) {
     console.error('Update profile error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function handleUploadAvatar(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const auth = req.headers['authorization'] || '';
+    const token = Array.isArray(auth) ? auth[0] : auth;
+    const bearer = token.startsWith('Bearer ') ? token.slice(7) : null;
+    if (!bearer) return res.status(401).json({ error: 'Unauthorized' });
+
+    // Resolve user by session token
+    const { data: session } = await supabase
+      .from('user_sessions')
+      .select('user_id, expires_at, is_active')
+      .eq('session_token', bearer)
+      .single();
+    if (!session || session.is_active === false || (session.expires_at && new Date(session.expires_at) < new Date())) {
+      return res.status(401).json({ error: 'Invalid session' });
+    }
+
+    const { name, contentType, dataBase64 } = req.body as any;
+    if (!name || !contentType || !dataBase64) {
+      return res.status(400).json({ error: 'Invalid payload' });
+    }
+
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET || process.env.REACT_APP_SUPABASE_STORAGE_BUCKET || 'product-images';
+    const safeName = String(name).replace(/[^a-zA-Z0-9-_\.]/g, '_');
+    const path = `avatars/${session.user_id}/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
+    const buffer = Buffer.from(dataBase64, 'base64');
+    const { error } = await (supabase as any).storage.from(bucket).upload(path, buffer, {
+      contentType,
+      upsert: false,
+      cacheControl: '3600'
+    });
+    if (error) return res.status(400).json({ error: error.message });
+    const { data } = (supabase as any).storage.from(bucket).getPublicUrl(path);
+    return res.status(200).json({ success: true, publicUrl: data?.publicUrl || null, path });
+  } catch (error) {
+    console.error('Upload avatar error:', error);
     return res.status(500).json({ error: 'Internal server error' });
   }
 }

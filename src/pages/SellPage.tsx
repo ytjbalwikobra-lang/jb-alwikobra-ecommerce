@@ -341,10 +341,10 @@ const SellPage: React.FC = () => {
               return (
                 <div key={index} className="bg-black p-6 rounded-xl text-center border border-pink-500/30 hover:bg-white/5 transition-colors">
                   <div 
-                    className="w-12 h-12 bg-black border border-pink-500/40 rounded-lg flex items-center justify-center mx-auto mb-3"
+                    className="w-16 h-16 bg-black border border-pink-500/40 rounded-xl flex items-center justify-center mx-auto mb-3"
                     style={{ borderColor: game.color + '40', backgroundColor: game.color + '10' }}
                   >
-                    <IconComponent className="text-pink-400" size={20} style={{ color: game.color }} />
+                    <IconComponent className="text-pink-400" size={28} style={{ color: game.color }} />
                   </div>
                   <h3 className="font-semibold text-white mb-1">{game.name}</h3>
                   <p className="text-sm text-gray-400">
