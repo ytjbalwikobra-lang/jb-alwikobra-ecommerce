@@ -4,6 +4,22 @@ import { createClient } from '@supabase/supabase-js';
 class AdminService {
   private adminClient: any = null;
   private static instance: AdminService | null = null;
+  // Lightweight in-memory cache (SWR-style)
+  private static cache = new Map<string, { data: any; expiry: number; inflight?: Promise<any> }>();
+  private static getFromCache<T = any>(key: string): T | null {
+    const hit = this.cache.get(key);
+    if (!hit) return null;
+    if (Date.now() > hit.expiry) return null;
+    return hit.data as T;
+  }
+  private static setCache<T = any>(key: string, data: T, ttlMs: number) {
+    const existing = this.cache.get(key);
+    this.cache.set(key, { data, expiry: Date.now() + ttlMs, inflight: existing?.inflight });
+  }
+  private static setInflight(key: string, p: Promise<any>) {
+    const existing = this.cache.get(key);
+    this.cache.set(key, { data: existing?.data, expiry: existing?.expiry || 0, inflight: p });
+  }
 
   private constructor() {
     this.initializeAdminClient();
@@ -323,6 +339,45 @@ class AdminService {
       return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
     }
     try {
+      const key = `flashSales:${JSON.stringify({ onlyActive: options.onlyActive !== false, notEndedOnly: options.notEndedOnly !== false })}`;
+      const cached = AdminService.getFromCache<{ data: any[]; error: any }>(key);
+      if (cached && cached.data && cached.error == null) {
+        // Background revalidate (SWR)
+        const existing = (AdminService as any).cache.get(key);
+        if (!existing?.inflight) {
+          const inflight = (async () => {
+            const fresh = await this.fetchFlashSalesInternal(options);
+            if (fresh && !fresh.error) AdminService.setCache(key, fresh, 30_000); // 30s TTL
+            (AdminService as any).cache.set(key, { ...((AdminService as any).cache.get(key) || {}), inflight: undefined });
+          })();
+          AdminService.setInflight(key, inflight);
+        }
+        return cached;
+      }
+
+      // If there's an in-flight request, await it; else fetch fresh
+      const existing = (AdminService as any).cache.get(key);
+      if (existing?.inflight) {
+        await existing.inflight;
+        const post = AdminService.getFromCache<{ data: any[]; error: any }>(key);
+        if (post) return post;
+      }
+
+      const fetchP = this.fetchFlashSalesInternal(options);
+      AdminService.setInflight(key, fetchP);
+      const fresh = await fetchP;
+      if (!fresh.error) AdminService.setCache(key, fresh, 30_000);
+      (AdminService as any).cache.set(key, { ...((AdminService as any).cache.get(key) || {}), inflight: undefined });
+      return fresh;
+    } catch (error) {
+      console.error('💥 AdminService: Unexpected error:', error);
+      return { data: [], error } as any;
+    }
+  }
+
+  // Internal fetcher for flash sales (no cache)
+  private async fetchFlashSalesInternal(options: { onlyActive?: boolean; notEndedOnly?: boolean } = {}) {
+    try {
       const { onlyActive = true, notEndedOnly = true } = options;
       let query = this.adminClient
         .from('flash_sales')
@@ -421,7 +476,7 @@ class AdminService {
             product
           };
         });
-        return { data: mapped, error: null };
+  return { data: mapped, error: null };
       }
 
       // Fallback when join not available: fetch base rows and hydrate product names

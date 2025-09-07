@@ -186,6 +186,21 @@ const sampleProducts: Product[] = [
 ];
 
 export class ProductService {
+  private static cache = new Map<string, { data: any; expiry: number; inflight?: Promise<any> }>();
+  private static getFromCache<T = any>(key: string): T | null {
+    const hit = this.cache.get(key);
+    if (!hit) return null;
+    if (Date.now() > hit.expiry) return null;
+    return hit.data as T;
+  }
+  private static setCache<T = any>(key: string, data: T, ttlMs: number) {
+    const existing = this.cache.get(key);
+    this.cache.set(key, { data, expiry: Date.now() + ttlMs, inflight: existing?.inflight });
+  }
+  private static setInflight(key: string, p: Promise<any>) {
+    const existing = this.cache.get(key);
+    this.cache.set(key, { data: existing?.data, expiry: existing?.expiry || 0, inflight: p });
+  }
   // Force reset of capability detection - useful after schema changes
   static resetCapabilities() {
     hasRelations = null;
@@ -1105,6 +1120,43 @@ export class ProductService {
   // Popular games with product counts for the Home page carousel
   static async getPopularGames(limit: number = 12): Promise<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>> {
     try {
+      const cacheKey = `popularGames:${limit}`;
+      const cached = this.getFromCache<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>>(cacheKey);
+      if (cached) {
+        // Background revalidation
+        const existing = (this as any).cache.get(cacheKey);
+        if (!existing?.inflight) {
+          const inflight = (async () => {
+            const fresh = await this.getPopularGamesInternal(limit);
+            if (fresh?.length) this.setCache(cacheKey, fresh, 60_000); // 60s TTL
+            (this as any).cache.set(cacheKey, { ...((this as any).cache.get(cacheKey) || {}), inflight: undefined });
+          })();
+          this.setInflight(cacheKey, inflight);
+        }
+        return cached;
+      }
+
+      const existing = (this as any).cache.get(cacheKey);
+      if (existing?.inflight) {
+        await existing.inflight;
+        const post = this.getFromCache<typeof cached>(cacheKey);
+        if (post) return post as any;
+      }
+
+      const inflight = this.getPopularGamesInternal(limit);
+      this.setInflight(cacheKey, inflight);
+      const fresh = await inflight;
+      if (fresh?.length) this.setCache(cacheKey, fresh, 60_000);
+      (this as any).cache.set(cacheKey, { ...((this as any).cache.get(cacheKey) || {}), inflight: undefined });
+      return fresh;
+    } catch (error) {
+      console.error('Error fetching popular games:', error);
+      return [];
+    }
+  }
+
+  private static async getPopularGamesInternal(limit: number) {
+    try {
       // Fallback to sample data when Supabase isn't configured
       if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY || !supabase) {
         const counts = new Map<string, number>();
@@ -1187,7 +1239,7 @@ export class ProductService {
         }
       }));
 
-      return counts
+  return counts
         .filter(item => item.count > 0)
         .sort((a, b) => b.count - a.count)
         .slice(0, limit);
