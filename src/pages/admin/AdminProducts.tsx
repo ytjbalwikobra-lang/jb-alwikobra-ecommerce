@@ -216,15 +216,23 @@ const AdminProducts: React.FC = () => {
       };
 
       if (editingProduct) {
-        await adminService.updateProduct(editingProduct.id, productData);
+        const result = await adminService.updateProduct(editingProduct.id, productData);
+        console.log('✅ Product updated:', result);
       } else {
-        await adminService.createProduct(productData);
+        const result = await adminService.createProduct(productData);
+        console.log('✅ Product created:', result);
       }
 
+      // Force reload products to ensure UI reflects changes
       await loadProducts();
       handleCloseModal();
+      
+      // Clear any cached data
+      setProducts([]);
+      setTimeout(() => loadProducts(), 100);
+      
     } catch (error) {
-      console.error('Error saving product:', error);
+      console.error('❌ Error saving product:', error);
     } finally {
       setSubmitting(false);
     }

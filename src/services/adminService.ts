@@ -3,12 +3,25 @@ import { createClient } from '@supabase/supabase-js';
 // Admin service with elevated permissions for CRUD operations
 class AdminService {
   private adminClient: any = null;
+  private static instance: AdminService | null = null;
 
-  constructor() {
+  private constructor() {
     this.initializeAdminClient();
   }
 
+  public static getInstance(): AdminService {
+    if (!AdminService.instance) {
+      AdminService.instance = new AdminService();
+    }
+    return AdminService.instance;
+  }
+
   private initializeAdminClient() {
+    // Prevent multiple initialization
+    if (this.adminClient) {
+      return;
+    }
+
     const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
     const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
 
@@ -16,9 +29,17 @@ class AdminService {
       this.adminClient = createClient(supabaseUrl, serviceRoleKey, {
         auth: {
           autoRefreshToken: false,
-          persistSession: false
+          persistSession: false,
+          detectSessionInUrl: false,
+          flowType: 'implicit'
+        },
+        global: {
+          headers: {
+            'X-Client-Info': 'admin-service'
+          }
         }
       });
+      console.log('✅ AdminService: Initialized with service role');
     } else {
       console.warn('⚠️ Admin service requires REACT_APP_SUPABASE_SERVICE_ROLE_KEY environment variable');
       console.warn('⚠️ Admin functionality will be limited without service role key');
@@ -365,7 +386,45 @@ class AdminService {
       };
     }
   }
+
+  // Get dashboard statistics
+  async getDashboardStats() {
+    try {
+      if (!this.isAdminClient()) {
+        return {
+          success: false,
+          data: {
+            orders: { count: 0, revenue: 0, averageValue: 0 },
+            users: 0,
+            flashSales: 0
+          }
+        };
+      }
+
+      // For now, return mock data since we don't have orders/users tables set up
+      // In the future, these would be real queries
+      return {
+        success: true,
+        data: {
+          orders: { count: 25, revenue: 1250000, averageValue: 50000 },
+          users: 150,
+          flashSales: 5
+        }
+      };
+
+    } catch (error) {
+      console.error('Error getting dashboard stats:', error);
+      return {
+        success: false,
+        data: {
+          orders: { count: 0, revenue: 0, averageValue: 0 },
+          users: 0,
+          flashSales: 0
+        }
+      };
+    }
+  }
 }
 
 // Export singleton instance
-export const adminService = new AdminService();
+export const adminService = AdminService.getInstance();

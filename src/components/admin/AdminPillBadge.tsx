@@ -8,70 +8,32 @@ interface AdminPillBadgeProps {
   className?: string;
 }
 
-const AdminPillBadge: React.FC<AdminPillBadgeProps> = ({
-  children,
-  variant = 'secondary',
-  size = 'sm',
-  glow = true,
-  className = ''
+const AdminPillBadge: React.FC<AdminPillBadgeProps> = ({ 
+  children, 
+  variant = 'primary', 
+  size = 'md', 
+  className = '' 
 }) => {
   const variants = {
-    primary: {
-      bg: 'bg-orange-500/20',
-      border: 'border-orange-400/40',
-      text: 'text-orange-200',
-      glow: 'shadow-orange-400/25'
-    },
-    secondary: {
-      bg: 'bg-gray-500/20',
-      border: 'border-gray-400/40',
-      text: 'text-gray-200',
-      glow: 'shadow-gray-400/25'
-    },
-    success: {
-      bg: 'bg-green-500/20',
-      border: 'border-green-400/40',
-      text: 'text-green-200',
-      glow: 'shadow-green-400/25'
-    },
-    warning: {
-      bg: 'bg-yellow-500/20',
-      border: 'border-yellow-400/40',
-      text: 'text-yellow-200',
-      glow: 'shadow-yellow-400/25'
-    },
-    danger: {
-      bg: 'bg-red-500/20',
-      border: 'border-red-400/40',
-      text: 'text-red-200',
-      glow: 'shadow-red-400/25'
-    },
-    info: {
-      bg: 'bg-blue-500/20',
-      border: 'border-blue-400/40',
-      text: 'text-blue-200',
-      glow: 'shadow-blue-400/25'
-    }
+    primary: 'text-orange-300 bg-orange-500/20 border-orange-400/40 shadow-orange-400/10',
+    secondary: 'text-gray-300 bg-gray-500/20 border-gray-400/40 shadow-gray-400/10',
+    success: 'text-green-300 bg-green-500/20 border-green-400/40 shadow-green-400/10',
+    warning: 'text-yellow-300 bg-yellow-500/20 border-yellow-400/40 shadow-yellow-400/10',
+    danger: 'text-red-300 bg-red-500/20 border-red-400/40 shadow-red-400/10',
+    info: 'text-blue-300 bg-blue-500/20 border-blue-400/40 shadow-blue-400/10'
   };
 
   const sizes = {
-    sm: 'px-2.5 py-1 text-xs',
+    sm: 'px-2 py-1 text-xs',
     md: 'px-3 py-1.5 text-sm',
     lg: 'px-4 py-2 text-base'
   };
 
-  const variantStyles = variants[variant];
-
   return (
     <span className={`
-      inline-flex items-center font-medium rounded-full border backdrop-blur-sm
-      ${variantStyles.bg}
-      ${variantStyles.border}
-      ${variantStyles.text}
-      ${sizes[size]}
-      ${glow ? `shadow-lg ${variantStyles.glow}` : ''}
-      transition-all duration-200 hover:scale-105
-      ${className}
+      inline-flex items-center rounded-full border 
+      font-medium shadow-md backdrop-blur-sm
+      ${variants[variant]} ${sizes[size]} ${className}
     `}>
       {children}
     </span>

@@ -87,25 +87,43 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
   return (
     <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
       {/* Fixed 3:2 aspect ratio for all screen sizes */}
-      <div className="relative w-full aspect-[3/2]">
+      <div className="relative w-full aspect-[3/2] overflow-hidden">
         <img
           src={active.image}
           alt={active.title || 'Banner'}
-          className="absolute inset-0 w-full h-full object-cover"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-300"
           onError={(e) => {
-            console.error('Banner image failed to load:', active.image);
-            // Fallback to a solid color placeholder
-            e.currentTarget.style.display = 'none';
+            // Silently handle error for production by using fallback
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('Banner image failed to load:', active.image);
+            }
+            // Use a more reliable fallback image or gradient
+            e.currentTarget.style.opacity = '0';
             const placeholder = e.currentTarget.parentElement?.querySelector('.fallback-placeholder') as HTMLElement;
             if (placeholder) {
               placeholder.style.display = 'flex';
             }
           }}
+          onLoad={(e) => {
+            // Ensure image is visible when loaded successfully
+            e.currentTarget.style.opacity = '1';
+            const placeholder = e.currentTarget.parentElement?.querySelector('.fallback-placeholder') as HTMLElement;
+            if (placeholder) {
+              placeholder.style.display = 'none';
+            }
+          }}
         />
-        <div className="fallback-placeholder hidden absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 items-center justify-center" style={{display: 'none'}}>
-          <div className="text-white text-center">
-            <h3 className="text-2xl font-bold">{active.title}</h3>
-            {active.subtitle && <p className="text-lg mt-2">{active.subtitle}</p>}
+        <div className="fallback-placeholder hidden absolute inset-0 bg-gradient-to-br from-orange-500 via-red-500 to-purple-600 items-center justify-center" style={{display: 'none'}}>
+          <div className="text-white text-center p-8">
+            <div className="mb-4">
+              <div className="w-16 h-16 mx-auto bg-white/20 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
+            <h3 className="text-2xl font-bold mb-2">{active.title}</h3>
+            {active.subtitle && <p className="text-lg opacity-90">{active.subtitle}</p>}
           </div>
         </div>
 
