@@ -103,9 +103,9 @@ code {
   color: #ffffff !important;
 }
 
-/* NAVIGATION FIXES - NO WHITE HOVER */
+/* NAVIGATION FIXES - ORANGE THEME */
 .admin-sidebar .active {
-  background: #ec4899 !important;
+  background: #ea580c !important;
   color: #ffffff !important;
 }
 
@@ -114,36 +114,27 @@ code {
   color: #ffffff !important;
 }
 
-/* TABLE FIXES - READABLE ROWS */
-.admin-table {
-  width: 100% !important;
-  background: #1a1a1a !important;
-  border: 1px solid #333333 !important;
-  border-radius: 8px !important;
-  overflow: hidden !important;
-}
-
-.admin-table th {
-  background: #2a2a2a !important;
+/* BUTTON STYLES - ORANGE THEME */
+.admin-button {
+  background: #ea580c !important;
   color: #ffffff !important;
-  padding: 12px !important;
-  text-align: left !important;
-  border-bottom: 1px solid #333333 !important;
+  border: none !important;
+  border-radius: 6px !important;
+  padding: 10px 16px !important;
+  cursor: pointer !important;
 }
 
-.admin-table td {
-  background: #1a1a1a !important;
-  color: #ffffff !important;
-  padding: 12px !important;
-  border-bottom: 1px solid #333333 !important;
-}
-
-.admin-table tr:hover td {
-  background: #2a2a2a !important;
+.admin-button:hover {
+  background: #c2410c !important;
   color: #ffffff !important;
 }
 
-/* FORM FIXES */
+.admin-button:disabled {
+  background: #6b7280 !important;
+  cursor: not-allowed !important;
+}
+
+/* FORM FIXES - ORANGE THEME */
 .admin-input,
 .admin-select,
 .admin-textarea {
@@ -157,23 +148,10 @@ code {
 .admin-input:focus,
 .admin-select:focus,
 .admin-textarea:focus {
-  border-color: #ec4899 !important;
+  border-color: #ea580c !important;
   background: #2a2a2a !important;
   color: #ffffff !important;
-}
-
-.admin-button {
-  background: #ec4899 !important;
-  color: #ffffff !important;
-  border: none !important;
-  border-radius: 6px !important;
-  padding: 10px 16px !important;
-  cursor: pointer !important;
-}
-
-.admin-button:hover {
-  background: #db2777 !important;
-  color: #ffffff !important;
+  box-shadow: 0 0 0 2px rgba(234, 88, 12, 0.3) !important;
 }
 
 /* OVERRIDE ALL CONFLICTING STYLES */

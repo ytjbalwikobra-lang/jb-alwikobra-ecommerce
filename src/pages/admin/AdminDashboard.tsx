@@ -1,5 +1,9 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { TrendingUp, DollarSign, ShoppingBag, Users, Zap, Calendar, BarChart3, PieChart, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
+import { 
+  TrendingUp, DollarSign, ShoppingBag, Users, Zap, Calendar, BarChart3, PieChart, 
+  ArrowUpRight, ArrowDownRight, RefreshCw, Filter, ChevronDown, Eye, Edit, 
+  Trash2, Download, Settings, BarChart2, PieChart as PieChartIcon
+} from 'lucide-react';
 
 // Simple cache untuk optimasi
 const dataCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -29,8 +33,11 @@ const getCachedData = async <T,>(
   }
 };
 
+// Time period types
+type TimePeriod = 'weekly' | 'monthly' | 'quarterly' | 'yearly' | 'custom';
+
 interface DashboardData {
-  orders: { count: number; revenue: number };
+  orders: { count: number; revenue: number; averageValue?: number };
   users: number;
   products: number;
   flashSales: number;
@@ -39,6 +46,11 @@ interface DashboardData {
     dailyRevenue: Array<{date: string; revenue: number; orders: number}>;
     monthlyOrders: number;
     monthlyRevenue: number;
+    trends?: {
+      orderTrend: number;
+      revenueTrend: number;
+      userTrend: number;
+    };
   };
 }
 
@@ -50,34 +62,163 @@ const StatCard: React.FC<{
   color?: string;
   trend?: { value: number; label: string };
   loading?: boolean;
-}> = ({ label, value, hint, icon, color = 'pink', trend, loading = false }) => (
-  <div className="admin-card">
-    <div className="flex items-center justify-between mb-4">
-      <div className="text-sm font-semibold text-gray-300">{label}</div>
-      {icon && <div className="text-pink-400">{icon}</div>}
-    </div>
-    
-    {loading ? (
-      <div className="animate-pulse">
-        <div className="h-8 bg-gray-700 rounded mb-2"></div>
-        <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+}> = ({ label, value, hint, icon, color = 'orange', trend, loading = false }) => {
+  
+  // Color themes using orange/amber as primary
+  const colorThemes = {
+    orange: 'text-orange-400 bg-orange-900/20 border-orange-500/30',
+    amber: 'text-amber-400 bg-amber-900/20 border-amber-500/30',
+    yellow: 'text-yellow-400 bg-yellow-900/20 border-yellow-500/30',
+    green: 'text-green-400 bg-green-900/20 border-green-500/30',
+    blue: 'text-blue-400 bg-blue-900/20 border-blue-500/30',
+    purple: 'text-purple-400 bg-purple-900/20 border-purple-500/30',
+    red: 'text-red-400 bg-red-900/20 border-red-500/30',
+    indigo: 'text-indigo-400 bg-indigo-900/20 border-indigo-500/30'
+  };
+
+  const themeClass = colorThemes[color as keyof typeof colorThemes] || colorThemes.orange;
+
+  return (
+    <div className={`bg-gray-900/60 border rounded-xl p-6 ${themeClass}`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm font-semibold text-gray-300">{label}</div>
+        {icon && <div className={`text-${color}-400`}>{icon}</div>}
       </div>
-    ) : (
-      <>
-        <div className="text-3xl font-bold text-white mb-2">{value}</div>
-        {trend && (
-          <div className={`text-sm flex items-center gap-1 font-medium ${
-            trend.value >= 0 ? 'text-green-400' : 'text-red-400'
-          }`}>
-            {trend.value >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-            <span>{Math.abs(trend.value)}% {trend.label}</span>
+      
+      {loading ? (
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-700 rounded mb-2"></div>
+          <div className="h-4 bg-gray-700 rounded w-3/4"></div>
+        </div>
+      ) : (
+        <>
+          <div className="text-3xl font-bold text-white mb-2">{value}</div>
+          {trend && (
+            <div className={`text-sm flex items-center gap-1 font-medium ${
+              trend.value >= 0 ? 'text-green-400' : 'text-red-400'
+            }`}>
+              {trend.value >= 0 ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
+              <span>{Math.abs(trend.value)}% {trend.label}</span>
+            </div>
+          )}
+          {hint && <div className="text-sm mt-1 text-gray-400">{hint}</div>}
+        </>
+      )}
+    </div>
+  );
+};
+
+// Time Period Filter Component
+const TimePeriodFilter: React.FC<{
+  currentPeriod: TimePeriod;
+  onPeriodChange: (period: TimePeriod) => void;
+  customDateRange?: { start: string; end: string };
+  onCustomDateChange?: (range: { start: string; end: string }) => void;
+}> = ({ currentPeriod, onPeriodChange, customDateRange, onCustomDateChange }) => {
+  const [showCustom, setShowCustom] = useState(false);
+
+  const periods = [
+    { key: 'weekly' as TimePeriod, label: 'Mingguan', icon: Calendar },
+    { key: 'monthly' as TimePeriod, label: 'Bulanan', icon: BarChart3 },
+    { key: 'quarterly' as TimePeriod, label: 'Kuartalan', icon: PieChartIcon },
+    { key: 'yearly' as TimePeriod, label: 'Tahunan', icon: TrendingUp },
+    { key: 'custom' as TimePeriod, label: 'Custom', icon: Settings }
+  ];
+
+  return (
+    <div className="bg-gray-900/60 border border-orange-500/30 rounded-xl p-4 mb-6">
+      <div className="flex items-center gap-2 mb-4">
+        <Filter className="w-5 h-5 text-orange-400" />
+        <h3 className="text-lg font-semibold text-white">Periode Waktu</h3>
+      </div>
+      
+      <div className="flex flex-wrap gap-2">
+        {periods.map(({ key, label, icon: Icon }) => (
+          <button
+            key={key}
+            onClick={() => {
+              onPeriodChange(key);
+              if (key === 'custom') {
+                setShowCustom(true);
+              } else {
+                setShowCustom(false);
+              }
+            }}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg border transition-all ${
+              currentPeriod === key
+                ? 'bg-orange-600 border-orange-500 text-white'
+                : 'bg-gray-800 border-gray-600 text-gray-300 hover:bg-gray-700'
+            }`}
+          >
+            <Icon className="w-4 h-4" />
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {showCustom && currentPeriod === 'custom' && (
+        <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Tanggal Mulai
+            </label>
+            <input
+              type="date"
+              value={customDateRange?.start || ''}
+              onChange={(e) => onCustomDateChange?.({ 
+                start: e.target.value, 
+                end: customDateRange?.end || '' 
+              })}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            />
           </div>
-        )}
-        {hint && <div className="text-sm mt-1 text-gray-400">{hint}</div>}
-      </>
-    )}
-  </div>
-);
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Tanggal Akhir
+            </label>
+            <input
+              type="date"
+              value={customDateRange?.end || ''}
+              onChange={(e) => onCustomDateChange?.({ 
+                start: customDateRange?.start || '', 
+                end: e.target.value 
+              })}
+              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+            />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// Action Button Component (Icon Only)
+const ActionButton: React.FC<{
+  icon: React.ReactNode;
+  onClick: () => void;
+  variant?: 'primary' | 'secondary' | 'danger';
+  tooltip: string;
+  loading?: boolean;
+}> = ({ icon, onClick, variant = 'secondary', tooltip, loading = false }) => {
+  const variants = {
+    primary: 'bg-orange-600 hover:bg-orange-700 text-white',
+    secondary: 'bg-gray-700 hover:bg-gray-600 text-gray-300',
+    danger: 'bg-red-600 hover:bg-red-700 text-white'
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={loading}
+      title={tooltip}
+      className={`p-2 rounded-lg transition-all ${variants[variant]} ${
+        loading ? 'opacity-50 cursor-not-allowed' : ''
+      }`}
+    >
+      {loading ? <RefreshCw className="w-4 h-4 animate-spin" /> : icon}
+    </button>
+  );
+};
 
 const SimpleChart: React.FC<{ 
   data: Array<{date: string; revenue: number; orders: number}>; 
@@ -86,9 +227,9 @@ const SimpleChart: React.FC<{
   const maxRevenue = Math.max(...data.map(d => d.revenue));
   
   return (
-    <div className="admin-card">
+    <div className="bg-gray-900/60 border border-orange-500/30 rounded-xl p-6">
       <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-        <BarChart3 className="w-5 h-5 text-pink-400" />
+        <BarChart3 className="w-5 h-5 text-orange-400" />
         {title}
       </h3>
       <div className="space-y-4">
@@ -104,7 +245,7 @@ const SimpleChart: React.FC<{
             </div>
             <div className="w-full rounded-full h-4 bg-gray-700 border border-gray-600">
               <div 
-                className="bg-gradient-to-r from-pink-500 to-purple-500 h-4 rounded-full transition-all duration-700 ease-out shadow-sm" 
+                className="bg-gradient-to-r from-orange-500 to-amber-500 h-4 rounded-full transition-all duration-700 ease-out shadow-sm" 
                 style={{ width: `${maxRevenue > 0 ? (item.revenue / maxRevenue) * 100 : 0}%` }}
               ></div>
             </div>
@@ -132,10 +273,10 @@ const StatusChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
   };
 
   return (
-    <div className="admin-card">
+    <div className="bg-gray-900/60 border border-orange-500/30 rounded-xl p-6">
       <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-        <PieChart className="w-5 h-5 text-pink-400" />
-        Status Pesanan (7 Hari)
+        <PieChart className="w-5 h-5 text-orange-400" />
+        Status Pesanan
       </h3>
       <div className="space-y-4">
         {Object.entries(data).map(([status, count]) => (
@@ -167,6 +308,50 @@ const AdminDashboard: React.FC = () => {
   });
   const [loading, setLoading] = useState({ basic: true, analytics: true });
   const [refreshing, setRefreshing] = useState(false);
+  const [timePeriod, setTimePeriod] = useState<TimePeriod>('weekly');
+  const [customDateRange, setCustomDateRange] = useState<{ start: string; end: string }>({
+    start: '',
+    end: ''
+  });
+
+  // Calculate date range based on time period
+  const getDateRange = () => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (timePeriod) {
+      case 'weekly':
+        return {
+          start: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
+          end: today
+        };
+      case 'monthly':
+        return {
+          start: new Date(today.getFullYear(), today.getMonth() - 1, today.getDate()),
+          end: today
+        };
+      case 'quarterly':
+        return {
+          start: new Date(today.getFullYear(), today.getMonth() - 3, today.getDate()),
+          end: today
+        };
+      case 'yearly':
+        return {
+          start: new Date(today.getFullYear() - 1, today.getMonth(), today.getDate()),
+          end: today
+        };
+      case 'custom':
+        return {
+          start: customDateRange.start ? new Date(customDateRange.start) : new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000),
+          end: customDateRange.end ? new Date(customDateRange.end) : today
+        };
+      default:
+        return {
+          start: new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000),
+          end: today
+        };
+    }
+  };
 
   const fetchDashboardData = useCallback(async (forceRefresh = false) => {
     try {
@@ -177,49 +362,31 @@ const AdminDashboard: React.FC = () => {
       
       setLoading({ basic: true, analytics: true });
       
-      // Fetch basic stats dengan cache 1 menit
-      const basicData = await getCachedData(
-        'basic-stats',
+      const dateRange = getDateRange();
+      const cacheKey = `dashboard-${timePeriod}-${dateRange.start.toISOString()}-${dateRange.end.toISOString()}`;
+      
+      // Fetch data dengan cache berdasarkan periode waktu
+      const dashboardData = await getCachedData(
+        cacheKey,
         async () => {
-          const response = await fetch('/api/admin?action=dashboard');
+          const params = new URLSearchParams({
+            action: 'dashboard',
+            period: timePeriod,
+            startDate: dateRange.start.toISOString(),
+            endDate: dateRange.end.toISOString()
+          });
+          
+          const response = await fetch(`/api/admin?${params}`);
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const result = await response.json();
           if (!result.success) throw new Error(result.error);
-          return {
-            orders: result.data.orders || { count: 0, revenue: 0 },
-            users: result.data.users || 0,
-            products: result.data.products || 0,
-            flashSales: result.data.flashSales || 0
-          };
+          return result.data;
         },
-        60000 // 1 menit cache
+        timePeriod === 'custom' ? 30000 : 300000 // Custom: 30s, Others: 5min
       );
       
-      setData(prevData => ({ ...prevData, ...basicData }));
-      setLoading(prev => ({ ...prev, basic: false }));
-      
-      // Kemudian fetch analytics dengan cache 5 menit
-      try {
-        const analytics = await getCachedData(
-          'analytics',
-          async () => {
-            const response = await fetch('/api/admin?action=dashboard');
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const result = await response.json();
-            if (!result.success) throw new Error(result.error);
-            return result.data.analytics;
-          },
-          300000 // 5 menit cache
-        );
-        
-        if (analytics) {
-          setData(prevData => ({ ...prevData, analytics }));
-        }
-      } catch (error) {
-        console.warn('Analytics fetch failed:', error);
-      } finally {
-        setLoading(prev => ({ ...prev, analytics: false }));
-      }
+      setData(dashboardData);
+      setLoading({ basic: false, analytics: false });
       
     } catch (error) {
       console.error('Dashboard fetch error:', error);
@@ -233,39 +400,24 @@ const AdminDashboard: React.FC = () => {
     } finally {
       setRefreshing(false);
     }
-  }, []);
+  }, [timePeriod, customDateRange]);
 
   useEffect(() => {
     fetchDashboardData();
-    
-    // Refresh basic stats setiap 2 menit
-    const basicInterval = setInterval(() => {
-      if (!refreshing) {
-        getCachedData(
-          'basic-stats',
-          async () => {
-            const response = await fetch('/api/admin?action=dashboard');
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const result = await response.json();
-            if (!result.success) throw new Error(result.error);
-            return {
-              orders: result.data.orders || { count: 0, revenue: 0 },
-              users: result.data.users || 0,
-              products: result.data.products || 0,
-              flashSales: result.data.flashSales || 0
-            };
-          },
-          60000
-        ).then(basicData => {
-          setData(prevData => ({ ...prevData, ...basicData }));
-        }).catch(console.error);
-      }
-    }, 120000);
-    
-    return () => {
-      clearInterval(basicInterval);
-    };
-  }, [fetchDashboardData, refreshing]);
+  }, [fetchDashboardData]);
+
+  // Auto refresh every 2 minutes for non-custom periods
+  useEffect(() => {
+    if (timePeriod !== 'custom') {
+      const interval = setInterval(() => {
+        if (!refreshing) {
+          fetchDashboardData();
+        }
+      }, 120000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [timePeriod, refreshing, fetchDashboardData]);
 
   if (loading.basic) {
     return (
@@ -290,156 +442,150 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header dengan refresh button */}
+      {/* Header dengan action buttons */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white mb-2">Dashboard Admin</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Dashboard Admin</h1>
           <p className="text-gray-400">Kelola toko online JB Alwikobra dengan mudah</p>
         </div>
-        <button
-          onClick={() => fetchDashboardData(true)}
-          disabled={refreshing}
-          className={`admin-button flex items-center gap-2 ${refreshing ? 'opacity-50' : ''}`}
-        >
-          <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-          {refreshing ? 'Refreshing...' : 'Refresh'}
-        </button>
+        <div className="flex items-center gap-2">
+          <ActionButton
+            icon={<Download className="w-4 h-4" />}
+            onClick={() => {/* TODO: Export functionality */}}
+            variant="secondary"
+            tooltip="Export Data"
+          />
+          <ActionButton
+            icon={<Eye className="w-4 h-4" />}
+            onClick={() => {/* TODO: View detailed reports */}}
+            variant="secondary"
+            tooltip="View Reports"
+          />
+          <ActionButton
+            icon={<RefreshCw className="w-4 h-4" />}
+            onClick={() => fetchDashboardData(true)}
+            variant="primary"
+            tooltip="Refresh Data"
+            loading={refreshing}
+          />
+        </div>
       </div>
 
-      {/* Main Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      {/* Time Period Filter */}
+      <TimePeriodFilter
+        currentPeriod={timePeriod}
+        onPeriodChange={(period) => {
+          setTimePeriod(period);
+          // Clear cache when period changes
+          dataCache.clear();
+        }}
+        customDateRange={customDateRange}
+        onCustomDateChange={setCustomDateRange}
+      />
+
+      {/* Main Statistics Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
         <StatCard 
-          label="Produk Aktif" 
+          label="Total Produk" 
           value={String(data.products)} 
-          hint="Total produk tersedia"
+          hint="Produk tersedia"
           icon={<ShoppingBag className="w-6 h-6" />}
           color="blue"
           loading={loading.basic}
         />
         <StatCard 
-          label="Flash Sale Aktif" 
+          label="Flash Sale" 
           value={String(data.flashSales)} 
-          hint="Sedang berlangsung"
+          hint="Aktif sekarang"
           icon={<Zap className="w-6 h-6" />}
           color="yellow"
           loading={loading.basic}
         />
         <StatCard 
-          label="Pesanan 7 Hari" 
+          label="Total Pesanan" 
           value={String(data.orders.count)} 
-          hint="Pesanan baru"
+          hint={`Periode ${timePeriod === 'weekly' ? 'mingguan' : timePeriod === 'monthly' ? 'bulanan' : timePeriod === 'quarterly' ? 'kuartalan' : timePeriod === 'yearly' ? 'tahunan' : 'custom'}`}
           icon={<Calendar className="w-6 h-6" />}
           color="green"
           loading={loading.basic}
+          trend={data.analytics?.trends ? { value: data.analytics.trends.orderTrend, label: 'vs periode sebelumnya' } : undefined}
         />
         <StatCard 
-          label="Pendapatan 7 Hari" 
+          label="Total Pendapatan" 
           value={`Rp ${data.orders.revenue.toLocaleString('id-ID')}`}
-          hint="Total revenue"
+          hint="Revenue periode ini"
           icon={<DollarSign className="w-6 h-6" />}
-          color="pink"
+          color="orange"
           loading={loading.basic}
+          trend={data.analytics?.trends ? { value: data.analytics.trends.revenueTrend, label: 'vs periode sebelumnya' } : undefined}
         />
         <StatCard 
           label="Rata-rata Pesanan" 
-          value={`Rp ${((data.orders as any).averageValue || 0).toLocaleString('id-ID')}`}
-          hint="Nilai rata-rata per pesanan"
+          value={`Rp ${(data.orders.averageValue || 0).toLocaleString('id-ID')}`}
+          hint="Per pesanan"
           icon={<TrendingUp className="w-6 h-6" />}
           color="purple"
           loading={loading.basic}
         />
+        <StatCard 
+          label="Total Pengguna" 
+          value={String(data.users)} 
+          hint="Pengguna terdaftar"
+          icon={<Users className="w-6 h-6" />}
+          color="indigo"
+          loading={loading.basic}
+          trend={data.analytics?.trends ? { value: data.analytics.trends.userTrend, label: 'vs periode sebelumnya' } : undefined}
+        />
       </div>
 
-      {/* Analytics Section - dengan loading terpisah */}
+      {/* Analytics Section */}
       {loading.analytics ? (
         <div className="animate-pulse space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="admin-card h-32">
-              <div className="h-4 bg-gray-700 rounded mb-4"></div>
-              <div className="h-8 bg-gray-700 rounded mb-2"></div>
-              <div className="h-4 bg-gray-700 rounded w-3/4"></div>
-            </div>
-            <div className="admin-card h-32">
-              <div className="h-4 bg-gray-700 rounded mb-4"></div>
-              <div className="h-8 bg-gray-700 rounded mb-2"></div>
-              <div className="h-4 bg-gray-700 rounded w-3/4"></div>
-            </div>
-          </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="admin-card h-96">
-              <div className="h-6 bg-gray-700 rounded mb-6"></div>
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="h-8 bg-gray-700 rounded"></div>
-                ))}
-              </div>
-            </div>
-            <div className="admin-card h-96">
-              <div className="h-6 bg-gray-700 rounded mb-6"></div>
-              <div className="space-y-4">
-                {[...Array(4)].map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-700 rounded"></div>
-                ))}
-              </div>
-            </div>
+            <div className="h-96 bg-gray-700 rounded-xl"></div>
+            <div className="h-96 bg-gray-700 rounded-xl"></div>
           </div>
         </div>
       ) : data.analytics && (
         <>
-          {/* Monthly Overview */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <StatCard 
-              label="Total Pengguna" 
-              value={String(data.users)} 
-              hint="Pengguna terdaftar"
-              icon={<Users className="w-6 h-6" />}
-              color="purple"
-            />
-            <StatCard 
-              label="Pesanan 30 Hari" 
-              value={String(data.analytics.monthlyOrders)} 
-              hint={`Pendapatan: Rp ${data.analytics.monthlyRevenue.toLocaleString('id-ID')}`}
-              icon={<TrendingUp className="w-6 h-6" />}
-              color="indigo"
-            />
-          </div>
-
           {/* Charts */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <SimpleChart 
-              data={data.analytics.dailyRevenue} 
-              title="Pendapatan Harian (7 Hari Terakhir)" 
+              data={data.analytics.dailyRevenue || []} 
+              title={`Pendapatan Harian (${timePeriod === 'weekly' ? '7 Hari' : timePeriod === 'monthly' ? '30 Hari' : timePeriod === 'quarterly' ? '90 Hari' : timePeriod === 'yearly' ? '365 Hari' : 'Custom'} Terakhir)`}
             />
-            <StatusChart data={data.analytics.statusDistribution} />
+            <StatusChart data={data.analytics.statusDistribution || {}} />
           </div>
 
-          {/* Performance Insights */}
-          <div className="admin-card">
-            <h3 className="text-lg font-semibold text-white mb-6">💡 Insight Performa</h3>
+          {/* Advanced Insights */}
+          <div className="bg-gray-900/60 border border-orange-500/30 rounded-xl p-6">
+            <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+              <BarChart2 className="w-5 h-5 text-orange-400" />
+              Insight Performa
+            </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
                 <div className="text-green-400 font-semibold mb-2">Rata-rata Pesanan/Hari</div>
                 <div className="text-2xl font-bold text-white">
-                  {data.analytics.dailyRevenue.length > 0 
-                    ? Math.round(data.orders.count / 7) 
+                  {data.analytics.dailyRevenue?.length > 0 
+                    ? Math.round(data.orders.count / (data.analytics.dailyRevenue.length || 1))
                     : 0} pesanan
                 </div>
               </div>
               <div className="bg-blue-900/30 border border-blue-700 rounded-lg p-4">
-                <div className="text-blue-400 font-semibold mb-2">Rata-rata Nilai Pesanan</div>
+                <div className="text-blue-400 font-semibold mb-2">Tingkat Konversi</div>
                 <div className="text-2xl font-bold text-white">
-                  Rp {data.orders.count > 0 
-                    ? Math.round(data.orders.revenue / data.orders.count).toLocaleString('id-ID')
-                    : 0}
+                  {data.orders.count > 0 && data.users > 0
+                    ? Math.round((data.orders.count / data.users) * 100)
+                    : 0}%
                 </div>
               </div>
               <div className="bg-purple-900/30 border border-purple-700 rounded-lg p-4">
-                <div className="text-purple-400 font-semibold mb-2">Growth Rate</div>
+                <div className="text-purple-400 font-semibold mb-2">Revenue per User</div>
                 <div className="text-2xl font-bold text-white">
-                  {data.analytics.monthlyOrders > 0 && data.orders.count > 0
-                    ? `${Math.round(((data.orders.count / 7 * 30) / data.analytics.monthlyOrders - 1) * 100)}%`
-                    : 'N/A'
-                  }
+                  Rp {data.users > 0 
+                    ? Math.round(data.orders.revenue / data.users).toLocaleString('id-ID')
+                    : 0}
                 </div>
               </div>
             </div>

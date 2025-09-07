@@ -52,23 +52,75 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
+    // Get time period parameters
+    const period = req.query.period as string || 'weekly';
+    const startDate = req.query.startDate as string;
+    const endDate = req.query.endDate as string;
+    
+    // Calculate date range based on period
+    const currentTime = new Date();
+    let periodStart: Date;
+    let periodEnd: Date = currentTime;
+    
+    if (startDate && endDate) {
+      periodStart = new Date(startDate);
+      periodEnd = new Date(endDate);
+    } else {
+      switch (period) {
+        case 'weekly':
+          periodStart = new Date(currentTime.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'monthly':
+          periodStart = new Date(currentTime.getFullYear(), currentTime.getMonth() - 1, currentTime.getDate());
+          break;
+        case 'quarterly':
+          periodStart = new Date(currentTime.getFullYear(), currentTime.getMonth() - 3, currentTime.getDate());
+          break;
+        case 'yearly':
+          periodStart = new Date(currentTime.getFullYear() - 1, currentTime.getMonth(), currentTime.getDate());
+          break;
+        default:
+          periodStart = new Date(currentTime.getTime() - 7 * 24 * 60 * 60 * 1000);
+      }
+    }
+
     // Try to use optimized RPC function first
     try {
       const { data: rpcData, error: rpcError } = await supabase
         .rpc('get_dashboard_data');
 
       if (!rpcError && rpcData) {
-        // Get daily revenue data
+        // Get daily revenue data for the specified period
+        const days_back = Math.ceil((periodEnd.getTime() - periodStart.getTime()) / (24 * 60 * 60 * 1000));
         const { data: dailyData, error: dailyError } = await supabase
-          .rpc('get_daily_revenue', { days_back: 7 });
+          .rpc('get_daily_revenue', { days_back });
 
         const analytics = rpcData.analytics || {};
+        
+        // Calculate trends by comparing with previous period
+        const prevPeriodStart = new Date(periodStart.getTime() - (periodEnd.getTime() - periodStart.getTime()));
+        const { data: prevData } = await supabase
+          .from('orders')
+          .select('amount, created_at')
+          .eq('status', 'PAID')
+          .gte('created_at', prevPeriodStart.toISOString())
+          .lt('created_at', periodStart.toISOString());
+
+        const prevOrders = prevData || [];
+        const prevRevenue = prevOrders.reduce((sum, order) => sum + (parseFloat(order.amount) || 0), 0);
+        
+        const currentRevenue = analytics.revenue_7d || 0;
+        const currentOrders = analytics.orders_7d || 0;
+        
+        const revenueTrend = prevRevenue > 0 ? ((currentRevenue - prevRevenue) / prevRevenue) * 100 : 0;
+        const orderTrend = prevOrders.length > 0 ? ((currentOrders - prevOrders.length) / prevOrders.length) * 100 : 0;
+
         return res.json({
           success: true,
           data: {
             orders: {
-              count: analytics.orders_7d || 0,
-              revenue: analytics.revenue_7d || 0,
+              count: currentOrders,
+              revenue: currentRevenue,
               averageValue: analytics.avg_order_value || 0
             },
             users: rpcData.users || 0,
@@ -83,7 +135,11 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
               dailyRevenue: dailyData || [],
               monthlyOrders: analytics.orders_30d || 0,
               monthlyRevenue: analytics.revenue_30d || 0,
-              averageOrderValue: analytics.avg_order_value || 0
+              trends: {
+                orderTrend: Math.round(orderTrend),
+                revenueTrend: Math.round(revenueTrend),
+                userTrend: 0 // TODO: Implement user trend calculation
+              }
             }
           }
         });

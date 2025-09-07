@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useToast } from '../../components/Toast.tsx';
-import { RefreshCw, Filter } from 'lucide-react';
+import { RefreshCw, Filter, RotateCcw } from 'lucide-react';
 
 type OrderRow = {
   id: string;
@@ -217,15 +217,17 @@ const AdminOrders: React.FC = () => {
                 setStatusFilter('all');
                 setOrderTypeFilter('all');
               }}
-              className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm"
+              title="Reset Filter"
+              className="p-2 rounded-lg border border-gray-600 bg-gray-700 text-gray-300 hover:bg-gray-600"
             >
-              Reset Filter
+              <RotateCcw size={16} />
             </button>
             <button 
               onClick={load} 
-              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-pink-500 text-white hover:bg-pink-600 text-sm"
+              title="Refresh Data"
+              className="p-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700"
             >
-              <RefreshCw size={16} /> Refresh
+              <RefreshCw size={16} />
             </button>
           </div>
         </div>
