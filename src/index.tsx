@@ -20,19 +20,25 @@ if (process.env.NODE_ENV === 'development') {
   }
 }
 
-// Initialize performance monitoring
-initWebVitalsMonitoring();
+// Initialize performance monitoring (idle)
+requestIdleCallback?.(() => initWebVitalsMonitoring());
 
 // Font optimization disabled to prevent preload warnings
 // FontOptimizer.preloadCriticalFonts();
 
 // Inject critical CSS before any rendering
 injectCriticalCSS();
-// preloadCriticalResources(); // Disabled to prevent font preload warnings
+// Preload only safe critical resources
+preloadCriticalResources?.();
+// Optionally warm fonts in idle to avoid layout shift
+requestIdleCallback?.(() => FontOptimizer.preloadCriticalFonts?.());
 
-const root = ReactDOM.createRoot(
-  document.getElementById('root') as HTMLElement
-);
+const container = document.getElementById('root') as HTMLElement;
+const root = ReactDOM.createRoot(container);
+// Minimal loading placeholder until first paint
+if (!container.hasChildNodes()) {
+  container.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#000;color:#ccc;font:14px system-ui,sans-serif">Loading…</div>';
+}
 root.render(
   <React.StrictMode>
     <App />

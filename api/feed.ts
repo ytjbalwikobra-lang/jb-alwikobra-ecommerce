@@ -397,7 +397,20 @@ async function eligibleProducts(req: VercelRequest, res: VercelResponse, me: any
     const p = row.products;
     if (p?.id && !seen[p.id]) seen[p.id] = p;
   });
-  return res.json({ success: true, products: Object.values(seen) });
+  const products: any[] = Object.values(seen);
+  const productIds = products.map((p: any) => p.id);
+  let reviewedIds: string[] = [];
+  if (productIds.length) {
+    const { data: reviews } = await supabase
+      .from('feed_posts')
+      .select('product_id')
+      .eq('user_id', me.id)
+      .eq('type', 'review')
+      .in('product_id', productIds);
+    reviewedIds = (reviews || []).map((r: any) => r.product_id).filter(Boolean);
+  }
+  const notReviewedProducts = products.filter((p: any) => !reviewedIds.includes(p.id));
+  return res.json({ success: true, products, notReviewedProducts, hasPurchases: products.length > 0 });
 }
 
 async function getNotifications(req: VercelRequest, res: VercelResponse, me: any) {

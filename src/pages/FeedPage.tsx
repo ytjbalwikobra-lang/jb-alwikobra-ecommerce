@@ -73,30 +73,39 @@ const FeedPage: React.FC = () => {
   const [newPostPreview, setNewPostPreview] = useState<string | null>(null);
   const [newReview, setNewReview] = useState<{title:string;content:string;rating:number;product_id:string}>({ title: '', content: '', rating: 5, product_id: '' });
   const [eligibleProducts, setEligibleProducts] = useState<any[]>([]);
+  const [notReviewedProducts, setNotReviewedProducts] = useState<any[]>([]);
+  const [hasPurchases, setHasPurchases] = useState<boolean>(false);
+  const [submitting, setSubmitting] = useState<boolean>(false);
   useEffect(() => {
     (async () => {
       if (user) {
         const res = await fetch('/api/feed?action=eligible-products', { headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')||''}` } });
         const j = await res.json();
-        setEligibleProducts(j.products || []);
+  setEligibleProducts(j.products || []);
+  setNotReviewedProducts(j.notReviewedProducts || []);
+  setHasPurchases(!!j.hasPurchases);
       }
     })();
   }, [user]);
   const createPost = async () => {
     if (!user) return;
+  setSubmitting(true);
   await feedService.createPost({ title: newPost.title, content: newPost.content, type: newPost.type, imageFile: newPostImage });
   setNewPost({ title: '', content: '', type: 'post' });
   setNewPostImage(null);
   setNewPostPreview(null);
   setShowCreatePostModal(false);
+  setSubmitting(false);
   load(1);
   };
   const createReview = async () => {
     if (!user) return;
     if (!newReview.product_id) return;
+  setSubmitting(true);
   await feedService.createReview({ title: newReview.title, content: newReview.content, rating: newReview.rating, product_id: newReview.product_id });
   setNewReview({ title: '', content: '', rating: 5, product_id: '' });
   setShowCreateReviewModal(false);
+  setSubmitting(false);
   load(1);
   };
 
@@ -178,14 +187,16 @@ const FeedPage: React.FC = () => {
 
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-4">
-      <h1 className="text-xl font-bold">Community Feed</h1>
-      <div className="flex items-center gap-2">
-        {user && isAdmin && (
-          <button onClick={()=>setShowCreatePostModal(true)} className="px-3 py-2 rounded bg-pink-600 hover:bg-pink-500">Buat Post/Announcement</button>
-        )}
-        {user && (
-          <button onClick={()=>setShowCreateReviewModal(true)} className="px-3 py-2 rounded border border-white/10 hover:bg-white/5">Buat Review</button>
-        )}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold">Community Feed</h1>
+        <div className="flex items-center gap-2">
+          {user && isAdmin && (
+            <button onClick={()=>setShowCreatePostModal(true)} className="px-3 py-2 rounded bg-pink-600 hover:bg-pink-500">Buat Post/Announcement</button>
+          )}
+          {user && hasPurchases && (notReviewedProducts.length > 0) && (
+            <button onClick={()=>setShowCreateReviewModal(true)} className="px-3 py-2 rounded border border-white/10 hover:bg-white/5">Buat Review</button>
+          )}
+        </div>
       </div>
       {posts.map(post => (
         <div key={post.id} className={`${post.type === 'announcement' ? 'bg-yellow-900/20 border-yellow-400/30' : 'bg-black/50 border-white/10'} border rounded-xl p-4`}>
@@ -296,31 +307,41 @@ const FeedPage: React.FC = () => {
             <div className="space-y-3">
               <input autoFocus value={newPost.title} onChange={e=>setNewPost(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" />
               <textarea value={newPost.content} onChange={e=>setNewPost(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" rows={4} />
-              <div className="flex items-start gap-3">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400">Gambar:
-                    <input type="file" accept="image/*" className="block text-sm mt-1" onChange={e=>{
-                      const f = e.target.files?.[0] || null;
-                      setNewPostImage(f);
-                      if (newPostPreview) URL.revokeObjectURL(newPostPreview);
-                      setNewPostPreview(f ? URL.createObjectURL(f) : null);
-                    }} />
-                  </label>
-                </div>
-                {newPostPreview && (
-                  <div className="flex items-center gap-2">
-                    <img src={newPostPreview} alt="preview" className="w-24 h-24 object-cover rounded-lg border border-white/10" />
-                    <button type="button" onClick={()=>{ setNewPostImage(null); if (newPostPreview) URL.revokeObjectURL(newPostPreview); setNewPostPreview(null); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/10">Hapus</button>
+                  <label className="block text-xs text-gray-400 mb-2">Gambar</label>
+                  <div className="relative w-full aspect-square border border-dashed border-white/15 rounded-lg bg-white/5 flex items-center justify-center overflow-hidden">
+                    {newPostPreview ? (
+                      <>
+                        <img src={newPostPreview} alt="preview" className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute top-2 right-2 flex gap-2">
+                          <button type="button" onClick={()=>{ setNewPostImage(null); if (newPostPreview) URL.revokeObjectURL(newPostPreview); setNewPostPreview(null); }} className="text-xs px-2 py-1 border border-white/20 rounded bg-black/40 hover:bg-black/60">Hapus</button>
+                        </div>
+                      </>
+                    ) : (
+                      <label className="w-full h-full flex items-center justify-center cursor-pointer text-gray-400 hover:text-white">
+                        <input type="file" accept="image/*" className="hidden" onChange={e=>{
+                          const f = e.target.files?.[0] || null;
+                          setNewPostImage(f);
+                          if (newPostPreview) URL.revokeObjectURL(newPostPreview);
+                          setNewPostPreview(f ? URL.createObjectURL(f) : null);
+                        }} />
+                        <span className="text-3xl">＋</span>
+                      </label>
+                    )}
                   </div>
-                )}
-                <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as any}))} className="bg-white/5 border border-white/10 rounded px-2 py-1">
-                  <option value="post">post</option>
-                  <option value="announcement">announcement</option>
-                </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-2">Tipe</label>
+                  <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as any}))} className="w-full bg-black/70 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30">
+                    <option className="bg-black text-white" value="post">Post</option>
+                    <option className="bg-black text-white" value="announcement">Announcement</option>
+                  </select>
+                </div>
               </div>
               <div className="flex items-center gap-2 justify-end mt-2">
-                <button onClick={()=>setShowCreatePostModal(false)} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5">Batal</button>
-                <button onClick={createPost} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500">Kirim</button>
+                <button disabled={submitting} onClick={()=>setShowCreatePostModal(false)} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-50">Batal</button>
+                <button disabled={submitting} onClick={createPost} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 disabled:opacity-50">{submitting ? 'Mengirim...' : 'Kirim'}</button>
               </div>
             </div>
           </div>
@@ -336,18 +357,23 @@ const FeedPage: React.FC = () => {
               <button onClick={()=>setShowCreateReviewModal(false)} className="p-1 rounded hover:bg-white/10">✕</button>
             </div>
             <div className="space-y-3">
-              <input autoFocus value={newReview.title} onChange={e=>setNewReview(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" />
-              <textarea value={newReview.content} onChange={e=>setNewReview(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" rows={4} />
-              <div className="flex items-center gap-2">
-                <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="bg-white/5 border border-white/10 rounded px-2 py-1">
-                  <option value="">Pilih produk yang pernah dibeli</option>
-                  {eligibleProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              <textarea autoFocus value={newReview.content} onChange={e=>setNewReview(p=>({...p,content:e.target.value}))} placeholder="Bagikan pengalamanmu..." className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" rows={4} />
+              <div>
+                <label className="block text-xs text-gray-400 mb-2">Produk</label>
+                <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="w-full bg-black/70 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30">
+                  <option className="bg-black text-white" value="">Pilih produk yang pernah dibeli</option>
+                  {notReviewedProducts.map(p => <option className="bg-black text-white" key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
-                <RatingSelector value={newReview.rating} onChange={(v)=>setNewReview(p=>({...p, rating: v}))} />
+              </div>
+              <div>
+                <label className="block text-xs text-gray-400 mb-2">Rating</label>
+                <div className="scale-125 origin-left">
+                  <RatingSelector value={newReview.rating} onChange={(v)=>setNewReview(p=>({...p, rating: v}))} />
+                </div>
               </div>
               <div className="flex items-center gap-2 justify-end mt-2">
-                <button onClick={()=>setShowCreateReviewModal(false)} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5">Batal</button>
-                <button onClick={createReview} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500">Kirim</button>
+                <button disabled={submitting} onClick={()=>setShowCreateReviewModal(false)} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 disabled:opacity-50">Batal</button>
+                <button disabled={submitting} onClick={createReview} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500 disabled:opacity-50">{submitting ? 'Mengirim...' : 'Kirim'}</button>
               </div>
             </div>
           </div>
