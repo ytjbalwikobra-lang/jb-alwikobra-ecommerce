@@ -64,6 +64,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await editReview(req, res, me);
       case 'admin-delete-post':
         return await adminDeletePost(req, res, me);
+      case 'admin-edit-post':
+        return await adminEditPost(req, res, me);
       case 'admin-delete-comment':
         return await adminDeleteComment(req, res, me);
       case 'notifications':
@@ -213,6 +215,19 @@ async function addComment(req: VercelRequest, res: VercelResponse, me: any) {
     .single();
   if (error) return res.status(500).json({ error: 'Failed to add comment' });
 
+  // Recalculate exact count and set (defensive if triggers are missing)
+  try {
+    const { count } = await supabase
+      .from('feed_comments')
+      .select('id', { count: 'exact', head: true })
+      .eq('post_id', post_id)
+      .eq('is_deleted', false);
+    await supabase
+      .from('feed_posts')
+      .update({ comments_count: count || 0 })
+      .eq('id', post_id);
+  } catch {}
+
   // Notifications
   try {
     if (parent_comment_id) {
@@ -240,7 +255,13 @@ async function addComment(req: VercelRequest, res: VercelResponse, me: any) {
     }
   } catch {}
 
-  return res.json({ success: true, comment });
+  // Return updated counter for client convenience
+  let newCount = undefined as number | undefined;
+  try {
+    const { data: postRow } = await supabase.from('feed_posts').select('comments_count').eq('id', post_id).single();
+    newCount = postRow?.comments_count;
+  } catch {}
+  return res.json({ success: true, comment, comments_count: newCount });
 }
 
 async function listComments(req: VercelRequest, res: VercelResponse, me: any) {
@@ -291,6 +312,26 @@ async function adminDeletePost(req: VercelRequest, res: VercelResponse, me: any)
   const { error } = await supabase.from('feed_posts').update({ is_deleted: true }).eq('id', post_id);
   if (error) return res.status(500).json({ error: 'Failed to delete post' });
   return res.json({ success: true });
+}
+
+async function adminEditPost(req: VercelRequest, res: VercelResponse, me: any) {
+  if (req.method !== 'PUT') return res.status(405).json({ error: 'Method not allowed' });
+  if (!me || !me.is_admin) return res.status(403).json({ error: 'Admin only' });
+  const { post_id, title, content, image_url, type } = req.body || {};
+  if (!post_id) return res.status(400).json({ error: 'post_id required' });
+  const update: any = {};
+  if (title !== undefined) update.title = title;
+  if (content !== undefined) update.content = content;
+  if (image_url !== undefined) update.image_url = image_url || null;
+  if (type !== undefined) update.type = type;
+  const { data, error } = await supabase
+    .from('feed_posts')
+    .update(update)
+    .eq('id', post_id)
+    .select(`*, users:users!feed_posts_user_id_fkey ( id, name, is_admin ), products:products!feed_posts_product_id_fkey ( id, name, image )`)
+    .single();
+  if (error) return res.status(500).json({ error: 'Failed to edit post' });
+  return res.json({ success: true, post: data });
 }
 
 async function adminDeleteComment(req: VercelRequest, res: VercelResponse, me: any) {

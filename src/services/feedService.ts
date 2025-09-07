@@ -19,16 +19,31 @@ export const feedService = {
     });
     return res.json();
   },
-  async createReview(payload: { title: string; rating: number; content: string; product_id: string; imageFile?: File | null }) {
-    let image_url: string | undefined;
-    if (payload.imageFile) {
-      const u = await uploadFile(payload.imageFile, 'feed');
-      image_url = u || undefined;
-    }
+  async createReview(payload: { title: string; rating: number; content: string; product_id: string }) {
     const res = await fetch('/api/feed?action=create-review', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` },
-      body: JSON.stringify({ ...payload, image_url })
+      body: JSON.stringify({ ...payload })
+    });
+    return res.json();
+  },
+  async adminEditPost(post_id: string, fields: { title?: string; content?: string; type?: 'post'|'announcement'; imageFile?: File | null }) {
+    let image_url: string | undefined;
+    if (fields.imageFile) {
+      const u = await uploadFile(fields.imageFile, 'feed');
+      image_url = u || undefined;
+    }
+    const res = await fetch('/api/feed?action=admin-edit-post', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` },
+      body: JSON.stringify({ post_id, ...fields, image_url })
+    });
+    return res.json();
+  },
+  async adminDeletePost(post_id: string) {
+    const res = await fetch(`/api/feed?action=admin-delete-post&post_id=${post_id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` }
     });
     return res.json();
   },
@@ -70,13 +85,6 @@ export const feedService = {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` },
       body: JSON.stringify({ post_id, ...fields, image_url })
-    });
-    return res.json();
-  },
-  async adminDeletePost(post_id: string) {
-    const res = await fetch(`/api/feed?action=admin-delete-post&post_id=${post_id}`, {
-      method: 'DELETE',
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` }
     });
     return res.json();
   },

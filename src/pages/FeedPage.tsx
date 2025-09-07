@@ -58,13 +58,11 @@ const FeedPage: React.FC = () => {
 
   useEffect(() => { load(1); /* eslint-disable-next-line */ }, []);
 
-  // Minimal quick-create UI for dev testing
+  // Create bars
   const [newPost, setNewPost] = useState<{title:string;content:string;type:'post'|'announcement'}>({ title: '', content: '', type: 'post' });
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
   const [newPostPreview, setNewPostPreview] = useState<string | null>(null);
   const [newReview, setNewReview] = useState<{title:string;content:string;rating:number;product_id:string}>({ title: '', content: '', rating: 5, product_id: '' });
-  const [newReviewImage, setNewReviewImage] = useState<File | null>(null);
-  const [newReviewPreview, setNewReviewPreview] = useState<string | null>(null);
   const [eligibleProducts, setEligibleProducts] = useState<any[]>([]);
   useEffect(() => {
     (async () => {
@@ -86,10 +84,8 @@ const FeedPage: React.FC = () => {
   const createReview = async () => {
     if (!user) return;
     if (!newReview.product_id) return;
-  await feedService.createReview({ title: newReview.title, content: newReview.content, rating: newReview.rating, product_id: newReview.product_id, imageFile: newReviewImage });
+  await feedService.createReview({ title: newReview.title, content: newReview.content, rating: newReview.rating, product_id: newReview.product_id });
   setNewReview({ title: '', content: '', rating: 5, product_id: '' });
-  setNewReviewImage(null);
-  setNewReviewPreview(null);
     load(1);
   };
 
@@ -118,18 +114,22 @@ const FeedPage: React.FC = () => {
     if (isGuest) return;
     const content = parentId ? (commentInputs[`reply_${parentId}`] || '') : (commentInputs[postId] || '');
     if (!content.trim()) return;
-    const { comment } = await feedService.comment(postId, content, parentId);
+    const { comment, comments_count } = await feedService.comment(postId, content, parentId);
     setCommentInputs(prev => ({ ...prev, [postId]: '', [`reply_${parentId}`]: '' }));
     await loadComments(postId);
+    if (typeof comments_count === 'number') {
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count } : p));
+    } else {
+      // Fallback increment if API didn’t return new count
+      setPosts(prev => prev.map(p => p.id === postId ? { ...p, comments_count: (p.comments_count || 0) + 1 } : p));
+    }
   };
 
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-4">
       <h1 className="text-xl font-bold">Community Feed</h1>
-      {/* Dev-only create bar */}
-      {user && (
+  {user && (
         <div className="bg-black/40 border border-white/10 rounded-xl p-4">
-          <div className="text-sm text-gray-400 mb-2">Buat cepat (dev testing)</div>
           <div className="grid md:grid-cols-2 gap-3">
             <div className="space-y-2">
               <div className="text-xs text-gray-400">Post (Admin only)</div>
@@ -165,23 +165,6 @@ const FeedPage: React.FC = () => {
               <input value={newReview.title} onChange={e=>setNewReview(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
               <textarea value={newReview.content} onChange={e=>setNewReview(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={2} />
               <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-400">
-                  Gambar:
-                  <input type="file" accept="image/*" className="block text-sm mt-1" onChange={e=>{
-                    const f = e.target.files?.[0] || null;
-                    setNewReviewImage(f);
-                    if (newReviewPreview) URL.revokeObjectURL(newReviewPreview);
-                    setNewReviewPreview(f ? URL.createObjectURL(f) : null);
-                  }} />
-                </label>
-                {newReviewPreview && (
-                  <div className="flex items-center gap-2">
-                    <img src={newReviewPreview} alt="preview" className="w-16 h-16 object-cover rounded border border-white/10" />
-                    <button type="button" onClick={()=>{ setNewReviewImage(null); if (newReviewPreview) URL.revokeObjectURL(newReviewPreview); setNewReviewPreview(null); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/5">Hapus</button>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
                 <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
                   <option value="">Pilih produk yang pernah dibeli</option>
                   {eligibleProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -194,14 +177,26 @@ const FeedPage: React.FC = () => {
         </div>
       )}
       {posts.map(post => (
-        <div key={post.id} className="bg-black/50 border border-white/10 rounded-xl p-4">
+        <div key={post.id} className={`${post.type === 'announcement' ? 'bg-yellow-900/20 border-yellow-400/30' : 'bg-black/50 border-white/10'} border rounded-xl p-4`}>
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-400 flex items-center gap-2">
               <span>{post.users?.name || 'User'}</span>
               <RolePill isAdmin={post.users?.is_admin} />
               <span>· {new Date(post.created_at).toLocaleString('id-ID')}</span>
             </div>
-            <div className="text-xs px-2 py-1 rounded bg-pink-500/20 text-pink-300">{post.type}</div>
+            <div className="flex items-center gap-2">
+              {post.type === 'announcement' && <span className="text-[10px] px-2 py-0.5 rounded-full border bg-yellow-500/20 text-yellow-200 border-yellow-400/30">Announcement</span>}
+              {(user && (user.isAdmin || user.id === post.user_id)) && (
+                <div className="flex items-center gap-1">
+                  <button title="Edit" className="p-1 rounded hover:bg-white/10" onClick={() => {/* TODO: open edit UI */}}>
+                    ✎
+                  </button>
+                  <button title="Delete" className="p-1 rounded hover:bg-white/10" onClick={() => {/* TODO: call delete API */}}>
+                    🗑
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
           <h3 className="text-lg font-semibold mt-2">{post.title}</h3>
           {post.type === 'review' && <RatingStars value={post.rating} />}
