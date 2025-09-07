@@ -48,6 +48,13 @@ const FeedPage: React.FC = () => {
   const isGuest = !user;
   const isAdmin = !!user?.isAdmin;
 
+  // Modal state
+  const [showCreatePostModal, setShowCreatePostModal] = useState(false);
+  const [showCreateReviewModal, setShowCreateReviewModal] = useState(false);
+  const [editPostId, setEditPostId] = useState<string | null>(null);
+  const [editFields, setEditFields] = useState<{ title: string; content: string; type: 'post'|'announcement'; imageFile?: File | null; removeImage?: boolean }>({ title: '', content: '', type: 'post' });
+  const [editPreview, setEditPreview] = useState<string | null>(null);
+
   const load = async (p = 1) => {
     setLoading(true);
     const { data, total } = await feedService.list(p, limit);
@@ -79,14 +86,16 @@ const FeedPage: React.FC = () => {
   setNewPost({ title: '', content: '', type: 'post' });
   setNewPostImage(null);
   setNewPostPreview(null);
-    load(1);
+  setShowCreatePostModal(false);
+  load(1);
   };
   const createReview = async () => {
     if (!user) return;
     if (!newReview.product_id) return;
   await feedService.createReview({ title: newReview.title, content: newReview.content, rating: newReview.rating, product_id: newReview.product_id });
   setNewReview({ title: '', content: '', rating: 5, product_id: '' });
-    load(1);
+  setShowCreateReviewModal(false);
+  load(1);
   };
 
   const toggleLike = async (post: any) => {
@@ -125,57 +134,39 @@ const FeedPage: React.FC = () => {
     }
   };
 
+  const onClickEdit = (post: any) => {
+    setEditPostId(post.id);
+    setEditFields({ title: post.title || '', content: post.content || '', type: post.type || 'post' });
+    setEditPreview(null);
+  };
+  const onClickDelete = async (post: any) => {
+    if (!user) return;
+    if (!(user.isAdmin || user.id === post.user_id)) return;
+    if (!confirm('Hapus postingan ini?')) return;
+    await feedService.adminDeletePost(post.id);
+    load(page);
+  };
+  const submitEdit = async () => {
+    if (!editPostId) return;
+    await feedService.adminEditPost(editPostId, editFields);
+    setEditPostId(null);
+    setEditFields({ title: '', content: '', type: 'post' });
+    if (editPreview) URL.revokeObjectURL(editPreview);
+    setEditPreview(null);
+    load(page);
+  };
+
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-4">
       <h1 className="text-xl font-bold">Community Feed</h1>
-  {user && (
-        <div className="bg-black/40 border border-white/10 rounded-xl p-4">
-          <div className="grid md:grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <div className="text-xs text-gray-400">Post (Admin only)</div>
-              <input value={newPost.title} onChange={e=>setNewPost(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
-              <textarea value={newPost.content} onChange={e=>setNewPost(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={2} />
-              <div className="flex items-center gap-2">
-                <label className="text-xs text-gray-400">
-                  Gambar:
-                  <input type="file" accept="image/*" className="block text-sm mt-1" onChange={e=>{
-                    const f = e.target.files?.[0] || null;
-                    setNewPostImage(f);
-                    if (newPostPreview) URL.revokeObjectURL(newPostPreview);
-                    setNewPostPreview(f ? URL.createObjectURL(f) : null);
-                  }} />
-                </label>
-                {newPostPreview && (
-                  <div className="flex items-center gap-2">
-                    <img src={newPostPreview} alt="preview" className="w-16 h-16 object-cover rounded border border-white/10" />
-                    <button type="button" onClick={()=>{ setNewPostImage(null); if (newPostPreview) URL.revokeObjectURL(newPostPreview); setNewPostPreview(null); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/5">Hapus</button>
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as any}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
-                  <option value="post">post</option>
-                  <option value="announcement">announcement</option>
-                </select>
-                <button onClick={createPost} disabled={!isAdmin} className="px-3 py-2 bg-pink-600 rounded disabled:opacity-50">Kirim</button>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="text-xs text-gray-400">Review (pembeli saja)</div>
-              <input value={newReview.title} onChange={e=>setNewReview(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
-              <textarea value={newReview.content} onChange={e=>setNewReview(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={2} />
-              <div className="flex items-center gap-2">
-                <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
-                  <option value="">Pilih produk yang pernah dibeli</option>
-                  {eligibleProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
-                <RatingSelector value={newReview.rating} onChange={(v)=>setNewReview(p=>({...p, rating: v}))} />
-                <button onClick={createReview} className="px-3 py-2 bg-pink-600 rounded">Kirim</button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <div className="flex items-center gap-2">
+        {user && isAdmin && (
+          <button onClick={()=>setShowCreatePostModal(true)} className="px-3 py-2 rounded bg-pink-600 hover:bg-pink-500">Buat Post/Announcement</button>
+        )}
+        {user && (
+          <button onClick={()=>setShowCreateReviewModal(true)} className="px-3 py-2 rounded border border-white/10 hover:bg-white/5">Buat Review</button>
+        )}
+      </div>
       {posts.map(post => (
         <div key={post.id} className={`${post.type === 'announcement' ? 'bg-yellow-900/20 border-yellow-400/30' : 'bg-black/50 border-white/10'} border rounded-xl p-4`}>
           <div className="flex items-center justify-between">
@@ -188,10 +179,10 @@ const FeedPage: React.FC = () => {
               {post.type === 'announcement' && <span className="text-[10px] px-2 py-0.5 rounded-full border bg-yellow-500/20 text-yellow-200 border-yellow-400/30">Announcement</span>}
               {(user && (user.isAdmin || user.id === post.user_id)) && (
                 <div className="flex items-center gap-1">
-                  <button title="Edit" className="p-1 rounded hover:bg-white/10" onClick={() => {/* TODO: open edit UI */}}>
+                  <button title="Edit" className="p-1 rounded hover:bg-white/10" onClick={() => onClickEdit(post)}>
                     ✎
                   </button>
-                  <button title="Delete" className="p-1 rounded hover:bg-white/10" onClick={() => {/* TODO: call delete API */}}>
+                  <button title="Delete" className="p-1 rounded hover:bg-white/10" onClick={() => onClickDelete(post)}>
                     🗑
                   </button>
                 </div>
@@ -268,6 +259,122 @@ const FeedPage: React.FC = () => {
         })}
         <button disabled={loading || page >= Math.max(1, Math.ceil(total / limit))} onClick={() => { const p = page + 1; setPage(p); load(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-3 py-1 rounded border border-white/10 disabled:opacity-50 hover:bg-white/5">Next</button>
       </div>
+
+      {/* Create Post/Announcement Modal (Admin) */}
+      {showCreatePostModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="w-full max-w-lg bg-black border border-white/10 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Buat Post/Announcement</h3>
+              <button onClick={()=>setShowCreatePostModal(false)} className="p-1 rounded hover:bg-white/10">✕</button>
+            </div>
+            <div className="space-y-2">
+              <input value={newPost.title} onChange={e=>setNewPost(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
+              <textarea value={newPost.content} onChange={e=>setNewPost(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={4} />
+              <div className="flex items-start gap-3">
+                <div>
+                  <label className="text-xs text-gray-400">Gambar:
+                    <input type="file" accept="image/*" className="block text-sm mt-1" onChange={e=>{
+                      const f = e.target.files?.[0] || null;
+                      setNewPostImage(f);
+                      if (newPostPreview) URL.revokeObjectURL(newPostPreview);
+                      setNewPostPreview(f ? URL.createObjectURL(f) : null);
+                    }} />
+                  </label>
+                </div>
+                {newPostPreview && (
+                  <div className="flex items-center gap-2">
+                    <img src={newPostPreview} alt="preview" className="w-24 h-24 object-cover rounded border border-white/10" />
+                    <button type="button" onClick={()=>{ setNewPostImage(null); if (newPostPreview) URL.revokeObjectURL(newPostPreview); setNewPostPreview(null); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/5">Hapus</button>
+                  </div>
+                )}
+                <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as any}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
+                  <option value="post">post</option>
+                  <option value="announcement">announcement</option>
+                </select>
+              </div>
+              <div className="flex items-center gap-2 justify-end mt-2">
+                <button onClick={()=>setShowCreatePostModal(false)} className="px-3 py-2 rounded border border-white/10">Batal</button>
+                <button onClick={createPost} className="px-3 py-2 rounded bg-pink-600">Kirim</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Review Modal (Buyer) */}
+      {showCreateReviewModal && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="w-full max-w-lg bg-black border border-white/10 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Buat Review</h3>
+              <button onClick={()=>setShowCreateReviewModal(false)} className="p-1 rounded hover:bg-white/10">✕</button>
+            </div>
+            <div className="space-y-2">
+              <input value={newReview.title} onChange={e=>setNewReview(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
+              <textarea value={newReview.content} onChange={e=>setNewReview(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={4} />
+              <div className="flex items-center gap-2">
+                <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
+                  <option value="">Pilih produk yang pernah dibeli</option>
+                  {eligibleProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+                <RatingSelector value={newReview.rating} onChange={(v)=>setNewReview(p=>({...p, rating: v}))} />
+              </div>
+              <div className="flex items-center gap-2 justify-end mt-2">
+                <button onClick={()=>setShowCreateReviewModal(false)} className="px-3 py-2 rounded border border-white/10">Batal</button>
+                <button onClick={createReview} className="px-3 py-2 rounded bg-pink-600">Kirim</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Post Modal */}
+      {editPostId && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="w-full max-w-lg bg-black border border-white/10 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Edit Post</h3>
+              <button onClick={()=>{ setEditPostId(null); setEditFields({ title: '', content: '', type: 'post' }); if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); }} className="p-1 rounded hover:bg-white/10">✕</button>
+            </div>
+            <div className="space-y-2">
+              <input value={editFields.title} onChange={e=>setEditFields(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
+              <textarea value={editFields.content} onChange={e=>setEditFields(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={4} />
+              <div className="flex items-start gap-3">
+                <select value={editFields.type} onChange={e=>setEditFields(p=>({...p, type: e.target.value as any}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
+                  <option value="post">post</option>
+                  <option value="announcement">announcement</option>
+                </select>
+                <div>
+                  <label className="text-xs text-gray-400">Gambar:
+                    <input type="file" accept="image/*" className="block text-sm mt-1" onChange={e=>{
+                      const f = e.target.files?.[0] || null;
+                      setEditFields(p=>({ ...p, imageFile: f, removeImage: false }));
+                      if (editPreview) URL.revokeObjectURL(editPreview);
+                      setEditPreview(f ? URL.createObjectURL(f) : null);
+                    }} />
+                  </label>
+                  <div className="mt-1">
+                    <label className="inline-flex items-center gap-2 text-xs text-gray-400">
+                      <input type="checkbox" checked={!!editFields.removeImage} onChange={e=>setEditFields(p=>({ ...p, removeImage: e.target.checked, imageFile: e.target.checked ? undefined : p.imageFile }))} /> Hapus gambar
+                    </label>
+                  </div>
+                </div>
+                {editPreview && (
+                  <div className="flex items-center gap-2">
+                    <img src={editPreview} alt="preview" className="w-24 h-24 object-cover rounded border border-white/10" />
+                    <button type="button" onClick={()=>{ if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); setEditFields(p=>({ ...p, imageFile: undefined })); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/5">Bersihkan</button>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2 justify-end mt-2">
+                <button onClick={()=>{ setEditPostId(null); setEditFields({ title: '', content: '', type: 'post' }); if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); }} className="px-3 py-2 rounded border border-white/10">Batal</button>
+                <button onClick={submitEdit} className="px-3 py-2 rounded bg-pink-600">Simpan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

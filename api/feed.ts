@@ -293,7 +293,7 @@ async function editReview(req: VercelRequest, res: VercelResponse, me: any) {
     if (typeof rating !== 'number' || rating < 1 || rating > 5) return res.status(400).json({ error: 'Rating must be 1-5' });
     update.rating = rating;
   }
-  if (image_url !== undefined) update.image_url = image_url || null;
+  if (image_url !== undefined) update.image_url = image_url === '' ? null : image_url;
   const { data: updated, error } = await supabase
     .from('feed_posts')
     .update(update)

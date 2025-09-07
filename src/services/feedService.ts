@@ -27,11 +27,14 @@ export const feedService = {
     });
     return res.json();
   },
-  async adminEditPost(post_id: string, fields: { title?: string; content?: string; type?: 'post'|'announcement'; imageFile?: File | null }) {
+  async adminEditPost(post_id: string, fields: { title?: string; content?: string; type?: 'post'|'announcement'; imageFile?: File | null; removeImage?: boolean }) {
     let image_url: string | undefined;
     if (fields.imageFile) {
       const u = await uploadFile(fields.imageFile, 'feed');
       image_url = u || undefined;
+    }
+    if (!fields.imageFile && fields.removeImage) {
+      image_url = '';
     }
     const res = await fetch('/api/feed?action=admin-edit-post', {
       method: 'PUT',
