@@ -1,4 +1,5 @@
 import { supabase } from './supabase.ts';
+import { uploadFile } from './storageService.ts';
 
 async function toBase64(file: File): Promise<string> {
   const buf = await file.arrayBuffer();
@@ -26,6 +27,18 @@ async function uploadImageViaApi(file: File, folder = 'feed'): Promise<string | 
   return undefined;
 }
 
+async function uploadImagePreferNative(file: File, folder = 'feed'): Promise<string | undefined> {
+  // Try native client upload first
+  try {
+    const u = await uploadFile(file, folder);
+    if (u) return u;
+  } catch (_) {
+    // fall through to API fallback
+  }
+  // Fallback to server-side upload (bypasses RLS)
+  return uploadImageViaApi(file, folder);
+}
+
 export const feedService = {
   async list(page = 1, limit = 10) {
     const res = await fetch(`/api/feed?action=list&page=${page}&limit=${limit}`);
@@ -34,7 +47,7 @@ export const feedService = {
   async createPost(payload: { title: string; content: string; imageFile?: File | null; type?: 'post'|'announcement' }) {
     let image_url: string | undefined;
     if (payload.imageFile) {
-  const u = await uploadImageViaApi(payload.imageFile, 'feed');
+  const u = await uploadImagePreferNative(payload.imageFile, 'feed');
       image_url = u || undefined;
     }
     const res = await fetch('/api/feed?action=create-post', {
@@ -55,7 +68,7 @@ export const feedService = {
   async adminEditPost(post_id: string, fields: { title?: string; content?: string; type?: 'post'|'announcement'; imageFile?: File | null; removeImage?: boolean }) {
     let image_url: string | undefined;
     if (fields.imageFile) {
-  const u = await uploadImageViaApi(fields.imageFile, 'feed');
+  const u = await uploadImagePreferNative(fields.imageFile, 'feed');
       image_url = u || undefined;
     }
     if (!fields.imageFile && fields.removeImage) {
@@ -106,7 +119,7 @@ export const feedService = {
   async editReview(post_id: string, fields: { title?: string; content?: string; rating?: number; imageFile?: File | null }) {
     let image_url: string | undefined;
     if (fields.imageFile) {
-  const u = await uploadImageViaApi(fields.imageFile, 'feed');
+  const u = await uploadImagePreferNative(fields.imageFile, 'feed');
       image_url = u || undefined;
     }
     const res = await fetch('/api/feed?action=edit-review', {
