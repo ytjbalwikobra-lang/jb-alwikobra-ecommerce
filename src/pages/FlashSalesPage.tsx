@@ -2,13 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
-import HorizontalScroller from '../components/HorizontalScroller.tsx';
 import { 
   Zap, 
   Clock, 
   Flame,
   TrendingUp,
-  Timer,
   ArrowUpRight
 } from 'lucide-react';
 
@@ -115,9 +113,10 @@ const FlashSalesPage: React.FC = () => {
                 </p>
               </div>
 
-        <HorizontalScroller ariaLabel="Produk Flash Sale" itemGapClass="gap-4">
+              {/* Grid of products instead of horizontal scroller */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {flashSaleProducts.map((product) => (
-                  <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start">
+                  <div key={product.id}>
                     <ProductCard
                       product={product}
                       showFlashSaleTimer={true}
@@ -125,7 +124,7 @@ const FlashSalesPage: React.FC = () => {
                     />
                   </div>
                 ))}
-              </HorizontalScroller>
+              </div>
             </div>
           ) : (
             <div className="text-center py-16">
