@@ -72,11 +72,26 @@ export class SettingsService {
       } else if (input.faviconUrl) {
         payload.favicon_url = input.faviconUrl;
       }
-      const { data, error } = await (supabase as any)
-        .from('website_settings')
-        .upsert({ id: current.id === 'default' ? undefined : current.id, ...payload }, { onConflict: 'id' })
-        .select()
-        .maybeSingle();
+      let data: any = null;
+      let error: any = null;
+      if (current.id && current.id !== 'default') {
+        const resp = await (supabase as any)
+          .from('website_settings')
+          .update(payload)
+          .eq('id', current.id)
+          .select()
+          .single();
+        data = resp.data;
+        error = resp.error;
+      } else {
+        const resp = await (supabase as any)
+          .from('website_settings')
+          .insert(payload)
+          .select()
+          .single();
+        data = resp.data;
+        error = resp.error;
+      }
       if (error) throw error;
       const row = data || payload;
       return {

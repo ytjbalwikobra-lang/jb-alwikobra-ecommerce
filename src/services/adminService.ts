@@ -791,11 +791,28 @@ class AdminService {
         payload.favicon_url = input.faviconUrl;
       }
 
-      const { data, error } = await this.adminClient
-        .from('website_settings')
-        .upsert(payload, { onConflict: 'id' })
-        .select()
-        .maybeSingle();
+      let data: any = null;
+      let error: any = null;
+      // If a settings row exists, update it; otherwise insert one
+      const existingId = current?.data?.id as string | undefined;
+      if (existingId) {
+        const resp = await this.adminClient
+          .from('website_settings')
+          .update(payload)
+          .eq('id', existingId)
+          .select()
+          .single();
+        data = resp.data;
+        error = resp.error;
+      } else {
+        const resp = await this.adminClient
+          .from('website_settings')
+          .insert(payload)
+          .select()
+          .single();
+        data = resp.data;
+        error = resp.error;
+      }
       if (error) return { success: false, error };
       return { success: true, error: null, data };
     } catch (error) {
