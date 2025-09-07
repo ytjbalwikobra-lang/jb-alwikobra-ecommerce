@@ -1,5 +1,30 @@
 import { supabase } from './supabase.ts';
-import { uploadFile } from './storageService.ts';
+
+async function toBase64(file: File): Promise<string> {
+  const buf = await file.arrayBuffer();
+  let binary = '';
+  const bytes = new Uint8Array(buf);
+  const len = bytes.byteLength;
+  for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+  return btoa(binary);
+}
+
+async function uploadImageViaApi(file: File, folder = 'feed'): Promise<string | undefined> {
+  const body = {
+    name: file.name,
+    contentType: file.type || 'application/octet-stream',
+    dataBase64: await toBase64(file),
+    folder
+  };
+  const res = await fetch('/api/feed?action=upload-image', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}` },
+    body: JSON.stringify(body)
+  });
+  const data = await res.json();
+  if (data?.publicUrl) return data.publicUrl as string;
+  return undefined;
+}
 
 export const feedService = {
   async list(page = 1, limit = 10) {
@@ -9,7 +34,7 @@ export const feedService = {
   async createPost(payload: { title: string; content: string; imageFile?: File | null; type?: 'post'|'announcement' }) {
     let image_url: string | undefined;
     if (payload.imageFile) {
-      const u = await uploadFile(payload.imageFile, 'feed');
+  const u = await uploadImageViaApi(payload.imageFile, 'feed');
       image_url = u || undefined;
     }
     const res = await fetch('/api/feed?action=create-post', {
@@ -30,7 +55,7 @@ export const feedService = {
   async adminEditPost(post_id: string, fields: { title?: string; content?: string; type?: 'post'|'announcement'; imageFile?: File | null; removeImage?: boolean }) {
     let image_url: string | undefined;
     if (fields.imageFile) {
-      const u = await uploadFile(fields.imageFile, 'feed');
+  const u = await uploadImageViaApi(fields.imageFile, 'feed');
       image_url = u || undefined;
     }
     if (!fields.imageFile && fields.removeImage) {
@@ -81,7 +106,7 @@ export const feedService = {
   async editReview(post_id: string, fields: { title?: string; content?: string; rating?: number; imageFile?: File | null }) {
     let image_url: string | undefined;
     if (fields.imageFile) {
-      const u = await uploadFile(fields.imageFile, 'feed');
+  const u = await uploadImageViaApi(fields.imageFile, 'feed');
       image_url = u || undefined;
     }
     const res = await fetch('/api/feed?action=edit-review', {

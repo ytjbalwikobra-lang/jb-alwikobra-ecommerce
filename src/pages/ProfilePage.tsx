@@ -172,7 +172,7 @@ const ProfilePage: React.FC = () => {
         <div className="pt-20 pb-20 px-4">
           <div className="max-w-4xl mx-auto">
             {/* Profile Hero Section */}
-            <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-pink-500/20 via-purple-500/20 to-indigo-500/20 border border-pink-500/30 backdrop-blur-sm mb-8">
+            <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-gray-950 via-gray-900 to-black border border-white/10 backdrop-blur mb-6">
               {/* Background Pattern */}
               <div className="absolute inset-0 opacity-30" style={{
                 backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'%3E%3Ccircle cx='3' cy='3' r='3'/%3E%3Ccircle cx='13' cy='13' r='3'/%3E%3C/g%3E%3C/svg%3E")`
@@ -184,24 +184,24 @@ const ProfilePage: React.FC = () => {
                   <div className="flex items-center space-x-6">
                     {/* Avatar */}
                     <div className="relative">
-                      <div className="w-24 h-24 bg-gradient-to-br from-pink-400 to-purple-500 rounded-2xl flex items-center justify-center shadow-xl ring-4 ring-pink-400/20">
-                        <User size={40} className="text-white" />
+                      <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center shadow">
+                        <User size={32} className="text-white/90" />
                       </div>
-                      <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center ring-4 ring-gray-900">
+                      <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center ring-4 ring-gray-950">
                         <Check size={16} className="text-white" />
                       </div>
                     </div>
                     
                     {/* User Details */}
                     <div>
-                      <h1 className="text-3xl font-bold text-white mb-2">
+                      <h1 className="text-2xl font-bold text-white mb-1">
                         {profile.name || 'Pengguna Baru'}
                       </h1>
-                      <p className="text-pink-300 mb-1 flex items-center">
+                      <p className="text-gray-300 mb-1 flex items-center">
                         <Mail size={16} className="mr-2" />
                         {profile.email}
                       </p>
-                      <p className="text-gray-300 text-sm flex items-center">
+                      <p className="text-gray-400 text-sm flex items-center">
                         <Star size={16} className="mr-2 text-yellow-400" />
                         Member sejak {profile.joinDate}
                       </p>
@@ -211,10 +211,10 @@ const ProfilePage: React.FC = () => {
                   {/* Edit Button */}
                   <button
                     onClick={() => setIsEditing(!isEditing)}
-                    className={`px-6 py-3 rounded-xl font-medium transition-all transform hover:scale-105 flex items-center space-x-2 ${
+                    className={`px-5 py-2.5 rounded-lg font-medium transition-colors flex items-center space-x-2 ${
                       isEditing 
-                        ? 'bg-red-500/20 border border-red-500/50 text-red-300 hover:bg-red-500/30' 
-                        : 'bg-pink-500/20 border border-pink-500/50 text-pink-300 hover:bg-pink-500/30'
+                        ? 'bg-red-500/10 border border-red-500/30 text-red-300 hover:bg-red-500/20' 
+                        : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
                     }`}
                   >
                     {isEditing ? <X size={20} /> : <Edit size={20} />}
@@ -223,8 +223,8 @@ const ProfilePage: React.FC = () => {
                 </div>
 
                 {/* Stats Cards */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mt-8">
-                  <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 hover:border-pink-400/50 transition-colors">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-6">
+                  <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10 hover:border-pink-400/40 transition-colors">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
                         <Package size={20} className="text-blue-400" />
@@ -236,7 +236,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 hover:border-pink-400/50 transition-colors">
+                  <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10 hover:border-pink-400/40 transition-colors">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-pink-500/20 rounded-lg flex items-center justify-center">
                         <Heart size={20} className="text-pink-400" />
@@ -248,7 +248,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 hover:border-pink-400/50 transition-colors">
+                  <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10 hover:border-pink-400/40 transition-colors">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-yellow-500/20 rounded-lg flex items-center justify-center">
                         <Trophy size={20} className="text-yellow-400" />
@@ -260,7 +260,7 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="bg-white/5 backdrop-blur rounded-xl p-4 border border-white/10 hover:border-pink-400/50 transition-colors">
+                  <div className="bg-white/5 backdrop-blur rounded-lg p-4 border border-white/10 hover:border-pink-400/40 transition-colors">
                     <div className="flex items-center space-x-3">
                       <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center">
                         <Crown size={20} className="text-purple-400" />
@@ -277,7 +277,7 @@ const ProfilePage: React.FC = () => {
 
             {/* Edit Form Section */}
             {isEditing && (
-              <div className="bg-gray-900/50 backdrop-blur rounded-2xl p-6 border border-gray-700/50 mb-8">
+              <div className="bg-black/50 backdrop-blur rounded-2xl p-6 border border-white/10 mb-6">
                 <h2 className="text-xl font-semibold text-white mb-6 flex items-center">
                   <Edit size={24} className="mr-3 text-pink-400" />
                   Edit Informasi Profil
@@ -293,7 +293,7 @@ const ProfilePage: React.FC = () => {
                       type="text"
                       value={profile.name}
                       onChange={(e) => setProfile({...profile, name: e.target.value})}
-                      className="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/30"
                       placeholder="Masukkan nama lengkap"
                     />
                   </div>
@@ -307,7 +307,7 @@ const ProfilePage: React.FC = () => {
                       type="email"
                       value={profile.email}
                       onChange={(e) => setProfile({...profile, email: e.target.value})}
-                      className="w-full bg-gray-800/50 border border-gray-600/50 rounded-xl px-4 py-3 text-white placeholder-gray-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-500/20 transition-all"
+                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-2.5 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/30"
                       placeholder="Masukkan email"
                     />
                   </div>
@@ -327,10 +327,10 @@ const ProfilePage: React.FC = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-3 mt-8">
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
                   <button
                     onClick={saveProfile}
-                    className="flex-1 bg-gradient-to-r from-pink-500 to-purple-500 hover:from-pink-600 hover:to-purple-600 text-white py-3 px-6 rounded-xl font-medium transition-all transform hover:scale-[1.02] flex items-center justify-center space-x-2"
+          className="flex-1 bg-pink-600 hover:bg-pink-500 text-white py-2.5 px-6 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
                   >
                     <Check size={20} />
                     <span>Simpan Perubahan</span>
@@ -340,7 +340,7 @@ const ProfilePage: React.FC = () => {
                       setIsEditing(false);
                       loadProfile();
                     }}
-                    className="flex-1 bg-gray-700/50 hover:bg-gray-700 text-gray-300 py-3 px-6 rounded-xl font-medium transition-all border border-gray-600/50 flex items-center justify-center space-x-2"
+          className="flex-1 bg-white/5 hover:bg-white/10 text-gray-200 py-2.5 px-6 rounded-lg font-medium transition-colors border border-white/10 flex items-center justify-center space-x-2"
                   >
                     <X size={20} />
                     <span>Batal</span>
@@ -355,7 +355,7 @@ const ProfilePage: React.FC = () => {
                 <Link
                   key={index}
                   to={item.path}
-                  className="group relative overflow-hidden rounded-2xl bg-gray-900/50 backdrop-blur border border-gray-700/50 hover:border-pink-500/50 transition-all transform hover:scale-[1.02] hover:shadow-xl hover:shadow-pink-500/10"
+                  className="group relative overflow-hidden rounded-2xl bg-black/40 backdrop-blur border border-white/10 hover:border-pink-400/40 transition-transform hover:scale-[1.01]"
                 >
                   {/* Background Gradient */}
                   <div className="absolute inset-0 bg-gradient-to-br from-pink-500/5 via-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
@@ -363,11 +363,11 @@ const ProfilePage: React.FC = () => {
                   <div className="relative p-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${item.color} bg-opacity-20 border border-current border-opacity-20`}>
+                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${item.color} bg-white/5 border border-white/10`}>
                           <item.icon size={24} />
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-white group-hover:text-pink-300 transition-colors">
+                          <h3 className="text-base font-semibold text-white group-hover:text-pink-300 transition-colors">
                             {item.label}
                           </h3>
                           {item.count !== undefined && (
@@ -375,7 +375,7 @@ const ProfilePage: React.FC = () => {
                           )}
                         </div>
                       </div>
-                      <ChevronRight size={20} className="text-gray-400 group-hover:text-pink-400 transition-colors transform group-hover:translate-x-1" />
+                      <ChevronRight size={18} className="text-gray-400 group-hover:text-pink-400 transition-colors transform group-hover:translate-x-1" />
                     </div>
                   </div>
                 </Link>
@@ -387,10 +387,10 @@ const ProfilePage: React.FC = () => {
               {/* Help & Support */}
               <Link
                 to="/help"
-                className="group w-full bg-gray-900/50 backdrop-blur rounded-2xl p-6 border border-gray-700/50 hover:border-yellow-500/50 transition-all transform hover:scale-[1.01] flex items-center justify-between"
+                className="group w-full bg-black/40 backdrop-blur rounded-2xl p-6 border border-white/10 hover:border-yellow-400/40 transition-transform hover:scale-[1.01] flex items-center justify-between"
               >
                 <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 rounded-xl bg-yellow-500/20 border border-yellow-500/20 flex items-center justify-center">
+                  <div className="w-11 h-11 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center">
                     <Shield size={20} className="text-yellow-400" />
                   </div>
                   <div>
@@ -406,7 +406,7 @@ const ProfilePage: React.FC = () => {
               {/* Logout Button */}
               <button
                 onClick={handleLogout}
-                className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 hover:border-red-500/50 rounded-2xl p-6 transition-all group"
+                className="w-full bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 rounded-2xl p-6 transition-colors group"
               >
                 <div className="flex items-center justify-center space-x-3">
                   <LogOut size={20} className="text-red-400" />

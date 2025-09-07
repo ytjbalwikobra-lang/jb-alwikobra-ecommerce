@@ -54,6 +54,8 @@ const FeedPage: React.FC = () => {
   const [editPostId, setEditPostId] = useState<string | null>(null);
   const [editFields, setEditFields] = useState<{ title: string; content: string; type: 'post'|'announcement'; imageFile?: File | null; removeImage?: boolean }>({ title: '', content: '', type: 'post' });
   const [editPreview, setEditPreview] = useState<string | null>(null);
+  const [editReviewPost, setEditReviewPost] = useState<any | null>(null);
+  const [editReviewFields, setEditReviewFields] = useState<{ title: string; content: string; rating: number }>({ title: '', content: '', rating: 5 });
 
   const load = async (p = 1) => {
     setLoading(true);
@@ -135,13 +137,24 @@ const FeedPage: React.FC = () => {
   };
 
   const onClickEdit = (post: any) => {
-    setEditPostId(post.id);
-    setEditFields({ title: post.title || '', content: post.content || '', type: post.type || 'post' });
-    setEditPreview(null);
+    if (post.type === 'review') {
+      if (!user || user.id !== post.user_id) return;
+      setEditReviewPost(post);
+      setEditReviewFields({ title: post.title || '', content: post.content || '', rating: post.rating || 5 });
+    } else {
+      if (!user || !user.isAdmin) return;
+      setEditPostId(post.id);
+      setEditFields({ title: post.title || '', content: post.content || '', type: post.type || 'post' });
+      setEditPreview(null);
+    }
   };
   const onClickDelete = async (post: any) => {
     if (!user) return;
-    if (!(user.isAdmin || user.id === post.user_id)) return;
+    if (post.type === 'review') {
+      if (!user.isAdmin) return;
+    } else {
+      if (!user.isAdmin) return;
+    }
     if (!confirm('Hapus postingan ini?')) return;
     await feedService.adminDeletePost(post.id);
     load(page);
@@ -153,6 +166,13 @@ const FeedPage: React.FC = () => {
     setEditFields({ title: '', content: '', type: 'post' });
     if (editPreview) URL.revokeObjectURL(editPreview);
     setEditPreview(null);
+    load(page);
+  };
+  const submitEditReview = async () => {
+    if (!editReviewPost) return;
+    await feedService.editReview(editReviewPost.id, editReviewFields);
+    setEditReviewPost(null);
+    setEditReviewFields({ title: '', content: '', rating: 5 });
     load(page);
   };
 
@@ -177,14 +197,19 @@ const FeedPage: React.FC = () => {
             </div>
             <div className="flex items-center gap-2">
               {post.type === 'announcement' && <span className="text-[10px] px-2 py-0.5 rounded-full border bg-yellow-500/20 text-yellow-200 border-yellow-400/30">Announcement</span>}
-              {(user && (user.isAdmin || user.id === post.user_id)) && (
+              {(user && (
+                (post.type === 'review' && user.id === post.user_id) ||
+                (post.type !== 'review' && user.isAdmin)
+              )) && (
                 <div className="flex items-center gap-1">
                   <button title="Edit" className="p-1 rounded hover:bg-white/10" onClick={() => onClickEdit(post)}>
                     ✎
                   </button>
-                  <button title="Delete" className="p-1 rounded hover:bg-white/10" onClick={() => onClickDelete(post)}>
-                    🗑
-                  </button>
+                  {user && user.isAdmin && (
+                    <button title="Delete" className="p-1 rounded hover:bg-white/10" onClick={() => onClickDelete(post)}>
+                      🗑
+                    </button>
+                  )}
                 </div>
               )}
             </div>
@@ -262,15 +287,15 @@ const FeedPage: React.FC = () => {
 
       {/* Create Post/Announcement Modal (Admin) */}
       {showCreatePostModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="w-full max-w-lg bg-black border border-white/10 rounded-xl p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg bg-gradient-to-b from-gray-950 to-black border border-white/10 rounded-2xl p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">Buat Post/Announcement</h3>
               <button onClick={()=>setShowCreatePostModal(false)} className="p-1 rounded hover:bg-white/10">✕</button>
             </div>
-            <div className="space-y-2">
-              <input value={newPost.title} onChange={e=>setNewPost(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
-              <textarea value={newPost.content} onChange={e=>setNewPost(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={4} />
+            <div className="space-y-3">
+              <input autoFocus value={newPost.title} onChange={e=>setNewPost(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" />
+              <textarea value={newPost.content} onChange={e=>setNewPost(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" rows={4} />
               <div className="flex items-start gap-3">
                 <div>
                   <label className="text-xs text-gray-400">Gambar:
@@ -284,18 +309,18 @@ const FeedPage: React.FC = () => {
                 </div>
                 {newPostPreview && (
                   <div className="flex items-center gap-2">
-                    <img src={newPostPreview} alt="preview" className="w-24 h-24 object-cover rounded border border-white/10" />
-                    <button type="button" onClick={()=>{ setNewPostImage(null); if (newPostPreview) URL.revokeObjectURL(newPostPreview); setNewPostPreview(null); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/5">Hapus</button>
+                    <img src={newPostPreview} alt="preview" className="w-24 h-24 object-cover rounded-lg border border-white/10" />
+                    <button type="button" onClick={()=>{ setNewPostImage(null); if (newPostPreview) URL.revokeObjectURL(newPostPreview); setNewPostPreview(null); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/10">Hapus</button>
                   </div>
                 )}
-                <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as any}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
+                <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as any}))} className="bg-white/5 border border-white/10 rounded px-2 py-1">
                   <option value="post">post</option>
                   <option value="announcement">announcement</option>
                 </select>
               </div>
               <div className="flex items-center gap-2 justify-end mt-2">
-                <button onClick={()=>setShowCreatePostModal(false)} className="px-3 py-2 rounded border border-white/10">Batal</button>
-                <button onClick={createPost} className="px-3 py-2 rounded bg-pink-600">Kirim</button>
+                <button onClick={()=>setShowCreatePostModal(false)} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5">Batal</button>
+                <button onClick={createPost} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500">Kirim</button>
               </div>
             </div>
           </div>
@@ -304,25 +329,25 @@ const FeedPage: React.FC = () => {
 
       {/* Create Review Modal (Buyer) */}
       {showCreateReviewModal && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="w-full max-w-lg bg-black border border-white/10 rounded-xl p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg bg-gradient-to-b from-gray-950 to-black border border-white/10 rounded-2xl p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">Buat Review</h3>
               <button onClick={()=>setShowCreateReviewModal(false)} className="p-1 rounded hover:bg-white/10">✕</button>
             </div>
-            <div className="space-y-2">
-              <input value={newReview.title} onChange={e=>setNewReview(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
-              <textarea value={newReview.content} onChange={e=>setNewReview(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={4} />
+            <div className="space-y-3">
+              <input autoFocus value={newReview.title} onChange={e=>setNewReview(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" />
+              <textarea value={newReview.content} onChange={e=>setNewReview(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" rows={4} />
               <div className="flex items-center gap-2">
-                <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
+                <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="bg-white/5 border border-white/10 rounded px-2 py-1">
                   <option value="">Pilih produk yang pernah dibeli</option>
                   {eligibleProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
                 <RatingSelector value={newReview.rating} onChange={(v)=>setNewReview(p=>({...p, rating: v}))} />
               </div>
               <div className="flex items-center gap-2 justify-end mt-2">
-                <button onClick={()=>setShowCreateReviewModal(false)} className="px-3 py-2 rounded border border-white/10">Batal</button>
-                <button onClick={createReview} className="px-3 py-2 rounded bg-pink-600">Kirim</button>
+                <button onClick={()=>setShowCreateReviewModal(false)} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5">Batal</button>
+                <button onClick={createReview} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500">Kirim</button>
               </div>
             </div>
           </div>
@@ -331,17 +356,17 @@ const FeedPage: React.FC = () => {
 
       {/* Edit Post Modal */}
       {editPostId && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-          <div className="w-full max-w-lg bg-black border border-white/10 rounded-xl p-4">
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg bg-gradient-to-b from-gray-950 to-black border border-white/10 rounded-2xl p-5 shadow-2xl">
             <div className="flex items-center justify-between mb-3">
               <h3 className="font-semibold">Edit Post</h3>
               <button onClick={()=>{ setEditPostId(null); setEditFields({ title: '', content: '', type: 'post' }); if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); }} className="p-1 rounded hover:bg-white/10">✕</button>
             </div>
-            <div className="space-y-2">
-              <input value={editFields.title} onChange={e=>setEditFields(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
-              <textarea value={editFields.content} onChange={e=>setEditFields(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={4} />
+            <div className="space-y-3">
+              <input value={editFields.title} onChange={e=>setEditFields(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" />
+              <textarea value={editFields.content} onChange={e=>setEditFields(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" rows={4} />
               <div className="flex items-start gap-3">
-                <select value={editFields.type} onChange={e=>setEditFields(p=>({...p, type: e.target.value as any}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
+                <select value={editFields.type} onChange={e=>setEditFields(p=>({...p, type: e.target.value as any}))} className="bg-white/5 border border-white/10 rounded px-2 py-1">
                   <option value="post">post</option>
                   <option value="announcement">announcement</option>
                 </select>
@@ -362,14 +387,38 @@ const FeedPage: React.FC = () => {
                 </div>
                 {editPreview && (
                   <div className="flex items-center gap-2">
-                    <img src={editPreview} alt="preview" className="w-24 h-24 object-cover rounded border border-white/10" />
-                    <button type="button" onClick={()=>{ if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); setEditFields(p=>({ ...p, imageFile: undefined })); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/5">Bersihkan</button>
+                    <img src={editPreview} alt="preview" className="w-24 h-24 object-cover rounded-lg border border-white/10" />
+                    <button type="button" onClick={()=>{ if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); setEditFields(p=>({ ...p, imageFile: undefined })); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/10">Bersihkan</button>
                   </div>
                 )}
               </div>
               <div className="flex items-center gap-2 justify-end mt-2">
-                <button onClick={()=>{ setEditPostId(null); setEditFields({ title: '', content: '', type: 'post' }); if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); }} className="px-3 py-2 rounded border border-white/10">Batal</button>
-                <button onClick={submitEdit} className="px-3 py-2 rounded bg-pink-600">Simpan</button>
+                <button onClick={()=>{ setEditPostId(null); setEditFields({ title: '', content: '', type: 'post' }); if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); }} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5">Batal</button>
+                <button onClick={submitEdit} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500">Simpan</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Review Modal */}
+      {editReviewPost && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50" role="dialog" aria-modal="true">
+          <div className="w-full max-w-lg bg-gradient-to-b from-gray-950 to-black border border-white/10 rounded-2xl p-5 shadow-2xl">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-semibold">Edit Review</h3>
+              <button onClick={()=>{ setEditReviewPost(null); setEditReviewFields({ title: '', content: '', rating: 5 }); }} className="p-1 rounded hover:bg-white/10">✕</button>
+            </div>
+            <div className="space-y-3">
+              <input value={editReviewFields.title} onChange={e=>setEditReviewFields(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" />
+              <textarea value={editReviewFields.content} onChange={e=>setEditReviewFields(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" rows={4} />
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-gray-400">Rating:</span>
+                <RatingSelector value={editReviewFields.rating} onChange={(v)=>setEditReviewFields(p=>({...p, rating: v}))} />
+              </div>
+              <div className="flex items-center gap-2 justify-end mt-2">
+                <button onClick={()=>{ setEditReviewPost(null); setEditReviewFields({ title: '', content: '', rating: 5 }); }} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5">Batal</button>
+                <button onClick={submitEditReview} className="px-3 py-2 rounded-lg bg-pink-600 hover:bg-pink-500">Simpan</button>
               </div>
             </div>
           </div>

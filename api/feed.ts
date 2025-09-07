@@ -44,6 +44,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     switch (action) {
+      case 'upload-image':
+        return await uploadImage(req, res, me);
       case 'list':
         return await listFeed(req, res, me);
       case 'create-post':
@@ -78,6 +80,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (e) {
     console.error('Feed API error:', e);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function uploadImage(req: VercelRequest, res: VercelResponse, me: any) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  if (!me || !me.is_admin) return res.status(403).json({ error: 'Admin only' });
+  const { name, contentType, dataBase64, folder } = req.body || {};
+  if (!name || !contentType || !dataBase64) return res.status(400).json({ error: 'Invalid payload' });
+  try {
+    const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'product-images';
+    const safeName = String(name).replace(/[^a-zA-Z0-9-_\.]/g, '_');
+    const path = `${folder || 'feed'}/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
+    const buffer = Buffer.from(dataBase64, 'base64');
+    const { error } = await (supabase as any).storage.from(bucket).upload(path, buffer, {
+      contentType,
+      upsert: false,
+      cacheControl: '3600'
+    });
+    if (error) return res.status(400).json({ error: error.message });
+    const { data } = (supabase as any).storage.from(bucket).getPublicUrl(path);
+    return res.json({ success: true, publicUrl: data?.publicUrl || null, path });
+  } catch (e: any) {
+    console.error('uploadImage error', e);
+    return res.status(500).json({ error: 'Upload failed' });
   }
 }
 
