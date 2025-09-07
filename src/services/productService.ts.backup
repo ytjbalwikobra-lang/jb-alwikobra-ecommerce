@@ -1,7 +1,6 @@
 import { supabase } from './supabase.ts';
 import { deletePublicUrls } from './storageService.ts';
 import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
-import { clientCache } from './clientCacheService.ts';
 
 // Capability detection: whether DB exposes relations (tiers/game_titles) in products
 // Track database capabilities globally
@@ -283,29 +282,23 @@ export class ProductService {
 
       if (!supabase) return sampleProducts;
 
-      // Cache key with options
-      const cacheKey = `products:all:${opts?.includeArchived ? 'with-archived' : 'active'}`;
-      
-      return await clientCache.get(cacheKey, async () => {
-        // If we already know relations are unsupported, skip relational select entirely
-        if (hasRelations === false) {
-          throw new Error('REL_SKIP');
-        }
-      let query = supabase
+      // If we already know relations are unsupported, skip relational select entirely
+      if (hasRelations === false) {
+        throw new Error('REL_SKIP');
+      }
+  let query = supabase
         .from('products')
         .select(`
-          id, name, slug, price, discount_price, is_active, archived_at, 
-          has_rental, game_title, tier_id, game_title_id, image_url, 
-          description, stock_type, stock_quantity, created_at,
-          rental_options (
-            id, duration_days, price, discount_price, is_available, created_at
-          ),
+          *,
+          rental_options (*),
           tiers (
-            id, name, slug, color, border_color, background_gradient, 
-            icon, price_range_min, price_range_max
+            id, name, slug, description, color, border_color, 
+            background_gradient, icon, price_range_min, price_range_max,
+            is_active, sort_order, created_at, updated_at
           ),
           game_titles (
-            id, name, slug, icon, color, logo_url, is_popular
+            id, name, slug, description, icon, color,
+            logo_url, is_popular, is_active, sort_order, created_at, updated_at
           )
         `);
       if (!opts?.includeArchived) {
@@ -332,7 +325,7 @@ export class ProductService {
       if (error && (error as any).message !== 'REL_SKIP') {
         console.warn('Products relational select failed, trying basic select');
       }
-      let q2: any = supabase.from('products').select('id, name, slug, price, discount_price, is_active, archived_at, has_rental, game_title, tier_id, game_title_id, image_url, description, stock_type, stock_quantity, created_at');
+      let q2: any = supabase.from('products').select('*');
       if (!opts?.includeArchived) {
         q2 = q2.eq('is_active', true).is('archived_at', null);
       }
@@ -347,7 +340,7 @@ export class ProductService {
       try {
         const ids = (basic || []).map((p: any) => p.id);
         if (ids.length) {
-          const { data: ros } = await supabase.from('rental_options').select('id, product_id, duration_days, price, discount_price, is_available, created_at').in('product_id', ids);
+          const { data: ros } = await supabase.from('rental_options').select('*').in('product_id', ids);
           for (const ro of ros || []) {
             const arr = rentalsByProduct.get(ro.product_id) || [];
             arr.push(ro);
@@ -357,13 +350,12 @@ export class ProductService {
       } catch {}
   return (basic || []).map((p: any) => ({
         ...p,
-        isActive: p.is_active ?? p.isActive,
-        archivedAt: p.archived_at ?? p.archivedAt,
+  isActive: p.is_active ?? p.isActive,
+  archivedAt: p.archived_at ?? p.archivedAt,
         rentalOptions: rentalsByProduct.get(p.id) || [],
         hasRental: p.has_rental ?? p.hasRental ?? ((rentalsByProduct.get(p.id) || []).length > 0),
         gameTitle: p.game_title || p.gameTitle,
       }));
-      }, 5 * 60 * 1000); // 5 minutes cache
     } catch (error) {
       console.error('Error fetching products:', error);
       console.warn('Using sample data due to error');
@@ -389,59 +381,35 @@ export class ProductService {
     return sample;
   }
 
-  // Cache key for individual product
-  const cacheKey = `product:${id}`;
-  
-  return await clientCache.get(cacheKey, async () => {
-    const { data, error } = await supabase
-      .from('products')
-      .select(`
-        id, name, slug, price, discount_price, is_active, archived_at, 
-        has_rental, game_title, tier_id, game_title_id, image_url, 
-        description, stock_type, stock_quantity, created_at, updated_at,
-        rental_options (
-          id, duration_days, price, discount_price, is_available, created_at
-        ),
-        tiers (
-          id, name, slug, color, border_color, background_gradient, 
-          icon, price_range_min, price_range_max
-        ),
-        game_titles (
-          id, name, slug, icon, color, logo_url, is_popular
-        )
-      `)
-      .eq('id', id)
-      .maybeSingle(); // Use maybeSingle() instead of single() to avoid 406 errors
+  const { data, error } = await supabase
+        .from('products')
+        .select(`*`)
+        .eq('id', id)
+        .maybeSingle(); // Use maybeSingle() instead of single() to avoid 406 errors
 
-    if (error) {
-      console.error('Supabase error fetching product by ID:', JSON.stringify(error, null, 2));
-      const sample = sampleProducts.find(p => p.id === id) || null;
-      console.log('[ProductService] Error fallback to sample:', sample?.id);
-      return sample;
-    }
+      if (error) {
+        console.error('Supabase error fetching product by ID:', JSON.stringify(error, null, 2));
+        const sample = sampleProducts.find(p => p.id === id) || null;
+        console.log('[ProductService] Error fallback to sample:', sample?.id);
+        return sample;
+      }
 
-    if (!data) {
-      console.log('[ProductService] No product found for id:', id);
-      return null;
-    }
-    
-    console.log('[ProductService] Found product from DB:', { id: data.id, name: data.name, idType: typeof data.id });
-    
-    const result = {
-      ...data,
-      isActive: data.is_active ?? data.isActive,
-      archivedAt: data.archived_at ?? data.archivedAt,
-      rentalOptions: data.rental_options || [],
-      hasRental: data.has_rental ?? data.hasRental ?? ((data.rental_options || []).length > 0),
-      tierData: data.tiers,
-      gameTitleData: data.game_titles,
-      tier: data.tiers?.slug as ProductTier,
-      gameTitle: data.game_titles?.name || data.game_title
-    } as any;
-    
-    console.log('[ProductService] Returning final product:', { id: result.id, name: result.name, idType: typeof result.id });
-    return result;
-  }, 3 * 60 * 1000); // 3 minutes cache for individual products
+      if (!data) {
+        console.log('[ProductService] No product found for id:', id);
+        return null;
+      }
+      
+      console.log('[ProductService] Found product from DB:', { id: data.id, name: data.name, idType: typeof data.id });
+      
+  let rentalOptions: any[] = [];
+      try {
+        const { data: ro } = await supabase.from('rental_options').select('*').eq('product_id', id);
+        rentalOptions = ro || [];
+      } catch {}
+      
+      const result = { ...data, rentalOptions, hasRental: (data as any).has_rental ?? (data as any).hasRental ?? (rentalOptions.length > 0) } as any;
+      console.log('[ProductService] Returning final product:', { id: result.id, name: result.name, idType: typeof result.id });
+      return result;
     } catch (error) {
       console.error('Error fetching product:', error);
       const sample = sampleProducts.find(p => p.id === id) || null;
@@ -486,9 +454,8 @@ export class ProductService {
         }));
       }
 
-      return await clientCache.get('flash-sales', async () => {
-        // If we already know join is unsupported, skip relational join
-        if (hasFlashSaleJoin === false) {
+      // If we already know join is unsupported, skip relational join
+      if (hasFlashSaleJoin === false) {
         throw new Error('REL_SKIP');
       }
   const { data, error } = await supabase
@@ -632,7 +599,6 @@ export class ProductService {
 
         return { ...sale, product };
       }) || [];
-      }, 2 * 60 * 1000); // 2 minutes cache for flash sales
     } catch (error) {
       console.error('Error fetching flash sales:', error);
       const flashSaleProducts = sampleProducts.filter(p => p.isFlashSale);
@@ -988,30 +954,28 @@ export class ProductService {
         return sampleTiers;
       }
 
-      return await clientCache.get('tiers', async () => {
-        const { data, error } = await supabase
-          .from('tiers')
-          .select('id, name, slug, description, color, border_color, background_gradient, icon, price_range_min, price_range_max, is_active, sort_order, created_at, updated_at')
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true });
+      const { data, error } = await supabase
+        .from('tiers')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
 
-        if (error) {
-          console.error('Error fetching tiers:', error);
-          return sampleTiers;
-        }
+      if (error) {
+        console.error('Error fetching tiers:', error);
+        return sampleTiers;
+      }
 
-        return data?.map(tier => ({
-          ...tier,
-          isActive: tier.is_active,
-          sortOrder: tier.sort_order,
-          borderColor: tier.border_color,
-          backgroundGradient: tier.background_gradient,
-          priceRangeMin: tier.price_range_min,
-          priceRangeMax: tier.price_range_max,
-          createdAt: tier.created_at,
+      return data?.map(tier => ({
+        ...tier,
+        isActive: tier.is_active,
+        sortOrder: tier.sort_order,
+        borderColor: tier.border_color,
+        backgroundGradient: tier.background_gradient,
+        priceRangeMin: tier.price_range_min,
+        priceRangeMax: tier.price_range_max,
+        createdAt: tier.created_at,
         updatedAt: tier.updated_at
       })) || sampleTiers;
-      }, 10 * 60 * 1000); // 10 minutes cache for tiers
     } catch (error) {
       console.error('Error fetching tiers:', error);
       return sampleTiers;
@@ -1024,31 +988,30 @@ export class ProductService {
         return sampleGameTitles;
       }
 
-      return await clientCache.get('game-titles', async () => {
-        const { data, error } = await supabase
-          .from('game_titles')
-          .select('id, name, slug, description, icon, color, logo_url, logo_path, is_popular, is_active, sort_order, created_at, updated_at')
-          .eq('is_active', true)
-          .order('sort_order', { ascending: true });
+      const { data, error } = await supabase
+        .from('game_titles')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true });
 
-        if (error) {
-          console.error('Error fetching game titles:', error);
-          return sampleGameTitles;
-        }
+      if (error) {
+        console.error('Error fetching game titles:', error);
+        return sampleGameTitles;
+      }
 
-        return data?.map(gameTitle => {
-          // Get logo URL - prefer new logo_path with public URL, fallback to legacy logo_url
-          let logoUrl = gameTitle.logo_url; // Legacy URL fallback
-          
-          if (gameTitle.logo_path) {
-            // Convert storage path to public URL
-            try {
-              const { data: urlData } = (supabase as any).storage
-                .from('game-logos')
-                .getPublicUrl(gameTitle.logo_path);
-              logoUrl = urlData.publicUrl;
-            } catch (error) {
-              console.warn('Failed to get public URL for logo_path:', gameTitle.logo_path);
+      return data?.map(gameTitle => {
+        // Get logo URL - prefer new logo_path with public URL, fallback to legacy logo_url
+        let logoUrl = gameTitle.logo_url; // Legacy URL fallback
+        
+        if (gameTitle.logo_path) {
+          // Convert storage path to public URL
+          try {
+            const { data: urlData } = (supabase as any).storage
+              .from('game-logos')
+              .getPublicUrl(gameTitle.logo_path);
+            logoUrl = urlData.publicUrl;
+          } catch (error) {
+            console.warn('Failed to get public URL for logo_path:', gameTitle.logo_path);
             // Keep legacy logo_url as fallback
           }
         }
@@ -1063,7 +1026,6 @@ export class ProductService {
           updatedAt: gameTitle.updated_at
         };
       }) || sampleGameTitles;
-      }, 10 * 60 * 1000); // 10 minutes cache for game titles
     } catch (error) {
       console.error('Error fetching game titles:', error);
       return sampleGameTitles;

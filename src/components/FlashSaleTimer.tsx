@@ -8,7 +8,7 @@ interface FlashSaleTimerProps {
   compact?: boolean;
 }
 
-const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({ 
+const FlashSaleTimer: React.FC<FlashSaleTimerProps> = React.memo(({ 
   endTime, 
   className = '',
   compact = false 
@@ -70,6 +70,6 @@ const FlashSaleTimer: React.FC<FlashSaleTimerProps> = ({
       </div>
     </div>
   );
-};
+});
 
 export default FlashSaleTimer;

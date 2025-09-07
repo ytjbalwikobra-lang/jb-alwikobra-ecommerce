@@ -13,7 +13,7 @@ interface ProductCardProps {
   className?: string;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ 
+const ProductCard: React.FC<ProductCardProps> = React.memo(({ 
   product, 
   showFlashSaleTimer = false,
   fromCatalogPage = false,
@@ -296,6 +296,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
       </div>
     </Link>
   );
-};
+});
 
 export default ProductCard;

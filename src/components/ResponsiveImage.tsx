@@ -93,7 +93,7 @@ class ImageOptimizer {
   }
 }
 
-const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
+const ResponsiveImage: React.FC<ResponsiveImageProps> = React.memo(({
   src,
   alt,
   className = '',
@@ -261,6 +261,6 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = ({
       )}
     </div>
   );
-};
+});
 
 export default ResponsiveImage;

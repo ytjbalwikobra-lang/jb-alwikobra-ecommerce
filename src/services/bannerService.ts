@@ -1,6 +1,7 @@
 import { supabase } from './supabase.ts';
 import { Banner } from '../types/index.ts';
 import { uploadFile, deletePublicUrls } from './storageService.ts';
+import { clientCache } from './clientCacheService.ts';
 
 const sampleBanners: Banner[] = [
   {
@@ -38,23 +39,26 @@ export class BannerService {
   static async list(): Promise<Banner[]> {
     try {
       if (!supabase) return sampleBanners;
-      const { data, error } = await supabase
-        .from('banners')
-        .select('*')
-        .order('sort_order', { ascending: true });
-      if (error) throw error;
-      return (data || []).map((b: any) => ({
-        id: b.id,
-        title: b.title,
-        subtitle: b.subtitle,
-        imageUrl: b.image_url ?? b.imageUrl,
-        linkUrl: b.link_url ?? b.linkUrl,
-  ctaText: b.cta_text ?? b.ctaText,
-        sortOrder: b.sort_order ?? b.sortOrder ?? 0,
-        isActive: b.is_active ?? b.isActive ?? true,
-        createdAt: b.created_at ?? new Date().toISOString(),
-        updatedAt: b.updated_at ?? new Date().toISOString(),
-      }));
+      
+      return await clientCache.get('banners', async () => {
+        const { data, error } = await supabase
+          .from('banners')
+          .select('id, title, subtitle, image_url, link_url, cta_text, sort_order, is_active, created_at, updated_at')
+          .order('sort_order', { ascending: true });
+        if (error) throw error;
+        return (data || []).map((b: any) => ({
+          id: b.id,
+          title: b.title,
+          subtitle: b.subtitle,
+          imageUrl: b.image_url ?? b.imageUrl,
+          linkUrl: b.link_url ?? b.linkUrl,
+          ctaText: b.cta_text ?? b.ctaText,
+          sortOrder: b.sort_order ?? b.sortOrder ?? 0,
+          isActive: b.is_active ?? b.isActive ?? true,
+          createdAt: b.created_at ?? new Date().toISOString(),
+          updatedAt: b.updated_at ?? new Date().toISOString(),
+        }));
+      }, 10 * 60 * 1000); // 10 minutes cache for banners
     } catch (e) {
       console.error('BannerService.list error:', e);
       return sampleBanners;
@@ -85,13 +89,17 @@ export class BannerService {
         .select()
         .single();
       if (error) throw error;
+      
+      // Invalidate cache
+      clientCache.invalidate('banners');
+      
       return {
         id: data.id,
         title: data.title,
         subtitle: data.subtitle ?? undefined,
         imageUrl: data.image_url ?? image_url,
         linkUrl: data.link_url ?? undefined,
-  ctaText: data.cta_text ?? undefined,
+        ctaText: data.cta_text ?? undefined,
         sortOrder: data.sort_order ?? 0,
         isActive: data.is_active ?? true,
         createdAt: data.created_at,
@@ -128,13 +136,17 @@ export class BannerService {
         .select()
         .single();
       if (error) throw error;
+      
+      // Invalidate cache
+      clientCache.invalidate('banners');
+      
       return {
         id: data.id,
         title: data.title,
         subtitle: data.subtitle ?? undefined,
         imageUrl: data.image_url ?? payload.image_url,
         linkUrl: data.link_url ?? undefined,
-  ctaText: data.cta_text ?? undefined,
+        ctaText: data.cta_text ?? undefined,
         sortOrder: data.sort_order ?? 0,
         isActive: data.is_active ?? true,
         createdAt: data.created_at,
