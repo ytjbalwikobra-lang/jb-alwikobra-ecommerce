@@ -34,6 +34,7 @@ const WishlistPage = React.lazy(() => import('./pages/WishlistPage.tsx'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage.tsx'));
 const OrderHistoryPage = React.lazy(() => import('./pages/OrderHistoryPage.tsx'));
 const TermsPage = React.lazy(() => import('./pages/TermsPage.tsx'));
+const FeedPage = React.lazy(() => import('./pages/FeedPage.tsx'));
 
 // Lazy load admin pages (biggest performance impact)
 const AdminLayout = React.lazy(() => import('./layouts/AdminLayout.tsx'));
@@ -45,6 +46,7 @@ const AdminBanners = React.lazy(() => import('./pages/admin/AdminBanners.tsx'));
 const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings.tsx'));
 const AdminOrders = React.lazy(() => import('./pages/admin/AdminOrders.tsx'));
 const AdminGameTitles = React.lazy(() => import('./pages/admin/AdminGameTitles.tsx'));
+const AdminFeed = React.lazy(() => import('./pages/admin/AdminFeed.tsx'));
 
 // Optimized loading component for better perceived performance
 const PageLoader = () => (
@@ -152,6 +154,11 @@ function App() {
                         <AdminGameTitles />
                       </Suspense>
                     } />
+                    <Route path="feed" element={
+                      <Suspense fallback={<PageLoader />}>
+                        <AdminFeed />
+                      </Suspense>
+                    } />
                     <Route path="users" element={
                       <Suspense fallback={<PageLoader />}>
                         <AdminUsers />
@@ -206,6 +213,7 @@ function App() {
                           <Route path="/flash-sales" element={<FlashSalesPage />} />
                           <Route path="/sell" element={<SellPage />} />
                           <Route path="/help" element={<HelpPage />} />
+                          <Route path="/feed" element={<FeedPage />} />
                           <Route path="/profile" element={<ProfilePage />} />
                           <Route path="/wishlist" element={<WishlistPage />} />
                           <Route path="/settings" element={<SettingsPage />} />

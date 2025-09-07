@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShoppingBag, Zap, Home, Settings, HelpCircle, User } from 'lucide-react';
+import { ShoppingBag, MessageSquare, Home, Settings, HelpCircle, User } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 
 const Header: React.FC = () => {
@@ -37,7 +37,7 @@ const Header: React.FC = () => {
   const navItems = [
     { path: '/', label: 'Beranda', icon: Home },
     { path: '/products', label: 'Katalog', icon: ShoppingBag },
-    { path: '/flash-sales', label: 'Flash Sale', icon: Zap },
+    { path: '/feed', label: 'Feed', icon: MessageSquare },
     { path: '/sell', label: 'Jual Akun', icon: ShoppingBag },
     { path: '/help', label: 'Bantuan', icon: HelpCircle },
   ];

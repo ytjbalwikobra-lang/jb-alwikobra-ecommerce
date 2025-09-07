@@ -33,6 +33,7 @@ const SettingsPage = React.lazy(() => import('./pages/SettingsPage.tsx'));
 const WhatsAppConfirmPage = React.lazy(() => import('./pages/WhatsAppConfirmPage.tsx'));
 const OrderHistoryPage = React.lazy(() => import('./pages/OrderHistoryPage.tsx'));
 const TermsPage = React.lazy(() => import('./pages/TermsPage.tsx'));
+const FeedPage = React.lazy(() => import('./pages/FeedPage.tsx'));
 
 // Lazy load admin pages (biggest performance impact)
 const AdminLayout = React.lazy(() => import('./layouts/AdminLayout.tsx'));
@@ -198,6 +199,7 @@ function App() {
                           <Route path="/payment-status" element={<PaymentStatusPage />} />
                           <Route path="/auth/confirm" element={<WhatsAppConfirmPage />} />
                           <Route path="/orders" element={<OrderHistoryPage />} />
+                          <Route path="/feed" element={<FeedPage />} />
                           <Route path="*" element={
                             <div className="min-h-screen flex items-center justify-center">
                               <p className="text-gray-600">Halaman tidak ditemukan</p>
