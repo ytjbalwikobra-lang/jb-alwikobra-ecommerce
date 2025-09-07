@@ -173,14 +173,8 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   // Handle phone number input change
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     let inputValue = e.target.value;
-    
-    // Auto-detect country based on input
-    const detectedCountry = detectCountryFromNumber(inputValue);
-    if (detectedCountry && detectedCountry.code !== selectedCountry.code) {
-      setSelectedCountry(detectedCountry);
-    }
-    
-    const currentCountry = detectedCountry || selectedCountry;
+    // Do not auto-detect country; keep manual selection only
+    const currentCountry = selectedCountry;
     
     // Validate and format
     const validation = validatePhoneNumber(inputValue, currentCountry);
@@ -257,18 +251,10 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Parse initial value
+  // Parse initial value (no auto-detect; keep manual country selection)
   useEffect(() => {
     if (value) {
-      // Only auto-detect if not disabled
-      if (!disableAutoDetect) {
-        const detectedCountry = detectCountryFromNumber(value);
-        if (detectedCountry) {
-          setSelectedCountry(detectedCountry);
-        }
-      }
-      
-      // Format for display using current selected country (not auto-detected)
+      // Format for display using current selected country
       const formatted = formatPhoneNumber(value, selectedCountry);
       setPhoneNumber(formatted);
       
@@ -278,7 +264,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       setIsValid(validation.isValid);
       onValidationChange?.(validation.isValid);
     }
-  }, [value, selectedCountry, disableAutoDetect, onValidationChange]); // Added dependencies
+  }, [value, selectedCountry, onValidationChange]);
 
   const getBorderColor = () => {
     if (!phoneNumber) return 'border-pink-500/40';
