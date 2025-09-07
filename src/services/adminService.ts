@@ -1075,7 +1075,7 @@ class AdminService {
       // i. Insight performa = tingkat konversi (paid orders / total orders * 100)
       const conversionRate = totalOrders > 0 ? (orderStatuses.paid / totalOrders * 100) : 0;
 
-      // Build daily revenue breakdown for the selected range
+  // Build daily breakdown: orders = total created per day; revenue = paid+completed only
   const dailyMap = new Map<string, { revenue: number; orders: number }>();
       const startDate = startISO ? new Date(startISO) : new Date(new Date().getTime() - 7*24*60*60*1000);
       const endDate = endISO ? new Date(endISO) : new Date();
@@ -1087,11 +1087,12 @@ class AdminService {
         dailyMap.set(key, { revenue: 0, orders: 0 });
         cursor.setDate(cursor.getDate() + 1);
       }
-  for (const o of paidOrdersList) {
+      for (const o of orders) {
         const d = new Date(o.created_at);
         const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
         const cur = dailyMap.get(key) || { revenue: 0, orders: 0 };
-        dailyMap.set(key, { revenue: cur.revenue + (o.amount || 0), orders: cur.orders + 1 });
+        const addRevenue = (o.status === 'paid' || o.status === 'completed') ? (o.amount || 0) : 0;
+        dailyMap.set(key, { revenue: cur.revenue + addRevenue, orders: cur.orders + 1 });
       }
       const dailyRevenue = Array.from(dailyMap.entries()).map(([k, v]) => ({ date: k, revenue: v.revenue, orders: v.orders }));
 
