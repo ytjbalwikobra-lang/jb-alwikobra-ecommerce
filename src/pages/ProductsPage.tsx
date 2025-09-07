@@ -233,7 +233,7 @@ const ProductsPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 text-gray-200">
         {/* Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8">
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">Katalog Produk</h1>
+          <h1 id="katalog-produk" className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">Katalog Produk</h1>
         </div>
 
         <div className="lg:grid lg:grid-cols-4 lg:gap-8">

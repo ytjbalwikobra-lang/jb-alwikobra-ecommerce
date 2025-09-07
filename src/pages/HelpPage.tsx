@@ -139,14 +139,14 @@ const HelpPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
-      {/* Hero */}
+  {/* Hero */}
       <div className="bg-gradient-to-r from-pink-600/20 to-rose-600/20 border-b border-pink-500/20">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-black border border-pink-500/40 mb-6">
               <HelpCircle className="text-pink-400 w-8 h-8" />
             </div>
-            <h1 className="text-4xl font-bold text-white mb-4">Pusat Bantuan</h1>
+    <h1 id="pusat-bantuan" className="text-4xl font-bold text-white mb-4">Pusat Bantuan</h1>
             <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
               Temukan jawaban untuk pertanyaan umum, panduan lengkap, dan kontak support untuk pengalaman terbaik di JB Alwikobra
             </p>
@@ -165,8 +165,22 @@ const HelpPage: React.FC = () => {
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-        {/* Quick Topics */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
+        {/* TOC */}
+        <nav aria-label="Daftar Isi" className="mb-8 bg-black/40 border border-pink-500/30 rounded-lg p-4">
+          <p className="text-sm text-gray-400 mb-2">Daftar Isi</p>
+          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm list-disc list-inside text-pink-300">
+            <li><a href="#topik-cepat" className="hover:underline">Topik Cepat</a></li>
+            <li><a href="#kategori" className="hover:underline">Kategori</a></li>
+            <li><a href="#faq" className="hover:underline">Pertanyaan Umum</a></li>
+            <li><a href="#kontak-cepat" className="hover:underline">Kontak Cepat</a></li>
+            <li><a href="#panduan" className="hover:underline">Panduan</a></li>
+            <li><a href="#butuh-bantuan" className="hover:underline">Butuh Bantuan?</a></li>
+          </ul>
+        </nav>
+
+  {/* Quick Topics */}
+  <h2 id="topik-cepat" className="text-2xl font-bold text-white mb-4">Topik Cepat</h2>
+  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
           <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 text-center hover:border-pink-500/50 transition-colors cursor-pointer">
             <User className="mx-auto text-pink-400 mb-2" size={24} />
             <p className="text-sm font-medium">Akun</p>
@@ -193,8 +207,9 @@ const HelpPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Category Filter */}
-        <div className="mb-8">
+  {/* Category Filter */}
+  <h2 id="kategori" className="text-2xl font-bold text-white mb-4">Kategori</h2>
+  <div className="mb-8">
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <button
@@ -215,7 +230,7 @@ const HelpPage: React.FC = () => {
         <div className="grid lg:grid-cols-3 gap-8">
           {/* FAQ Section */}
           <div className="lg:col-span-2">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+            <h2 id="faq" className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
               <MessageSquare className="text-pink-400" />
               Pertanyaan Umum
             </h2>
@@ -259,7 +274,7 @@ const HelpPage: React.FC = () => {
           <div className="space-y-6">
             {/* Quick Contact */}
             <div className="bg-black/60 border border-pink-500/30 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+              <h3 id="kontak-cepat" className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <MessageSquare className="text-pink-400" />
                 Butuh Bantuan Cepat?
               </h3>
@@ -329,7 +344,7 @@ const HelpPage: React.FC = () => {
 
         {/* Guides Section */}
         <div className="mt-12">
-          <h2 className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
+          <h2 id="panduan" className="text-2xl font-bold text-white mb-6 flex items-center gap-3">
             <Sparkles className="text-pink-400" />
             Panduan Lengkap
           </h2>
@@ -356,7 +371,7 @@ const HelpPage: React.FC = () => {
         {/* Still Need Help */}
         <div className="mt-12 bg-gradient-to-r from-pink-600/20 to-rose-600/20 border border-pink-500/30 rounded-xl p-8 text-center">
           <AlertTriangle className="mx-auto text-yellow-400 mb-4" size={48} />
-          <h3 className="text-2xl font-bold text-white mb-4">Masih Belum Menemukan Jawaban?</h3>
+          <h3 id="butuh-bantuan" className="text-2xl font-bold text-white mb-4">Masih Belum Menemukan Jawaban?</h3>
           <p className="text-gray-300 mb-6 max-w-2xl mx-auto">
             Tim support kami siap membantu menyelesaikan masalah spesifik Anda. Jangan ragu untuk menghubungi kami kapan saja.
           </p>

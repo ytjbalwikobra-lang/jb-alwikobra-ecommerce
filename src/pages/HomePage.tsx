@@ -100,11 +100,11 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Hero Section */}
+  {/* Hero Section */}
   <section className="py-14">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
+      <h1 id="beranda" className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
               Marketplace Akun Game
                 <span className="text-pink-400"> #1 di Indonesia</span>
             </h1>
@@ -139,7 +139,7 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Flash Sales Section */}
+  {/* Flash Sales Section */}
       {flashSaleProducts.length > 0 && (
         <section className="py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -149,7 +149,7 @@ const HomePage: React.FC = () => {
                   <Zap className="text-white" size={24} />
                 </div>
                 <div>
-                    <h2 className="text-3xl font-bold text-white">Flash Sale</h2>
+                    <h2 id="flash-sale" className="text-3xl font-bold text-white">Flash Sale</h2>
                     <p className="text-gray-300">Diskon hingga 70% - Terbatas!</p>
                 </div>
               </div>
@@ -178,11 +178,11 @@ const HomePage: React.FC = () => {
         </section>
       )}
 
-      {/* Game Categories */}
+  {/* Game Categories */}
   <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold text-white mb-4">Game Populer</h2>
+      <h2 id="game-populer" className="text-3xl font-bold text-white mb-4">Game Populer</h2>
               <p className="text-gray-300 max-w-2xl mx-auto">
               Pilih dari berbagai game populer yang tersedia di platform kami
             </p>

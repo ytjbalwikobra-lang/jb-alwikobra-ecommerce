@@ -67,13 +67,13 @@ const FlashSalesPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
       {/* Hero Section */}
-      <section className="bg-gradient-to-r from-pink-600 via-pink-500 to-rose-500 py-16">
+  <section className="bg-gradient-to-r from-pink-600 via-pink-500 to-rose-500 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center space-x-3 mb-6">
             <div className="w-16 h-16 bg-black/20 rounded-xl flex items-center justify-center border border-white/20">
               <Zap className="text-white" size={32} />
             </div>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white">
+            <h1 id="flash-sale-h1" className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white">
               Flash Sale
             </h1>
           </div>
@@ -113,13 +113,22 @@ const FlashSalesPage: React.FC = () => {
           {flashSaleProducts.length > 0 ? (
             <div className="space-y-8">
               <div className="text-center">
-                <h2 className="text-3xl font-bold text-white mb-4">
+                <h2 id="produk-flash-sale" className="text-3xl font-bold text-white mb-4">
                   Produk Flash Sale Hari Ini
                 </h2>
                 <p className="text-gray-300 max-w-2xl mx-auto">
                   Jangan sampai terlewat! Akun game berkualitas dengan harga spesial yang tidak akan Anda temukan di tempat lain.
                 </p>
               </div>
+
+              {/* TOC for this section */}
+              <nav aria-label="Daftar Isi" className="bg-black/40 border border-pink-500/30 rounded-lg p-4">
+                <p className="text-sm text-gray-400 mb-2">Daftar Isi</p>
+                <ul className="list-disc list-inside text-sm text-pink-300 space-y-1">
+                  <li><a href="#produk-flash-sale" className="hover:underline">Produk Flash Sale</a></li>
+                  <li><a href="#cara-kerja" className="hover:underline">Cara Kerja</a></li>
+                </ul>
+              </nav>
 
               {/* Grid of products instead of horizontal scroller (2 cols mobile like /products) */}
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -196,7 +205,7 @@ const FlashSalesPage: React.FC = () => {
       <section className="py-16 bg-black/60 border-t border-pink-500/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 id="cara-kerja" className="text-3xl font-bold text-white mb-4">
               Cara Kerja Flash Sale
             </h2>
             <p className="text-gray-300 max-w-2xl mx-auto">
