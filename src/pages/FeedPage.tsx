@@ -13,18 +13,46 @@ function RatingStars({ value }: { value?: number }) {
   );
 }
 
+function RatingSelector({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  return (
+    <div className="flex items-center gap-1 select-none" aria-label="Pilih rating">
+      {[1,2,3,4,5].map(i => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => onChange(i)}
+          className={`text-2xl leading-none ${i <= value ? 'text-yellow-400' : 'text-gray-600'} hover:scale-110 transition-transform`}
+          title={`${i} bintang`}
+        >
+          ★
+        </button>
+      ))}
+      <span className="ml-2 text-sm text-gray-400">{value}/5</span>
+    </div>
+  );
+}
+
+function RolePill({ isAdmin }: { isAdmin?: boolean }) {
+  const text = isAdmin ? 'Admin' : 'Member';
+  const cls = isAdmin ? 'bg-red-500/20 text-red-300 border-red-400/30' : 'bg-blue-500/20 text-blue-300 border-blue-400/30';
+  return <span className={`text-[10px] px-2 py-0.5 rounded-full border ${cls}`}>{text}</span>;
+}
+
 const FeedPage: React.FC = () => {
   const { user } = useAuth();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const limit = 10;
   const isGuest = !user;
   const isAdmin = !!user?.isAdmin;
 
   const load = async (p = 1) => {
     setLoading(true);
-    const { data } = await feedService.list(p, 10);
-    setPosts(p === 1 ? (data || []) : [...posts, ...(data || [])]);
+    const { data, total } = await feedService.list(p, limit);
+    setPosts(data || []);
+    setTotal(total || 0);
     setLoading(false);
   };
 
@@ -32,7 +60,11 @@ const FeedPage: React.FC = () => {
 
   // Minimal quick-create UI for dev testing
   const [newPost, setNewPost] = useState<{title:string;content:string;type:'post'|'announcement'}>({ title: '', content: '', type: 'post' });
+  const [newPostImage, setNewPostImage] = useState<File | null>(null);
+  const [newPostPreview, setNewPostPreview] = useState<string | null>(null);
   const [newReview, setNewReview] = useState<{title:string;content:string;rating:number;product_id:string}>({ title: '', content: '', rating: 5, product_id: '' });
+  const [newReviewImage, setNewReviewImage] = useState<File | null>(null);
+  const [newReviewPreview, setNewReviewPreview] = useState<string | null>(null);
   const [eligibleProducts, setEligibleProducts] = useState<any[]>([]);
   useEffect(() => {
     (async () => {
@@ -45,15 +77,19 @@ const FeedPage: React.FC = () => {
   }, [user]);
   const createPost = async () => {
     if (!user) return;
-    await feedService.createPost({ title: newPost.title, content: newPost.content, type: newPost.type });
-    setNewPost({ title: '', content: '', type: 'post' });
+  await feedService.createPost({ title: newPost.title, content: newPost.content, type: newPost.type, imageFile: newPostImage });
+  setNewPost({ title: '', content: '', type: 'post' });
+  setNewPostImage(null);
+  setNewPostPreview(null);
     load(1);
   };
   const createReview = async () => {
     if (!user) return;
     if (!newReview.product_id) return;
-    await feedService.createReview({ title: newReview.title, content: newReview.content, rating: newReview.rating, product_id: newReview.product_id });
-    setNewReview({ title: '', content: '', rating: 5, product_id: '' });
+  await feedService.createReview({ title: newReview.title, content: newReview.content, rating: newReview.rating, product_id: newReview.product_id, imageFile: newReviewImage });
+  setNewReview({ title: '', content: '', rating: 5, product_id: '' });
+  setNewReviewImage(null);
+  setNewReviewPreview(null);
     load(1);
   };
 
@@ -100,6 +136,23 @@ const FeedPage: React.FC = () => {
               <input value={newPost.title} onChange={e=>setNewPost(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
               <textarea value={newPost.content} onChange={e=>setNewPost(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={2} />
               <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-400">
+                  Gambar:
+                  <input type="file" accept="image/*" className="block text-sm mt-1" onChange={e=>{
+                    const f = e.target.files?.[0] || null;
+                    setNewPostImage(f);
+                    if (newPostPreview) URL.revokeObjectURL(newPostPreview);
+                    setNewPostPreview(f ? URL.createObjectURL(f) : null);
+                  }} />
+                </label>
+                {newPostPreview && (
+                  <div className="flex items-center gap-2">
+                    <img src={newPostPreview} alt="preview" className="w-16 h-16 object-cover rounded border border-white/10" />
+                    <button type="button" onClick={()=>{ setNewPostImage(null); if (newPostPreview) URL.revokeObjectURL(newPostPreview); setNewPostPreview(null); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/5">Hapus</button>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as any}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
                   <option value="post">post</option>
                   <option value="announcement">announcement</option>
@@ -112,11 +165,28 @@ const FeedPage: React.FC = () => {
               <input value={newReview.title} onChange={e=>setNewReview(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" />
               <textarea value={newReview.content} onChange={e=>setNewReview(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-black/60 border border-white/10 rounded px-3 py-2" rows={2} />
               <div className="flex items-center gap-2">
+                <label className="text-xs text-gray-400">
+                  Gambar:
+                  <input type="file" accept="image/*" className="block text-sm mt-1" onChange={e=>{
+                    const f = e.target.files?.[0] || null;
+                    setNewReviewImage(f);
+                    if (newReviewPreview) URL.revokeObjectURL(newReviewPreview);
+                    setNewReviewPreview(f ? URL.createObjectURL(f) : null);
+                  }} />
+                </label>
+                {newReviewPreview && (
+                  <div className="flex items-center gap-2">
+                    <img src={newReviewPreview} alt="preview" className="w-16 h-16 object-cover rounded border border-white/10" />
+                    <button type="button" onClick={()=>{ setNewReviewImage(null); if (newReviewPreview) URL.revokeObjectURL(newReviewPreview); setNewReviewPreview(null); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/5">Hapus</button>
+                  </div>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
                 <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="bg-black/60 border border-white/10 rounded px-2 py-1">
                   <option value="">Pilih produk yang pernah dibeli</option>
                   {eligibleProducts.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
-                <input type="number" min={1} max={5} value={newReview.rating} onChange={e=>setNewReview(p=>({...p,rating: Number(e.target.value)}))} className="w-20 bg-black/60 border border-white/10 rounded px-2 py-1" />
+                <RatingSelector value={newReview.rating} onChange={(v)=>setNewReview(p=>({...p, rating: v}))} />
                 <button onClick={createReview} className="px-3 py-2 bg-pink-600 rounded">Kirim</button>
               </div>
             </div>
@@ -126,7 +196,11 @@ const FeedPage: React.FC = () => {
       {posts.map(post => (
         <div key={post.id} className="bg-black/50 border border-white/10 rounded-xl p-4">
           <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-400">{post.users?.name || 'User'} · {new Date(post.created_at).toLocaleString('id-ID')}</div>
+            <div className="text-sm text-gray-400 flex items-center gap-2">
+              <span>{post.users?.name || 'User'}</span>
+              <RolePill isAdmin={post.users?.is_admin} />
+              <span>· {new Date(post.created_at).toLocaleString('id-ID')}</span>
+            </div>
             <div className="text-xs px-2 py-1 rounded bg-pink-500/20 text-pink-300">{post.type}</div>
           </div>
           <h3 className="text-lg font-semibold mt-2">{post.title}</h3>
@@ -155,7 +229,11 @@ const FeedPage: React.FC = () => {
               <div className="space-y-3">
                 {(comments[post.id] || []).filter(c => !c.parent_comment_id).map(c => (
                   <div key={c.id} className="bg-black/40 border border-white/5 rounded p-3">
-                    <div className="text-sm text-gray-400">{c.users?.name || 'User'} · {new Date(c.created_at).toLocaleString('id-ID')}</div>
+                    <div className="text-sm text-gray-400 flex items-center gap-2">
+                      <span>{c.users?.name || 'User'}</span>
+                      <RolePill isAdmin={c.users?.is_admin} />
+                      <span>· {new Date(c.created_at).toLocaleString('id-ID')}</span>
+                    </div>
                     <div className="text-gray-200 mt-1 whitespace-pre-wrap">{c.content}</div>
                     {!isGuest && (
                       <div className="mt-2">
@@ -168,7 +246,11 @@ const FeedPage: React.FC = () => {
                     {/* Replies */}
                     {(comments[post.id] || []).filter(r => r.parent_comment_id === c.id).map(r => (
                       <div key={r.id} className="mt-2 ml-4 border-l border-white/10 pl-3">
-                        <div className="text-xs text-gray-400">{r.users?.name || 'User'} · {new Date(r.created_at).toLocaleString('id-ID')}</div>
+                        <div className="text-xs text-gray-400 flex items-center gap-2">
+                          <span>{r.users?.name || 'User'}</span>
+                          <RolePill isAdmin={r.users?.is_admin} />
+                          <span>· {new Date(r.created_at).toLocaleString('id-ID')}</span>
+                        </div>
                         <div className="text-gray-300 mt-1 whitespace-pre-wrap">{r.content}</div>
                       </div>
                     ))}
@@ -179,8 +261,17 @@ const FeedPage: React.FC = () => {
           )}
         </div>
       ))}
-      <div className="text-center">
-        <button disabled={loading} onClick={() => { const next = page + 1; setPage(next); load(next); }} className="px-4 py-2 rounded border border-white/10 hover:bg-white/5">{loading ? 'Loading...' : 'Load More'}</button>
+      <div className="flex items-center justify-center gap-2 pt-2">
+        <button disabled={loading || page <= 1} onClick={() => { const p = page - 1; setPage(p); load(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-3 py-1 rounded border border-white/10 disabled:opacity-50 hover:bg-white/5">Prev</button>
+        {Array.from({ length: Math.max(1, Math.ceil(total / limit)) }).slice(0, 7).map((_, idx) => {
+          const p = idx + 1;
+          return (
+            <button key={p} onClick={() => { setPage(p); load(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} disabled={loading} className={`px-3 py-1 rounded border ${p === page ? 'border-pink-500 text-pink-400' : 'border-white/10 text-gray-300'} hover:bg-white/5`}>
+              {p}
+            </button>
+          );
+        })}
+        <button disabled={loading || page >= Math.max(1, Math.ceil(total / limit))} onClick={() => { const p = page + 1; setPage(p); load(p); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="px-3 py-1 rounded border border-white/10 disabled:opacity-50 hover:bg-white/5">Next</button>
       </div>
     </div>
   );

@@ -84,11 +84,18 @@ async function listFeed(req: VercelRequest, res: VercelResponse, me: any) {
   const limit = parseInt((req.query.limit as string) || '10');
   const offset = (page - 1) * limit;
 
+  // Get total count for pagination
+  const { count: totalCount, error: countError } = await supabase
+    .from('feed_posts')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_deleted', false);
+  if (countError) return res.status(500).json({ error: 'Failed to count feed' });
+
   let q = supabase
     .from('feed_posts')
     .select(`
       *,
-      users:users!feed_posts_user_id_fkey ( id, name ),
+      users:users!feed_posts_user_id_fkey ( id, name, is_admin ),
       products:products!feed_posts_product_id_fkey ( id, name, image )
     `)
     .eq('is_deleted', false)
@@ -112,6 +119,9 @@ async function listFeed(req: VercelRequest, res: VercelResponse, me: any) {
 
   return res.json({
     success: true,
+    page,
+    limit,
+    total: totalCount || 0,
     data: (posts || []).map((p: any) => ({
       ...p,
       liked_by_me: !!likedBy[p.id]
@@ -238,7 +248,7 @@ async function listComments(req: VercelRequest, res: VercelResponse, me: any) {
   if (!post_id) return res.status(400).json({ error: 'post_id required' });
   const { data, error } = await supabase
     .from('feed_comments')
-  .select('*, users:users!feed_comments_user_id_fkey ( id, name )')
+  .select('*, users:users!feed_comments_user_id_fkey ( id, name, is_admin )')
     .eq('post_id', post_id)
     .eq('is_deleted', false)
     .order('created_at', { ascending: true });
