@@ -424,7 +424,7 @@ async function handleValidateSession(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Session token is required' });
     }
 
-    const { data: session, error: sessionError } = await supabase
+  const { data: session, error: sessionError } = await supabase
       .from('user_sessions')
       .select(`
         *,
@@ -444,6 +444,16 @@ async function handleValidateSession(req: VercelRequest, res: VercelResponse) {
     // Check if session is expired
     if (new Date(session.expires_at) < new Date()) {
       return res.status(401).json({ error: 'Session expired' });
+    }
+
+    // Touch last_seen_at for activity tracking (best-effort)
+    try {
+      await supabase
+        .from('user_sessions')
+        .update({ last_seen_at: new Date().toISOString() })
+        .eq('session_token', session_token);
+    } catch (e) {
+      console.warn('Failed to update last_seen_at:', e);
     }
 
     return res.status(200).json({

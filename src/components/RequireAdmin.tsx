@@ -14,9 +14,15 @@ const RequireAdmin: React.FC = () => {
     );
   }
 
-  if (!user || !user.isAdmin) {
+  // If not logged in, send to login with redirect
+  if (!user) {
     const redirect = encodeURIComponent(location.pathname + location.search);
     return <Navigate to={`/auth?redirect=${redirect}`} replace />;
+  }
+
+  // Logged in but not admin -> No Access page
+  if (!user.isAdmin) {
+    return <Navigate to="/no-access" replace />;
   }
 
   return <Outlet />;

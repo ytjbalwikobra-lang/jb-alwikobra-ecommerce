@@ -307,7 +307,7 @@ const ProductDetailPage: React.FC = () => {
           payerEmail: customer.email,
           description: `Pembelian akun: ${product.name}`,
           // We cannot know the server-created order_id ahead of time. We will update via webhook and let user return manually.
-          successRedirectUrl: `${window.location.origin}/payment-status`,
+          successRedirectUrl: `${window.location.origin}/payment-success`,
           failureRedirectUrl: `${window.location.origin}/payment-status`,
           customer: {
             given_names: customer.name,
