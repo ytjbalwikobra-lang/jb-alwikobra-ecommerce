@@ -434,32 +434,56 @@ const FeedPage: React.FC = () => {
             <div className="space-y-3">
               <input value={editFields.title} onChange={e=>setEditFields(p=>({...p,title:e.target.value}))} placeholder="Judul" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" />
               <textarea value={editFields.content} onChange={e=>setEditFields(p=>({...p,content:e.target.value}))} placeholder="Konten" className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30" rows={4} />
-              <div className="flex items-start gap-3">
-                <select value={editFields.type} onChange={e=>setEditFields(p=>({...p, type: e.target.value as any}))} className="bg-white/5 border border-white/10 rounded px-2 py-1">
-                  <option value="post">post</option>
-                  <option value="announcement">announcement</option>
-                </select>
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-gray-400">Gambar:
-                    <input type="file" accept="image/*" className="block text-sm mt-1" onChange={e=>{
-                      const f = e.target.files?.[0] || null;
-                      setEditFields(p=>({ ...p, imageFile: f, removeImage: false }));
-                      if (editPreview) URL.revokeObjectURL(editPreview);
-                      setEditPreview(f ? URL.createObjectURL(f) : null);
-                    }} />
-                  </label>
-                  <div className="mt-1">
-                    <label className="inline-flex items-center gap-2 text-xs text-gray-400">
-                      <input type="checkbox" checked={!!editFields.removeImage} onChange={e=>setEditFields(p=>({ ...p, removeImage: e.target.checked, imageFile: e.target.checked ? undefined : p.imageFile }))} /> Hapus gambar
-                    </label>
+                  <label className="block text-xs text-gray-400 mb-2">Gambar</label>
+                  <div className="relative w-full aspect-square border border-dashed border-white/15 rounded-lg bg-white/5 flex items-center justify-center overflow-hidden">
+                    {editPreview ? (
+                      <>
+                        <img src={editPreview} alt="preview" className="absolute inset-0 w-full h-full object-cover" />
+                        <div className="absolute top-2 right-2 flex gap-2">
+                          <button type="button" onClick={()=>{ if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); setEditFields(p=>({ ...p, imageFile: undefined })); }} className="text-xs px-2 py-1 border border-white/20 rounded bg-black/40 hover:bg-black/60">Bersihkan</button>
+                        </div>
+                      </>
+                    ) : (
+                      // Show existing image when available and not marked for removal
+                      (() => {
+                        const existing = (posts.find(p => p.id === editPostId) || {}).image_url as string | undefined;
+                        if (existing && !editFields.removeImage) {
+                          return (
+                            <>
+                              <img src={existing} alt="current" className="absolute inset-0 w-full h-full object-cover" />
+                              <div className="absolute top-2 right-2 flex gap-2">
+                                <button type="button" onClick={()=> setEditFields(p=>({ ...p, removeImage: true }))} className="text-xs px-2 py-1 border border-white/20 rounded bg-black/40 hover:bg-black/60">Hapus</button>
+                              </div>
+                            </>
+                          );
+                        }
+                        return (
+                          <label className="w-full h-full flex items-center justify-center cursor-pointer text-gray-400 hover:text-white">
+                            <input type="file" accept="image/*" className="hidden" onChange={e=>{
+                              const f = e.target.files?.[0] || null;
+                              setEditFields(p=>({ ...p, imageFile: f, removeImage: false }));
+                              if (editPreview) URL.revokeObjectURL(editPreview);
+                              setEditPreview(f ? URL.createObjectURL(f) : null);
+                            }} />
+                            <span className="text-3xl">＋</span>
+                          </label>
+                        );
+                      })()
+                    )}
                   </div>
                 </div>
-                {editPreview && (
-                  <div className="flex items-center gap-2">
-                    <img src={editPreview} alt="preview" className="w-24 h-24 object-cover rounded-lg border border-white/10" />
-                    <button type="button" onClick={()=>{ if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); setEditFields(p=>({ ...p, imageFile: undefined })); }} className="text-xs px-2 py-1 border border-white/10 rounded hover:bg-white/10">Bersihkan</button>
+                <div>
+                  <label className="block text-xs text-gray-400 mb-2">Tipe</label>
+                  <select value={editFields.type} onChange={e=>setEditFields(p=>({...p, type: e.target.value as any}))} className="w-full bg-black/70 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30">
+                    <option className="bg-black text-white" value="post">Post</option>
+                    <option className="bg-black text-white" value="announcement">Announcement</option>
+                  </select>
+                  <div className="mt-2 text-xs text-gray-400">
+                    Pilih gambar baru untuk mengganti, atau centang hapus pada gambar yang ada.
                   </div>
-                )}
+                </div>
               </div>
               <div className="flex items-center gap-2 justify-end mt-2">
                 <button onClick={()=>{ setEditPostId(null); setEditFields({ title: '', content: '', type: 'post' }); if (editPreview) URL.revokeObjectURL(editPreview); setEditPreview(null); }} className="px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5">Batal</button>

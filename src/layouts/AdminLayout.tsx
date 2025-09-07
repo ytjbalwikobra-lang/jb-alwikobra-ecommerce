@@ -74,23 +74,26 @@ const AdminLayout: React.FC = () => {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {navigation.map((item) => (
-            <NavLink
-              key={item.name}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                  isActive
-                    ? 'bg-pink-600/20 text-pink-300 border-r-2 border-pink-500'
-                    : 'text-gray-300 hover:bg-white/5 hover:text-white'
-                }`
-              }
-            >
-              <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
-              {item.name}
-            </NavLink>
-          ))}
+          {navigation.map((item) => {
+            const active = item.end ? location.pathname === item.to : location.pathname.startsWith(item.to);
+            return (
+              <NavLink
+                key={item.name}
+                to={item.to}
+                end={item.end}
+                className={() =>
+                  `group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    active
+                      ? 'bg-pink-600/20 text-pink-300 border-r-2 border-pink-500'
+                      : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                  }`
+                }
+              >
+                <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                {item.name}
+              </NavLink>
+            );
+          })}
         </nav>
 
         {/* Sidebar Footer */}
