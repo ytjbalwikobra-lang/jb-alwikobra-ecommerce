@@ -174,8 +174,8 @@ const AdminLayout: React.FC = () => {
 
         {/* Page Content */}
         <main className="admin-content">
-          {/* Force remount on path change to avoid stale content */}
-          <Outlet key={location.pathname} />
+          {/* Force remount on navigation to avoid stale content */}
+          <Outlet key={(location as any).key || location.pathname} />
         </main>
       </div>
 

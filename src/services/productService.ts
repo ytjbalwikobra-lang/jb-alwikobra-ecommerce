@@ -381,6 +381,8 @@ export class ProductService {
     return sample;
   }
 
+  
+
   const { data, error } = await supabase
         .from('products')
         .select(`*`)
@@ -415,6 +417,64 @@ export class ProductService {
       const sample = sampleProducts.find(p => p.id === id) || null;
       console.log('[ProductService] Exception fallback to sample:', sample?.id);
       return sample;
+    }
+  }
+
+  // Get related products based on same game title or tier, excluding current
+  static async getRelatedProductsByProduct(base: Product, limit = 3): Promise<Product[]> {
+    try {
+      if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY || !supabase) {
+        const pool = sampleProducts.filter(p => p.id !== base.id && (p.gameTitleId === base.gameTitleId || p.tierId === base.tierId || p.gameTitle === base.gameTitle));
+        return pool.slice(0, limit);
+      }
+
+      let q: any = supabase
+        .from('products')
+        .select('*')
+        .neq('id', base.id)
+        .eq('is_active', true)
+        .is('archived_at', null)
+        .order('created_at', { ascending: false })
+        .limit(limit * 3);
+
+      const hasGame = !!base.gameTitleId || !!base.gameTitle;
+      const hasTier = !!base.tierId;
+      if (hasGame && hasTier) {
+        const parts: string[] = [];
+        if (base.gameTitleId) parts.push(`game_title_id.eq.${base.gameTitleId}`);
+        else if (base.gameTitle) parts.push(`game_title.ilike.%${base.gameTitle}%`);
+        parts.push(`tier_id.eq.${base.tierId}`);
+        q = q.or(parts.join(','));
+      } else if (hasGame) {
+        if (base.gameTitleId) q = q.eq('game_title_id', base.gameTitleId);
+        else if (base.gameTitle) q = q.ilike('game_title', `%${base.gameTitle}%`);
+      } else if (hasTier) {
+        q = q.eq('tier_id', base.tierId);
+      }
+
+      const { data, error } = await q;
+      if (error) {
+        console.warn('getRelatedProductsByProduct error:', error);
+        return [];
+      }
+      const list: Product[] = (data || []).map((p: any) => ({
+        ...p,
+        isActive: p.is_active ?? p.isActive,
+        archivedAt: p.archived_at ?? p.archivedAt,
+      }));
+      const dedup: Product[] = [];
+      const seen = new Set<string>();
+      for (const p of list) {
+        if (seen.has(p.id)) continue;
+        seen.add(p.id);
+        dedup.push(p);
+        if (dedup.length >= limit) break;
+      }
+      return dedup.slice(0, limit);
+    } catch (e) {
+      console.warn('getRelatedProductsByProduct fallback:', e);
+      const pool = sampleProducts.filter(p => p.id !== base.id);
+      return pool.slice(0, limit);
     }
   }
 

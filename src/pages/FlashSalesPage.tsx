@@ -13,6 +13,8 @@ import {
 const FlashSalesPage: React.FC = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 8;
 
   useEffect(() => {
     let mounted = true;
@@ -44,6 +46,12 @@ const FlashSalesPage: React.FC = () => {
       mounted = false;
     };
   }, []);
+
+  // Ensure current page stays in range when data changes
+  useEffect(() => {
+    const totalPages = Math.max(1, Math.ceil(flashSaleProducts.length / pageSize));
+    if (currentPage > totalPages) setCurrentPage(totalPages);
+  }, [flashSaleProducts.length]);
 
   if (loading) {
     return (
@@ -115,7 +123,9 @@ const FlashSalesPage: React.FC = () => {
 
               {/* Grid of products instead of horizontal scroller */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {flashSaleProducts.map((product) => (
+                {flashSaleProducts
+                  .slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize)
+                  .map((product) => (
                   <div key={product.id}>
                     <ProductCard
                       product={product}
@@ -125,6 +135,39 @@ const FlashSalesPage: React.FC = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Pagination */}
+              {flashSaleProducts.length > pageSize && (
+                <div className="flex items-center justify-center gap-2 pt-2">
+                  <button
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    className={`px-3 py-2 rounded-lg border border-white/20 text-white/90 hover:bg-white/10 transition ${currentPage === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    Sebelumnya
+                  </button>
+                  {Array.from({ length: Math.ceil(flashSaleProducts.length / pageSize) }).map((_, i) => {
+                    const page = i + 1;
+                    const active = page === currentPage;
+                    return (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`w-9 h-9 rounded-lg border text-sm font-semibold transition ${active ? 'bg-pink-600 border-pink-500 text-white' : 'border-white/20 text-white/80 hover:bg-white/10'}`}
+                      >
+                        {page}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(Math.ceil(flashSaleProducts.length / pageSize), p + 1))}
+                    disabled={currentPage === Math.ceil(flashSaleProducts.length / pageSize)}
+                    className={`px-3 py-2 rounded-lg border border-white/20 text-white/90 hover:bg-white/10 transition ${currentPage === Math.ceil(flashSaleProducts.length / pageSize) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    Berikutnya
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <div className="text-center py-16">

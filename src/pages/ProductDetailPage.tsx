@@ -56,6 +56,7 @@ const ProductDetailPage: React.FC = () => {
   const [creatingInvoice, setCreatingInvoice] = useState(false);
   const [paymentAttemptId, setPaymentAttemptId] = useState<string | null>(null);
   const [whatsappNumber, setWhatsappNumber] = useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
+  const [related, setRelated] = useState<Product[]>([]);
   React.useEffect(() => { 
     (async () => { 
       try { 
@@ -193,6 +194,14 @@ const ProductDetailPage: React.FC = () => {
     }, 1000);
     return () => clearInterval(timer as any);
   }, [cameFromFlashSaleCard, product?.flashSaleEndTime]);
+
+  // Load related products after product loads
+  useEffect(() => {
+    (async () => {
+      if (!product) return;
+      try { setRelated(await ProductService.getRelatedProductsByProduct(product, 3)); } catch {}
+    })();
+  }, [product?.id]);
 
   // Show flash sale price/timer only when user arrives from flash sale card AND sale is active
   const isFlashSaleActive = cameFromFlashSaleCard && product?.isFlashSale && timeRemaining && !timeRemaining.isExpired;
@@ -667,6 +676,26 @@ const ProductDetailPage: React.FC = () => {
             <p className="text-gray-300 leading-relaxed">{product.description}</p>
           </div>
         </div>
+
+        {/* Related Products */}
+        {related.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-white mb-4">Produk Terkait</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {related.map(rp => (
+                <Link key={rp.id} to={`/products/${rp.id}`} className="block group">
+                  <div className="rounded-xl overflow-hidden border border-white/10 bg-white/5">
+                    <img src={rp.image || rp.images?.[0]} alt={rp.name} className="w-full h-40 object-cover group-hover:scale-105 transition-transform" />
+                    <div className="p-3">
+                      <div className="font-semibold">{rp.name}</div>
+                      <div className="text-pink-400">{formatCurrency(rp.originalPrice && rp.originalPrice > 0 ? rp.originalPrice : rp.price)}</div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Checkout Modal */}
         {showCheckoutForm && (
