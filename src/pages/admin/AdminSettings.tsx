@@ -251,4 +251,4 @@ const AdminSettings: React.FC = () => {
   );
 };
 
-export default React.memo(AdminSettings);
+export default AdminSettings;

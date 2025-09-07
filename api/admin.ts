@@ -30,6 +30,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       case 'dashboard':
         return await handleDashboard(req, res);
       case 'orders':
+        if (req.method === 'GET') {
+          res.setHeader('Cache-Control', 'public, max-age=15, s-maxage=60, stale-while-revalidate=60');
+        }
         return await handleOrders(req, res);
       case 'users':
         return await handleUsers(req, res);
@@ -329,13 +332,7 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
     // Build the query with filters
     let ordersQuery = supabase
       .from('orders')
-      .select(`
-        *,
-        products (
-          name,
-          image
-        )
-      `);
+      .select('id, product_id, customer_name, customer_email, customer_phone, order_type, amount, status, payment_method, rental_duration, created_at');
 
     // Apply filters
     if (status && status !== 'all') {
@@ -349,7 +346,7 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
     }
 
     // Apply pagination and ordering
-    const { data: orders, error } = await ordersQuery
+  const { data: orders, error } = await ordersQuery
       .order('created_at', { ascending: false })
       .range(offset, offset + parseInt(limit as string) - 1);
 

@@ -24,6 +24,7 @@ const AdminOrders: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<'all'|'pending'|'paid'|'completed'|'cancelled'>('all');
   const [orderTypeFilter, setOrderTypeFilter] = useState<'all'|'purchase'|'rental'>('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   
   // Pagination states (like AdminProducts)
   const [currentPage, setCurrentPage] = useState(1);
@@ -41,6 +42,12 @@ const AdminOrders: React.FC = () => {
       setCurrentPage(1);
     }
   }, [statusFilter, orderTypeFilter, searchTerm, itemsPerPage]);
+
+  // Debounce search term to limit requests while typing
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   const mapRow = (r: any): OrderRow => ({
     id: r.id,
@@ -72,8 +79,8 @@ const AdminOrders: React.FC = () => {
       if (orderTypeFilter !== 'all') {
         params.append('order_type', orderTypeFilter);
       }
-      if (searchTerm.trim()) {
-        params.append('search', searchTerm.trim());
+      if (debouncedSearch) {
+        params.append('search', debouncedSearch);
       }
 
       // Fetch orders from consolidated admin API endpoint
@@ -105,7 +112,7 @@ const AdminOrders: React.FC = () => {
 
   useEffect(() => { 
     load(); 
-  }, [currentPage, itemsPerPage, statusFilter, orderTypeFilter, searchTerm]);
+  }, [currentPage, itemsPerPage, statusFilter, orderTypeFilter, debouncedSearch]);
   
   // Realtime updates: refresh periodically
   useEffect(() => {
@@ -114,7 +121,7 @@ const AdminOrders: React.FC = () => {
     }, 30000); // Refresh every 30 seconds
     
     return () => clearInterval(interval as any);
-  }, [currentPage, itemsPerPage, statusFilter, orderTypeFilter, searchTerm]);
+  }, [currentPage, itemsPerPage, statusFilter, orderTypeFilter, debouncedSearch]);
 
   // Since we're using server-side filtering and pagination, just use rows directly
   const filtered = rows as OrderRow[];
