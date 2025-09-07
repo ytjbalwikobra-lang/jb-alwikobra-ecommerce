@@ -159,12 +159,12 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     let productsCount = 0;
     let flashSalesCount = 0;
 
-    // Orders count and revenue (with error handling) - ONLY PAID ORDERS
+  // Orders count and revenue (with error handling) - ONLY paid orders (lowercase to match UI/DB semantics)
     try {
       const { data: ordersData, error: ordersError } = await supabase
         .from('orders')
-        .select('amount, created_at, status')
-        .eq('status', 'PAID')
+    .select('amount, created_at, status')
+    .eq('status', 'paid')
         .gte('created_at', sevenDaysAgo.toISOString());
 
       if (ordersError) {
@@ -191,11 +191,13 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       console.warn('Users count failed:', error);
     }
 
-    // Products count (with error handling) - Only count, no data
+  // Products count (active & not archived) (with error handling) - Only count, no data
     try {
       const { count, error: productsError } = await supabase
         .from('products')
-        .select('id', { count: 'exact', head: true });
+    .select('id', { count: 'exact', head: true })
+    .eq('is_active', true)
+    .is('archived_at', null);
 
       if (productsError) {
         console.warn('Products count error:', productsError);
@@ -206,12 +208,13 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
       console.warn('Products count failed:', error);
     }
 
-    // Flash sales count (with fallback if table doesn't exist) - Only count, no data
+  // Flash sales count (active and not ended) (with fallback if table doesn't exist) - Only count, no data
     try {
       const { count, error: flashSalesError } = await supabase
         .from('flash_sales')
-        .select('id', { count: 'exact', head: true })
-        .eq('is_active', true);
+    .select('id', { count: 'exact', head: true })
+    .eq('is_active', true)
+    .gte('end_time', new Date().toISOString());
 
       if (flashSalesError) {
         console.warn('Flash sales table not found or error:', flashSalesError);
@@ -230,13 +233,13 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     // Get additional analytics data
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     
-    // Monthly orders data for chart - ONLY PAID ORDERS
+  // Monthly orders data for chart - ONLY paid orders
     let monthlyOrders: any[] = [];
     try {
       const { data: monthlyData, error: monthlyError } = await supabase
         .from('orders')
-        .select('amount, created_at, status')
-        .eq('status', 'PAID')
+    .select('amount, created_at, status')
+    .eq('status', 'paid')
         .gte('created_at', thirtyDaysAgo.toISOString())
         .order('created_at', { ascending: true });
 
@@ -480,9 +483,10 @@ async function handleUpdateOrder(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const { orderId, status, notes } = req.body;
+    const { orderId: rawOrderId, id, status, notes } = req.body as any;
+    const orderId = rawOrderId || id;
 
-    if (!orderId || !status) {
+  if (!orderId || !status) {
       return res.status(400).json({ error: 'Order ID and status are required' });
     }
 

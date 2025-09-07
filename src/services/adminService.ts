@@ -240,6 +240,143 @@ class AdminService {
     }
   }
 
+  async updateFlashSale(id: string, updates: any): Promise<{ data: any; error: any }> {
+    if (!this.isAdminClient()) {
+      return {
+        data: null,
+        error: { message: 'Admin client not available. Service role key required.' }
+      };
+    }
+
+    try {
+      const payload: any = { ...updates };
+      // Normalize dates if provided
+      if (payload.start_time) payload.start_time = new Date(payload.start_time).toISOString();
+      if (payload.end_time) payload.end_time = new Date(payload.end_time).toISOString();
+      Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
+
+      const { data, error } = await this.adminClient
+        .from('flash_sales')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ AdminService: Flash sale update error:', error);
+        return { data: null, error };
+      }
+
+      return { data, error: null };
+    } catch (error) {
+      console.error('💥 AdminService: Unexpected error:', error);
+      return { data: null, error } as any;
+    }
+  }
+
+  async deleteFlashSale(id: string): Promise<{ success: boolean; error: any }> {
+    if (!this.isAdminClient()) {
+      return {
+        success: false,
+        error: { message: 'Admin client not available. Service role key required.' }
+      };
+    }
+
+    try {
+      const { error } = await this.adminClient
+        .from('flash_sales')
+        .delete()
+        .eq('id', id);
+      if (error) {
+        console.error('❌ AdminService: Flash sale delete error:', error);
+        return { success: false, error };
+      }
+      return { success: true, error: null };
+    } catch (error) {
+      console.error('💥 AdminService: Unexpected error:', error);
+      return { success: false, error } as any;
+    }
+  }
+
+  async getFlashSales(options: { onlyActive?: boolean; notEndedOnly?: boolean } = {}): Promise<{ data: any[]; error: any }>{
+    if (!this.isAdminClient()) {
+      return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const { onlyActive = true, notEndedOnly = true } = options;
+      let query = this.adminClient
+        .from('flash_sales')
+        .select(`
+          id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at,
+          products ( id, name )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (onlyActive) {
+        query = query.eq('is_active', true);
+      }
+      if (notEndedOnly) {
+        query = query.gte('end_time', new Date().toISOString());
+      }
+
+      const { data, error } = await query;
+      if (!error) {
+        const mapped = (data || []).map((row: any) => ({
+          ...row,
+          productId: row.product_id,
+          salePrice: row.sale_price,
+          originalPrice: row.original_price,
+          startTime: row.start_time,
+          endTime: row.end_time,
+          isActive: row.is_active,
+          createdAt: row.created_at,
+          product: row.products ? { id: row.products.id, name: row.products.name } : undefined,
+        }));
+        return { data: mapped, error: null };
+      }
+
+      // Fallback when join not available: fetch base rows and hydrate product names
+      console.warn('⚠️ Falling back to basic flash_sales select (no join):', error?.message);
+      let basic = this.adminClient
+        .from('flash_sales')
+        .select('id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at')
+        .order('created_at', { ascending: false });
+      if (options.onlyActive) basic = basic.eq('is_active', true);
+      if (options.notEndedOnly) basic = basic.gte('end_time', new Date().toISOString());
+      const { data: rows, error: basicErr } = await basic;
+      if (basicErr) {
+        console.error('❌ AdminService: basic getFlashSales error:', basicErr);
+        return { data: [], error: basicErr };
+      }
+      const ids = (rows || []).map((r: any) => r.product_id).filter(Boolean);
+      let nameMap = new Map<string, { id: string; name: string }>();
+      if (ids.length) {
+        try {
+          const { data: prods } = await this.adminClient
+            .from('products')
+            .select('id, name')
+            .in('id', ids);
+          for (const p of prods || []) nameMap.set(p.id, { id: p.id, name: p.name });
+        } catch {}
+      }
+      const mapped = (rows || []).map((row: any) => ({
+        ...row,
+        productId: row.product_id,
+        salePrice: row.sale_price,
+        originalPrice: row.original_price,
+        startTime: row.start_time,
+        endTime: row.end_time,
+        isActive: row.is_active,
+        createdAt: row.created_at,
+        product: nameMap.get(row.product_id),
+      }));
+      return { data: mapped, error: null };
+    } catch (error) {
+      console.error('💥 AdminService: Unexpected error:', error);
+      return { data: [], error } as any;
+    }
+  }
+
   // Image upload with admin privileges
   async uploadImage(file: File, path: string): Promise<{ data: any; error: any }> {
     if (!this.isAdminClient()) {
@@ -278,14 +415,88 @@ class AdminService {
     }
   }
 
+  // --- Lookup helpers ---
+  async getGameTitles(): Promise<{ data: any[]; error: any }> {
+    if (!this.isAdminClient()) {
+      return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const { data, error } = await this.adminClient
+        .from('game_titles')
+        .select('id, name, slug, icon, color, is_popular, is_active, sort_order, created_at, updated_at')
+        .order('name');
+      if (error) return { data: [], error };
+      return { data: data || [], error: null };
+    } catch (error) {
+      return { data: [], error } as any;
+    }
+  }
+
+  async getTiers(): Promise<{ data: any[]; error: any }> {
+    if (!this.isAdminClient()) {
+      return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const { data, error } = await this.adminClient
+        .from('tiers')
+        .select('id, name, slug, description, color')
+        .order('name');
+      if (error) return { data: [], error };
+      return { data: data || [], error: null };
+    } catch (error) {
+      return { data: [], error } as any;
+    }
+  }
+
+  // Rental options helpers
+  async getRentalOptions(productId: string): Promise<{ data: any[]; error: any }> {
+    if (!this.isAdminClient()) {
+      return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const { data, error } = await this.adminClient
+        .from('rental_options')
+        .select('id, duration, price, description')
+        .eq('product_id', productId)
+        .order('price', { ascending: true });
+      if (error) return { data: [], error };
+      return { data: data || [], error: null };
+    } catch (error) {
+      return { data: [], error } as any;
+    }
+  }
+
+  async saveRentalOptions(productId: string, options: Array<{ duration: string; price: number; description?: string }>): Promise<{ success: boolean; error: any }> {
+    if (!this.isAdminClient()) {
+      return { success: false, error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      // Replace strategy: delete then insert
+      await this.adminClient.from('rental_options').delete().eq('product_id', productId);
+      if (!options || options.length === 0) return { success: true, error: null };
+      const payload = options.slice(0, 4).map(o => ({
+        product_id: productId,
+        duration: o.duration,
+        price: o.price,
+        description: o.description ?? null
+      }));
+      const { error } = await this.adminClient.from('rental_options').insert(payload);
+      if (error) return { success: false, error };
+      return { success: true, error: null };
+    } catch (error) {
+      return { success: false, error } as any;
+    }
+  }
+
   // Product retrieval with filtering and pagination
   async getProducts(options: {
     page?: number;
     perPage?: number;
     search?: string;
     category?: string;
-    gameTitle?: string;
-    status?: string;
+    gameTitle?: string; // legacy text filter
+    gameTitleId?: string; // preferred FK filter
+    status?: string; // 'active' | 'archived' | 'inactive'
   } = {}): Promise<{ data: any[] | null; error: any; count?: number }> {
     if (!this.isAdminClient()) {
       return { 
@@ -300,8 +511,9 @@ class AdminService {
         perPage = 10,
         search = '',
         category = '',
-        gameTitle = '',
-        status = ''
+  gameTitle = '',
+  gameTitleId = '',
+  status = ''
       } = options;
 
       let query = this.adminClient
@@ -317,12 +529,18 @@ class AdminService {
         query = query.eq('category', category.trim());
       }
 
-      if (gameTitle.trim()) {
+      if (gameTitleId.trim()) {
+        query = query.eq('game_title_id', gameTitleId.trim());
+      } else if (gameTitle.trim()) {
+        // fallback legacy text filter
         query = query.ilike('game_title', `%${gameTitle.trim()}%`);
       }
 
+      // Status semantics
       if (status === 'active') {
-        query = query.eq('is_active', true);
+        query = query.eq('is_active', true).is('archived_at', null);
+      } else if (status === 'archived') {
+        query = query.not('archived_at', 'is', null);
       } else if (status === 'inactive') {
         query = query.eq('is_active', false);
       }

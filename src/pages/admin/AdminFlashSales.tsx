@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
 import { Product } from '../../types/index.ts';
-import { ProductService } from '../../services/productService.ts';
+import { adminService } from '../../services/adminService.ts';
 import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
 import { useToast } from '../../components/Toast.tsx';
 import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
@@ -40,12 +40,13 @@ const AdminFlashSales: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [all, fs] = await Promise.all([
-          ProductService.getAllProducts(),
-          ProductService.getFlashSales(),
+        const [prods, fs] = await Promise.all([
+          // Use admin service to fetch products for admin controls
+          adminService.getProducts({ perPage: 100, status: 'active' }),
+          adminService.getFlashSales({ onlyActive: true, notEndedOnly: true }),
         ]);
-        setProducts(all);
-        setFlashSales(fs);
+        setProducts((prods.data || []) as any);
+        setFlashSales(fs.data || []);
       } finally { setLoading(false); }
     })();
   }, []);
@@ -82,8 +83,8 @@ const AdminFlashSales: React.FC = () => {
   const cancelForm = () => { setForm(emptyFS); setShowForm(false); };
 
   const refresh = async () => {
-    const fs = await ProductService.getFlashSales();
-    setFlashSales(fs);
+  const fs = await adminService.getFlashSales({ onlyActive: true, notEndedOnly: true });
+  setFlashSales(fs.data || []);
   };
 
   const validate = (): string[] => {
@@ -103,8 +104,8 @@ const AdminFlashSales: React.FC = () => {
       const selected = products.find(p => p.id === form.product_id);
       const computedOriginal = (form.original_price && Number(form.original_price) > 0)
         ? Number(form.original_price)
-        : (selected?.originalPrice && Number(selected.originalPrice) > 0)
-          ? Number(selected.originalPrice)
+        : (selected && (Number((selected as any).original_price || selected.originalPrice) > 0))
+          ? Number((selected as any).original_price || selected.originalPrice)
           : Number(selected?.price || form.sale_price || 0);
 
       const computedStart = form.start_time && form.start_time.trim().length > 0
@@ -136,8 +137,8 @@ const AdminFlashSales: React.FC = () => {
         is_active: form.is_active ?? true,
       };
 
-      if (form.id) await ProductService.updateFlashSale(form.id, payload);
-      else await ProductService.createFlashSale(payload);
+  if (form.id) await adminService.updateFlashSale(form.id, payload);
+  else await adminService.createFlashSale(payload);
       await refresh();
       setShowForm(false);
   push('Flash sale disimpan', 'success');
@@ -149,8 +150,8 @@ const AdminFlashSales: React.FC = () => {
 
   const handleDelete = async (id: string) => {
     if (!confirm('Hapus flash sale ini?')) return;
-  const ok = await ProductService.deleteFlashSale(id);
-  if (ok) { await refresh(); push('Flash sale dihapus', 'success'); } else { push('Gagal menghapus', 'error'); }
+  const ok = await adminService.deleteFlashSale(id);
+  if (ok.success) { await refresh(); push('Flash sale dihapus', 'success'); } else { push('Gagal menghapus', 'error'); }
   };
 
   return (

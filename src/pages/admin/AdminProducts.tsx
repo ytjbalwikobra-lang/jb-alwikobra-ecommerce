@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Trash2, Edit, Plus, X, Upload, Search, Filter } from 'lucide-react';
-import { Product, GameTitle, Tier, RentalOption } from '../../types/index.ts';
+import { Product, GameTitle, Tier } from '../../types/index.ts';
 import { adminService } from '../../services/adminService.ts';
 import { useToast } from '../../components/Toast.tsx';
 import { AdminButton } from '../../components/admin/AdminButton.tsx';
@@ -86,23 +86,45 @@ const AdminProducts: React.FC = () => {
   // Load game titles and tiers
   const loadGameTitlesAndTiers = useCallback(async () => {
     try {
-      // Load game titles
-      const gameTitlesResult = await adminService.testConnection();
-      if (gameTitlesResult.success) {
-        // Use real game titles from database
-        setGameTitles([
-          { id: '1', name: 'Mobile Legends', slug: 'ml', description: '', icon: '', color: '#1e40af', isActive: true },
-          { id: '2', name: 'Free Fire', slug: 'ff', description: '', icon: '', color: '#dc2626', isActive: true },
-          { id: '3', name: 'PUBG Mobile', slug: 'pubg', description: '', icon: '', color: '#059669', isActive: true },
-        ]);
-      }
-      
-      // Load tiers
-      setTiers([
-        { id: '1', name: 'Regular', slug: 'regular', description: 'Regular tier', color: '#6b7280', borderColor: '', backgroundGradient: '', icon: '', priceRangeMin: 0, priceRangeMax: 100000, isActive: true, sortOrder: 1, createdAt: '', updatedAt: '' },
-        { id: '2', name: 'Premium', slug: 'premium', description: 'Premium tier', color: '#f59e0b', borderColor: '', backgroundGradient: '', icon: '', priceRangeMin: 100000, priceRangeMax: 500000, isActive: true, sortOrder: 2, createdAt: '', updatedAt: '' },
-        { id: '3', name: 'Elite', slug: 'elite', description: 'Elite tier', color: '#8b5cf6', borderColor: '', backgroundGradient: '', icon: '', priceRangeMin: 500000, priceRangeMax: 1000000, isActive: true, sortOrder: 3, createdAt: '', updatedAt: '' },
+      const [gt, tr] = await Promise.all([
+        adminService.getGameTitles(),
+        adminService.getTiers()
       ]);
+      if (!gt.error) {
+        const mapped: GameTitle[] = (gt.data || []).map((g: any) => ({
+          id: g.id,
+          name: g.name,
+          slug: g.slug || '',
+          description: g.description || '',
+          icon: g.icon || '',
+          color: g.color || '#000000',
+          isPopular: !!(g.is_popular ?? g.isPopular),
+          isActive: g.is_active ?? true,
+          sortOrder: g.sort_order ?? 0,
+          createdAt: g.created_at,
+          updatedAt: g.updated_at
+        }));
+        setGameTitles(mapped);
+      }
+      if (!tr.error) {
+        const mappedTiers: Tier[] = (tr.data || []).map((t: any) => ({
+          id: t.id,
+          name: t.name,
+          slug: t.slug || '',
+          description: t.description || '',
+          color: t.color || '',
+          borderColor: '',
+          backgroundGradient: '',
+          icon: '',
+          priceRangeMin: undefined,
+          priceRangeMax: undefined,
+          isActive: true,
+          sortOrder: 0,
+          createdAt: '',
+          updatedAt: ''
+        }));
+        setTiers(mappedTiers);
+      }
     } catch (error) {
       console.error('Error loading game titles and tiers:', error);
     }
@@ -118,6 +140,7 @@ const AdminProducts: React.FC = () => {
         perPage: itemsPerPage,
         search: searchTerm,
         category: categoryFilter,
+        gameTitleId: gameFilter,
         status: statusFilter
       });
 
@@ -221,9 +244,9 @@ const AdminProducts: React.FC = () => {
 
       if (result.data) {
         // Handle rental options separately if needed
-        if (formData.has_rental && formData.rental_options.length > 0) {
-          // TODO: Implement rental options save
-          console.log('Rental options:', formData.rental_options);
+        if (formData.has_rental) {
+          const targetId = (editingProduct?.id) || result.data.id;
+          await adminService.saveRentalOptions(targetId, formData.rental_options);
         }
 
         await loadProducts();
@@ -239,7 +262,7 @@ const AdminProducts: React.FC = () => {
   };
 
   // Handle modal operations
-  const handleOpenModal = (product?: Product) => {
+  const handleOpenModal = async (product?: Product) => {
     if (product) {
       setEditingProduct(product);
       
@@ -249,6 +272,19 @@ const AdminProducts: React.FC = () => {
         status = 'archived';
       }
       
+      // Try to fetch latest rental options for this product from DB
+      let rentalOptions = (product as any).rentalOptions?.map((ro: any) => ({
+        duration: ro.duration,
+        price: ro.price,
+        description: ro.description
+      })) || [];
+      try {
+        const ro = await adminService.getRentalOptions(product.id);
+        if (!ro.error && ro.data && ro.data.length) {
+          rentalOptions = ro.data.map((r: any) => ({ duration: r.duration, price: r.price, description: r.description }));
+        }
+      } catch {}
+
       setFormData({
         name: product.name,
         description: product.description,
@@ -258,12 +294,8 @@ const AdminProducts: React.FC = () => {
         tier_id: product.tierId || '',
         account_level: product.accountLevel || '',
         account_details: product.accountDetails || '',
-        has_rental: product.hasRental || false,
-        rental_options: product.rentalOptions?.map(ro => ({
-          duration: ro.duration,
-          price: ro.price,
-          description: ro.description
-        })) || [],
+        has_rental: product.hasRental || rentalOptions.length > 0 || false,
+        rental_options: rentalOptions,
         status: status,
         images: product.images || []
       });
@@ -498,10 +530,10 @@ const AdminProducts: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
-                        {product.gameTitleData?.name || product.gameTitle}
+                        {product.gameTitleData?.name || product.gameTitle || '-'}
                       </div>
                       <div className="text-sm text-gray-500 capitalize">
-                        {product.category}
+                        {product.category || '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4">
