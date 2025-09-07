@@ -242,6 +242,16 @@ const FeedPage: React.FC = () => {
         <div key={post.id} className={`${post.type === 'announcement' ? 'bg-yellow-900/20 border-yellow-400/30' : 'bg-black/50 border-white/10'} border rounded-xl p-4`}>
           <div className="flex items-center justify-between">
             <div className="text-sm text-gray-400 flex items-center gap-2">
+              {/* Avatar */}
+              <div className="w-7 h-7 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center">
+                {post.users?.avatar_url ? (
+                  <img src={post.users.avatar_url} alt={post.users?.name||'avatar'} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xs text-white/70">
+                    {(post.users?.name||'U').slice(0,1).toUpperCase()}
+                  </span>
+                )}
+              </div>
               <span>{post.users?.name || 'User'}</span>
               <RolePill isAdmin={post.users?.is_admin} />
               <span>· {new Date(post.created_at).toLocaleString('id-ID')}</span>
@@ -295,6 +305,13 @@ const FeedPage: React.FC = () => {
                 {(comments[post.id] || []).filter(c => !c.parent_comment_id).map(c => (
                   <div key={c.id} className="bg-black/40 border border-white/5 rounded p-3">
                     <div className="text-sm text-gray-400 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center">
+                        {c.users?.avatar_url ? (
+                          <img src={c.users.avatar_url} alt={c.users?.name||'avatar'} className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-[10px] text-white/70">{(c.users?.name||'U').slice(0,1).toUpperCase()}</span>
+                        )}
+                      </div>
                       <span>{c.users?.name || 'User'}</span>
                       <RolePill isAdmin={c.users?.is_admin} />
                       <span>· {new Date(c.created_at).toLocaleString('id-ID')}</span>
@@ -312,6 +329,13 @@ const FeedPage: React.FC = () => {
                     {(comments[post.id] || []).filter(r => r.parent_comment_id === c.id).map(r => (
                       <div key={r.id} className="mt-2 ml-4 border-l border-white/10 pl-3">
                         <div className="text-xs text-gray-400 flex items-center gap-2">
+                          <div className="w-5 h-5 rounded-full overflow-hidden bg-white/10 border border-white/10 flex items-center justify-center">
+                            {r.users?.avatar_url ? (
+                              <img src={r.users.avatar_url} alt={r.users?.name||'avatar'} className="w-full h-full object-cover" />
+                            ) : (
+                              <span className="text-[9px] text-white/70">{(r.users?.name||'U').slice(0,1).toUpperCase()}</span>
+                            )}
+                          </div>
                           <span>{r.users?.name || 'User'}</span>
                           <RolePill isAdmin={r.users?.is_admin} />
                           <span>· {new Date(r.created_at).toLocaleString('id-ID')}</span>

@@ -3,6 +3,7 @@ import { useSearchParams, useLocation } from 'react-router-dom';
 import { Product, Tier, GameTitle } from '../types/index.ts';
 import ProductCard from '../components/ProductCard.tsx';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
+import SeoBreadcrumbs from '../components/SeoBreadcrumbs.tsx';
 
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -233,6 +234,12 @@ const ProductsPage: React.FC = () => {
       <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8 py-4 sm:py-6 lg:py-8 text-gray-200">
         {/* Header */}
         <div className="mb-4 sm:mb-6 lg:mb-8">
+          <SeoBreadcrumbs
+            items={[
+              { name: 'Beranda', item: '/' },
+              { name: 'Produk', item: '/products' }
+            ]}
+          />
           <h1 id="katalog-produk" className="text-xl sm:text-2xl lg:text-3xl font-bold text-white mb-2">Katalog Produk</h1>
         </div>
 

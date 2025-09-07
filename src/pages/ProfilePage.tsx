@@ -26,6 +26,7 @@ import { useWishlist } from '../contexts/WishlistContext.tsx';
 import { useConfirmation } from '../components/ConfirmationModal.tsx';
 import { useToast } from '../components/Toast.tsx';
 import { supabase } from '../services/supabase.ts';
+import { uploadFile } from '../services/storageService.ts';
 
 interface UserProfile {
   name: string;
@@ -34,6 +35,7 @@ interface UserProfile {
   joinDate: string;
   totalOrders: number;
   wishlistCount: number;
+  avatarUrl?: string;
 }
 
 const ProfilePage: React.FC = () => {
@@ -48,8 +50,12 @@ const ProfilePage: React.FC = () => {
     whatsapp: user?.phone || '',
     joinDate: user?.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID') : new Date().toLocaleDateString('id-ID'),
     totalOrders: 0,
-    wishlistCount: wishlistItems.length
+    wishlistCount: wishlistItems.length,
+    avatarUrl: user?.avatarUrl
   });
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isValidPhone, setIsValidPhone] = useState(false);
 
@@ -138,20 +144,35 @@ const ProfilePage: React.FC = () => {
 
     if (confirmed) {
       try {
+        // Upload avatar first if selected
+  let avatar_url: string | undefined;
+        if (avatarFile) {
+          try {
+            const url = await uploadFile(avatarFile, 'avatars');
+            if (url) avatar_url = url;
+          } catch (e) {
+            console.error('Avatar upload failed:', e);
+            showToast('Upload avatar gagal, coba lagi', 'error');
+          }
+        }
         // Persist to database using admin API or direct client based on session
         const token = localStorage.getItem('session_token') || '';
         const res = await fetch('/api/auth?action=update-profile', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-          body: JSON.stringify({ name: profile.name, email: profile.email, phone: profile.whatsapp })
+          body: JSON.stringify({ name: profile.name, email: profile.email, phone: profile.whatsapp, ...(avatar_url ? { avatar_url } : (removeAvatar ? { avatar_url: '' } : {})) })
         });
         if (!res.ok) throw new Error('Gagal menyimpan profil');
         const data = await res.json();
         if (!data?.success) throw new Error(data?.error || 'Gagal menyimpan profil');
         // Update local auth user and storage
-        const updatedUser = { ...(user as any), name: data.user?.name ?? profile.name, email: data.user?.email ?? profile.email, phone: data.user?.phone ?? profile.whatsapp };
+        const updatedUser = { ...(user as any), name: data.user?.name ?? profile.name, email: data.user?.email ?? profile.email, phone: data.user?.phone ?? profile.whatsapp, avatarUrl: data.user?.avatar_url ?? avatar_url ?? (user as any)?.avatarUrl };
         localStorage.setItem('user_data', JSON.stringify(updatedUser));
-        setProfile(p=>({ ...p }));
+        setProfile(p=>({ ...p, avatarUrl: updatedUser.avatarUrl }));
+        if (avatarPreview) { try { URL.revokeObjectURL(avatarPreview); } catch {} }
+  setAvatarFile(null);
+        setAvatarPreview(null);
+  setRemoveAvatar(false);
         setIsEditing(false);
         showToast('Profil berhasil disimpan', 'success');
       } catch (e:any) {
@@ -202,8 +223,12 @@ const ProfilePage: React.FC = () => {
                   <div className="flex items-center space-x-6">
                     {/* Avatar */}
                     <div className="relative">
-                      <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center shadow">
-                        <User size={32} className="text-white/90" />
+                      <div className="w-20 h-20 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center overflow-hidden shadow">
+                        {profile.avatarUrl ? (
+                          <img src={profile.avatarUrl} alt="avatar" className="w-full h-full object-cover" />
+                        ) : (
+                          <User size={32} className="text-white/90" />
+                        )}
                       </div>
                       <div className="absolute -bottom-2 -right-2 w-7 h-7 bg-green-500 rounded-full flex items-center justify-center ring-4 ring-gray-950">
                         <Check size={16} className="text-white" />
@@ -302,6 +327,34 @@ const ProfilePage: React.FC = () => {
                 </h2>
                 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-3">Foto Profil</label>
+                    <div className="flex items-center gap-4">
+                      <div className="w-16 h-16 rounded-lg overflow-hidden border border-white/10 bg-white/5 flex items-center justify-center">
+                        {avatarPreview ? (
+                          <img src={avatarPreview} className="w-full h-full object-cover" alt="avatar preview" />
+                        ) : profile.avatarUrl ? (
+                          <img src={profile.avatarUrl} className="w-full h-full object-cover" alt="avatar" />
+                        ) : (
+                          <User className="text-white/80" size={24} />
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <label className="px-3 py-2 text-sm border border-white/10 rounded-lg hover:bg-white/5 cursor-pointer">
+                          Pilih Foto
+                          <input type="file" accept="image/*" className="hidden" onChange={e=>{
+                            const f = e.target.files?.[0] || null;
+                            setAvatarFile(f);
+                            if (avatarPreview) { try { URL.revokeObjectURL(avatarPreview); } catch {} }
+                            setAvatarPreview(f ? URL.createObjectURL(f) : null);
+                          }} />
+                        </label>
+                        {(profile.avatarUrl || avatarPreview) && (
+                          <button type="button" onClick={()=>{ setAvatarFile(null); if (avatarPreview) { try { URL.revokeObjectURL(avatarPreview); } catch {} } setAvatarPreview(null); setProfile(p=>({...p, avatarUrl: undefined })); setRemoveAvatar(true); }} className="px-3 py-2 text-sm border border-white/10 rounded-lg hover:bg-white/5">Hapus</button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-300 mb-3">
                       <User size={16} className="inline mr-2" />

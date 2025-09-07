@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
 import { ProductService } from '../services/productService.ts';
 import { SettingsService } from '../services/settingsService.ts';
@@ -31,6 +31,7 @@ import { useWishlist } from '../contexts/WishlistContext.tsx';
 import Footer from '../components/Footer.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
 import { useToast } from '../components/Toast.tsx';
+import SeoBreadcrumbs from '../components/SeoBreadcrumbs.tsx';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -66,6 +67,26 @@ const ProductDetailPage: React.FC = () => {
     })(); 
   }, []);
   const currentUrl = window.location.href;
+  const productJsonLd = useMemo(() => {
+    if (!product) return null;
+    const imgs = product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : []);
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      name: product.name,
+      description: product.description,
+      image: imgs,
+      brand: product.gameTitleData?.name || product.gameTitle || 'JB Alwikobra',
+      sku: product.id,
+      offers: {
+        '@type': 'Offer',
+        priceCurrency: 'IDR',
+        price: String(product.price),
+        availability: product.stock > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+        url: currentUrl,
+      },
+    } as const;
+  }, [product, currentUrl]);
 
   // Handle share functionality
   const handleBackToCatalog = () => {
@@ -395,14 +416,19 @@ const ProductDetailPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 text-sm text-gray-400 mb-6">
-          <Link to="/" className="hover:text-pink-400">Beranda</Link>
-          <span>/</span>
-          <button onClick={handleBackToCatalog} className="hover:text-pink-400 bg-transparent border-none p-0 text-inherit">Produk</button>
-          <span>/</span>
-          <span className="text-white">{product.name}</span>
-        </nav>
+        {/* Breadcrumbs */}
+        <SeoBreadcrumbs
+          items={[
+            { name: 'Beranda', item: '/' },
+            { name: 'Produk', item: '/products' },
+            { name: product.name, item: `/products/${product.id}` }
+          ]}
+        />
+
+        {/* Product JSON-LD */}
+        {productJsonLd && (
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
+        )}
 
         {/* Back Button */}
         <button

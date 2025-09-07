@@ -137,6 +137,20 @@ const HelpPage: React.FC = () => {
     return matchesCategory && matchesSearch;
   });
 
+  // FAQPage JSON-LD for rich results
+  const faqJsonLd = React.useMemo(() => ({
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: faqs.map(f => ({
+      '@type': 'Question',
+      name: f.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: f.a,
+      },
+    })),
+  }), []);
+
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
   {/* Hero */}
@@ -163,7 +177,10 @@ const HelpPage: React.FC = () => {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+  {/* FAQPage JSON-LD for rich results */}
+  <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+
+  <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
         {/* TOC */}
         <nav aria-label="Daftar Isi" className="mb-8 bg-black/40 border border-pink-500/30 rounded-lg p-4">

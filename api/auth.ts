@@ -94,11 +94,16 @@ async function handleUpdateProfile(req: VercelRequest, res: VercelResponse) {
       return res.status(401).json({ error: 'Invalid session' });
     }
 
-    const { name, email, phone } = req.body as any;
+    const { name, email, phone, avatar_url } = req.body as any;
     const update: any = {};
     if (typeof name === 'string') update.name = name;
     if (typeof email === 'string') update.email = email;
     if (typeof phone === 'string') update.phone = phone;
+    if (avatar_url !== undefined) {
+      // Allow clearing with empty string
+      if (avatar_url === '') update.avatar_url = null;
+      else if (typeof avatar_url === 'string') update.avatar_url = avatar_url;
+    }
     if (Object.keys(update).length === 0) return res.status(400).json({ error: 'No fields to update' });
 
     const { data: user, error } = await supabase
@@ -430,7 +435,7 @@ async function handleValidateSession(req: VercelRequest, res: VercelResponse) {
         *,
         users (
           id, phone, email, name, is_admin, is_active, 
-          phone_verified, profile_completed
+          phone_verified, profile_completed, avatar_url
         )
       `)
       .eq('session_token', session_token)

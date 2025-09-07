@@ -34,16 +34,16 @@ const AdminLayout: React.FC = () => {
     { name: 'Game Titles', to: '/admin/game-titles', icon: Gamepad2 },
     { name: 'Orders', to: '/admin/orders', icon: ListOrdered },
     { name: 'Banners', to: '/admin/banners', icon: ImageIcon },
-    { name: 'Settings', to: '/admin/settings', icon: SettingsIcon },
     ...(isSuper ? [{ name: 'Users', to: '/admin/users', icon: Users }] : []),
   ];
 
   const getPageTitle = () => {
     const currentPath = location.pathname;
-    const nav = navigation.find(item => 
+  const nav = navigation.find(item => 
       item.end ? currentPath === item.to : currentPath.startsWith(item.to)
     );
-    return nav?.name || 'Admin Panel';
+  if (currentPath.startsWith('/admin/settings')) return 'Settings';
+  return nav?.name || 'Admin Panel';
   };
 
   return (
@@ -103,6 +103,21 @@ const AdminLayout: React.FC = () => {
 
         {/* Sidebar Footer */}
         <div style={{borderTop: '1px solid rgba(236, 72, 153, 0.3)', padding: '16px'}}>
+          {/* Settings at bottom */}
+          <NavLink
+            to="/admin/settings"
+            className={() => {
+              const active = location.pathname.startsWith('/admin/settings');
+              return `mb-2 group flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                active
+                  ? 'bg-pink-600/20 text-pink-300 border-r-2 border-pink-500'
+                  : 'text-gray-300 hover:bg-white/5 hover:text-white'
+              }`;
+            }}
+          >
+            <SettingsIcon className="mr-3 h-5 w-5 flex-shrink-0" />
+            Settings
+          </NavLink>
           <Link 
             to="/"
             className="flex items-center px-3 py-2 text-sm text-gray-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors"

@@ -135,7 +135,7 @@ async function listFeed(req: VercelRequest, res: VercelResponse, me: any) {
     .from('feed_posts')
     .select(`
       id, user_id, type, product_id, title, content, rating, image_url, likes_count, comments_count, is_pinned, created_at,
-      users:users!feed_posts_user_id_fkey ( id, name, is_admin ),
+  users:users!feed_posts_user_id_fkey ( id, name, is_admin, avatar_url ),
       products:products!feed_posts_product_id_fkey ( id, name, image )
     `)
     .eq('is_deleted', false);
@@ -331,7 +331,7 @@ async function listComments(req: VercelRequest, res: VercelResponse, me: any) {
   if (!post_id) return res.status(400).json({ error: 'post_id required' });
   const { data, error } = await supabase
     .from('feed_comments')
-  .select('*, users:users!feed_comments_user_id_fkey ( id, name, is_admin )')
+  .select('*, users:users!feed_comments_user_id_fkey ( id, name, is_admin, avatar_url )')
     .eq('post_id', post_id)
     .eq('is_deleted', false)
     .order('created_at', { ascending: true });

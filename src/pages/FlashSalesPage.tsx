@@ -9,6 +9,7 @@ import {
   TrendingUp,
   ArrowUpRight
 } from 'lucide-react';
+import SeoBreadcrumbs from '../components/SeoBreadcrumbs.tsx';
 
 const FlashSalesPage: React.FC = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
@@ -67,6 +68,14 @@ const FlashSalesPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-dark text-gray-200">
       {/* Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <SeoBreadcrumbs
+          items={[
+            { name: 'Beranda', item: '/' },
+            { name: 'Flash Sale', item: '/flash-sales' }
+          ]}
+        />
+      </div>
   <section className="bg-gradient-to-r from-pink-600 via-pink-500 to-rose-500 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="flex items-center justify-center space-x-3 mb-6">

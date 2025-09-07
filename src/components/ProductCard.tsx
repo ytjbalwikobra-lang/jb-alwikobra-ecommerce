@@ -165,7 +165,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
           {showBest && (
             <div className="absolute top-2 sm:top-3 left-2 sm:left-3 inline-flex items-center gap-1 sm:gap-1.5 rounded-full bg-red-500/90 text-white text-xs font-bold px-2 sm:px-3 py-1 sm:py-1.5 backdrop-blur border border-red-400/50 shadow-lg animate-pulse">
               <Zap size={10} className="sm:w-3 sm:h-3" />
-              <span className="text-xs">{isFlashSaleActive ? 'FLASH SALE' : 'TERLARIS'}</span>
+              <span className="text-xs">{isFlashSaleActive ? 'FLASH SALE' : 'REKOMENDASI'}</span>
             </div>
           )}
 

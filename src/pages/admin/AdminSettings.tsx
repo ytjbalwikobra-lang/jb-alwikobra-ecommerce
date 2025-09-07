@@ -180,9 +180,17 @@ const AdminSettings: React.FC = () => {
   if (loading) return <div className="flex items-center gap-2 text-gray-400"><Loader2 className="animate-spin" size={18} /> Memuat...</div>;
 
   return (
-  <div key={location.key} className="space-y-6">
-      <h1 className="text-xl font-bold">Pengaturan Website</h1>
-      <div className="bg-black/40 border border-pink-500/20 rounded-xl p-4 space-y-4">
+    <div key={location.key} className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-bold">Pengaturan Website</h1>
+        <button disabled={saving} onClick={save} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60">
+          <Save size={16} /> {saving ? 'Menyimpan...' : 'Simpan'}
+        </button>
+      </div>
+
+      {/* General */}
+      <section className="bg-black/40 border border-white/10 rounded-xl p-4">
+        <h2 className="text-sm font-semibold text-gray-200 mb-3">Umum</h2>
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-gray-400">Nama Situs</label>
@@ -192,6 +200,21 @@ const AdminSettings: React.FC = () => {
             <label className="text-sm text-gray-400">Email Kontak</label>
             <input value={form.contactEmail} onChange={e=>updateForm('contactEmail', e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
           </div>
+          <div className="md:col-span-2">
+            <label className="text-sm text-gray-400">Hero Title</label>
+            <input value={form.heroTitle} onChange={e=>updateForm('heroTitle', e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
+          </div>
+          <div className="md:col-span-2">
+            <label className="text-sm text-gray-400">Hero Subtitle</label>
+            <input value={form.heroSubtitle} onChange={e=>updateForm('heroSubtitle', e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
+          </div>
+        </div>
+      </section>
+
+      {/* Contact & Social */}
+      <section className="bg-black/40 border border-white/10 rounded-xl p-4">
+        <h2 className="text-sm font-semibold text-gray-200 mb-3">Kontak & Sosial</h2>
+        <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="text-sm text-gray-400">WhatsApp</label>
             <PhoneInput
@@ -202,7 +225,7 @@ const AdminSettings: React.FC = () => {
               className="mt-1 bg-black/60 border-white/10"
             />
           </div>
-          <div className="md:col-span-2">
+          <div>
             <label className="text-sm text-gray-400">Alamat</label>
             <textarea value={form.address} onChange={e=>updateForm('address', e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" rows={3} />
           </div>
@@ -222,47 +245,39 @@ const AdminSettings: React.FC = () => {
             <label className="text-sm text-gray-400">YouTube</label>
             <input value={form.youtubeUrl} onChange={e=>updateForm('youtubeUrl', e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
           </div>
-          <div className="md:col-span-2 grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="text-sm text-gray-400">Logo</label>
-              <div className="mt-1 flex items-center gap-3">
-                <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 cursor-pointer">
-                  <ImageIcon size={16} /> Pilih Logo
-                  <input type="file" className="hidden" accept="image/*" onChange={handleLogoChange} />
-                </label>
-                {(logoPreview || settings?.logoUrl) && (
-                  <img src={logoPreview || settings?.logoUrl!} alt="logo" className="h-8 rounded border border-white/10" />
-                )}
-              </div>
-            </div>
-            <div>
-              <label className="text-sm text-gray-400">Favicon</label>
-              <div className="mt-1 flex items-center gap-3">
-                <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 cursor-pointer">
-                  <ImageIcon size={16} /> Pilih Favicon
-                  <input type="file" className="hidden" accept="image/*" onChange={handleFaviconChange} />
-                </label>
-                {(faviconPreview || settings?.faviconUrl) && (
-                  <img src={faviconPreview || settings?.faviconUrl!} alt="favicon" className="h-8 rounded border border-white/10" />
-                )}
-              </div>
+        </div>
+      </section>
+
+      {/* Branding */}
+      <section className="bg-black/40 border border-white/10 rounded-xl p-4">
+        <h2 className="text-sm font-semibold text-gray-200 mb-3">Branding</h2>
+        <div className="grid md:grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm text-gray-400">Logo</label>
+            <div className="mt-1 flex items-center gap-3">
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 cursor-pointer">
+                <ImageIcon size={16} /> Pilih Logo
+                <input type="file" className="hidden" accept="image/*" onChange={handleLogoChange} />
+              </label>
+              {(logoPreview || settings?.logoUrl) && (
+                <img src={logoPreview || settings?.logoUrl!} alt="logo" className="h-8 rounded border border-white/10" />
+              )}
             </div>
           </div>
-          <div className="md:col-span-2">
-            <label className="text-sm text-gray-400">Hero Title</label>
-            <input value={form.heroTitle} onChange={e=>updateForm('heroTitle', e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
-          </div>
-          <div className="md:col-span-2">
-            <label className="text-sm text-gray-400">Hero Subtitle</label>
-            <input value={form.heroSubtitle} onChange={e=>updateForm('heroSubtitle', e.target.value)} className="w-full mt-1 bg-black/60 border border-white/10 rounded-lg px-3 py-2" />
+          <div>
+            <label className="text-sm text-gray-400">Favicon</label>
+            <div className="mt-1 flex items-center gap-3">
+              <label className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 cursor-pointer">
+                <ImageIcon size={16} /> Pilih Favicon
+                <input type="file" className="hidden" accept="image/*" onChange={handleFaviconChange} />
+              </label>
+              {(faviconPreview || settings?.faviconUrl) && (
+                <img src={faviconPreview || settings?.faviconUrl!} alt="favicon" className="h-8 rounded border border-white/10" />
+              )}
+            </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button disabled={saving} onClick={save} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60">
-            <Save size={16} /> {saving ? 'Menyimpan...' : 'Simpan'}
-          </button>
-        </div>
-      </div>
+      </section>
     </div>
   );
 };

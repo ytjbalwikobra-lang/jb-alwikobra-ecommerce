@@ -112,7 +112,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data.user,
         isAdmin: data.user.is_admin,
         phoneVerified: data.user.phone_verified,
-        profileCompleted: data.user.profile_completed
+        profileCompleted: data.user.profile_completed,
+        avatarUrl: (data.user as any).avatar_url || undefined
       };
 
       // Store session data
@@ -190,7 +191,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ...data.user,
         isAdmin: data.user.is_admin,
         phoneVerified: data.user.phone_verified,
-        profileCompleted: data.user.profile_completed
+        profileCompleted: data.user.profile_completed,
+        avatarUrl: (data.user as any).avatar_url || undefined
       };
 
       // Store session data
@@ -339,7 +341,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...data.user,
             isAdmin: data.user.is_admin,
             phoneVerified: data.user.phone_verified,
-            profileCompleted: data.user.profile_completed
+            profileCompleted: data.user.profile_completed,
+            avatarUrl: (data.user as any).avatar_url || undefined
           };
           // Update user data with latest from server
           localStorage.setItem('user_data', JSON.stringify(mappedUser));

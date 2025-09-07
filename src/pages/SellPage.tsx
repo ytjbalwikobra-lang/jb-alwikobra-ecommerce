@@ -154,23 +154,23 @@ const SellPage: React.FC = () => {
   const steps = [
     {
       number: '01',
-      title: 'Hubungi Admin',
-      description: 'Klik tombol WhatsApp untuk menghubungi admin dengan detail akun Anda.'
+  title: 'Isi Form Singkat',
+  description: 'Masukkan game, level/rank, estimasi harga, dan detail akun agar admin bisa menilai lebih cepat.'
     },
     {
       number: '02',
-      title: 'Evaluasi Akun',
-      description: 'Tim kami akan mengevaluasi akun dan memberikan estimasi harga terbaik.'
+  title: 'Chat via WhatsApp',
+  description: 'Klik tombol WhatsApp untuk mengirim detail akun ke admin. Kami akan merespons cepat di jam operasional.'
     },
     {
       number: '03',
-      title: 'Konfirmasi Deal',
-      description: 'Setujui harga dan syarat, kemudian akun akan diproses untuk dijual.'
+  title: 'Evaluasi & Penawaran',
+  description: 'Tim kami mengevaluasi akun Anda dan memberikan penawaran harga terbaik secara transparan.'
     },
     {
       number: '04',
-      title: 'Terima Pembayaran',
-      description: 'Dapatkan pembayaran langsung setelah akun berhasil terjual ke pembeli.'
+  title: 'Deal & Pencairan',
+  description: 'Setelah sepakat, proses transfer akun dilakukan dan dana dicairkan dengan aman.'
     }
   ];
 
