@@ -69,7 +69,7 @@ const AdminProducts: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const itemsPerPage = 10;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Category options
   const categoryOptions = [
@@ -155,7 +155,7 @@ const AdminProducts: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [currentPage, searchTerm, categoryFilter, statusFilter, push]);
+  }, [currentPage, itemsPerPage, searchTerm, categoryFilter, statusFilter, push]);
 
   // Load data on mount
   useEffect(() => {
@@ -467,7 +467,7 @@ const AdminProducts: React.FC = () => {
         </div>
       </div>
 
-      {/* Products Table */}
+  {/* Products Table */}
       <div className="bg-white rounded-lg border overflow-hidden">
         {loading ? (
           <div className="p-8 text-center">
@@ -483,12 +483,10 @@ const AdminProducts: React.FC = () => {
             <table className="w-full">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Produk
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Game/Kategori
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipe</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul Game</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tier</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Harga
                   </th>
@@ -529,12 +527,18 @@ const AdminProducts: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">
-                        {product.gameTitleData?.name || product.gameTitle || '-'}
+                      <div className="text-xs inline-flex items-center gap-2 px-2 py-1 rounded-full border">
+                        <span className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+                        <span className="capitalize text-gray-700">
+                          {product.hasRental && product.price > 0 ? 'both' : product.hasRental ? 'rental' : 'purchase'}
+                        </span>
                       </div>
-                      <div className="text-sm text-gray-500 capitalize">
-                        {product.category || '-'}
-                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{product.gameTitleData?.name || product.gameTitle || '-'}</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{product.tierData?.name || '-'}</div>
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm font-medium text-gray-900">
@@ -604,7 +608,19 @@ const AdminProducts: React.FC = () => {
                       <span className="font-medium">{totalProducts}</span> produk
                     </p>
                   </div>
-                  <div>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-gray-700">Per halaman</span>
+                      <select 
+                        value={itemsPerPage}
+                        onChange={e => { setItemsPerPage(parseInt(e.target.value) || 10); setCurrentPage(1); }}
+                        className="px-2 py-1 border border-gray-300 rounded-md text-sm"
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                      </select>
+                    </div>
                     <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                       <button
                         disabled={currentPage === 1}

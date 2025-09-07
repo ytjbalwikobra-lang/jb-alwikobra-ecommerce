@@ -399,8 +399,11 @@ const AdminDashboard: React.FC = () => {
         cacheKey,
         async () => {
           try {
-            // Get dashboard stats from adminService
-            const statsResult = await adminService.getDashboardStats();
+            // Get dashboard stats from adminService (dynamic by time period)
+            const statsResult = await adminService.getDashboardStats({
+              start: dateRange.start.toISOString(),
+              end: dateRange.end.toISOString()
+            });
             
             if (statsResult.success) {
               const stats = statsResult.data;
@@ -420,8 +423,8 @@ const AdminDashboard: React.FC = () => {
                     'pending': stats.orderStatuses.pending,
                     'cancelled': stats.orderStatuses.cancelled
                   } as Record<string, number>,
-                  dailyRevenue: [], // Would be populated with historical data in future
-                  monthlyOrders: stats.dailyOrders,
+                  dailyRevenue: stats.dailyRevenue || [],
+                  monthlyOrders: stats.totalOrders,
                   monthlyRevenue: stats.totalRevenue,
                   trends: {
                     orderTrend: 0, // Would be calculated from historical data

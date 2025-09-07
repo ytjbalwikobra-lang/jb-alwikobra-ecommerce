@@ -161,7 +161,7 @@ class AdminService {
     }
   }
 
-  async deleteProduct(id: string): Promise<{ success: boolean; error: any }> {
+  async deleteProduct(id: string): Promise<{ success: boolean; error: any; archived?: boolean }> {
     if (!this.isAdminClient()) {
       return { 
         success: false, 
@@ -178,6 +178,12 @@ class AdminService {
         .delete()
         .eq('product_id', id);
 
+      // Then delete related flash sales
+      await this.adminClient
+        .from('flash_sales')
+        .delete()
+        .eq('product_id', id);
+
       // Then delete the product
       const { error } = await this.adminClient
         .from('products')
@@ -185,6 +191,19 @@ class AdminService {
         .eq('id', id);
 
       if (error) {
+        // Handle FK conflict (e.g., orders referencing product): fallback to archive
+        if ((error as any).code === '409' || (error as any).message?.includes('foreign key')) {
+          console.warn('⚠️ AdminService: FK conflict deleting product, archiving instead');
+          const { error: upErr } = await this.adminClient
+            .from('products')
+            .update({ is_active: false, archived_at: new Date().toISOString() })
+            .eq('id', id);
+          if (upErr) {
+            console.error('❌ AdminService: Archive fallback failed:', upErr);
+            return { success: false, error: upErr };
+          }
+          return { success: true, error: null, archived: true };
+        }
         console.error('❌ AdminService: Product deletion error:', error);
         return { success: false, error };
       }
@@ -676,7 +695,11 @@ class AdminService {
 
       let query = this.adminClient
         .from('products')
-        .select('*', { count: 'exact' });
+        .select(`
+          *,
+          game_titles:game_title_id ( id, name ),
+          tiers:tier_id ( id, name )
+        `, { count: 'exact' });
 
       // Apply filters
       if (search.trim()) {
@@ -718,8 +741,25 @@ class AdminService {
         return { data: null, error, count: 0 };
       }
 
-      console.log(`✅ AdminService: Retrieved ${data?.length || 0} products`);
-      return { data: data || [], error: null, count: count || 0 };
+      const mapped = (data || []).map((row: any) => ({
+        ...row,
+        originalPrice: row.original_price ?? null,
+        gameTitleId: row.game_title_id ?? null,
+        tierId: row.tier_id ?? null,
+        gameTitle: row.game_title ?? null,
+        accountLevel: row.account_level ?? null,
+        accountDetails: row.account_details ?? null,
+        hasRental: row.has_rental ?? false,
+        isActive: row.is_active ?? true,
+        archivedAt: row.archived_at ?? null,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
+        gameTitleData: row.game_titles ? { id: row.game_titles.id, name: row.game_titles.name } : undefined,
+        tierData: row.tiers ? { id: row.tiers.id, name: row.tiers.name } : undefined,
+      }));
+
+      console.log(`✅ AdminService: Retrieved ${mapped?.length || 0} products`);
+      return { data: mapped, error: null, count: count || 0 };
 
     } catch (error: any) {
       console.error('💥 AdminService: Unexpected error fetching products:', error);
@@ -794,7 +834,7 @@ class AdminService {
   }
 
   // Get dashboard statistics
-  async getDashboardStats() {
+  async getDashboardStats(range?: { start?: string; end?: string }) {
     try {
       if (!this.isAdminClient()) {
         return {
@@ -813,15 +853,25 @@ class AdminService {
         };
       }
 
+      // Build range filters
+      let startISO: string | undefined;
+      let endISO: string | undefined;
+      if (range?.start) {
+        startISO = new Date(range.start).toISOString();
+      }
+      if (range?.end) {
+        // include full end day by adding 1 day and using lt
+        const end = new Date(range.end);
+        end.setHours(23,59,59,999);
+        endISO = end.toISOString();
+      }
+
       // Real dashboard queries from database
       const [
         productsResult,
         flashSalesResult,
-        ordersResult,
-        revenueResult,
         usersResult,
-        dailyOrdersResult,
-        orderStatusesResult
+        ordersInRangeResult
       ] = await Promise.all([
         // a. Total Produk = Count dari produk yang tersedia
         this.adminClient
@@ -837,56 +887,44 @@ class AdminService {
           .eq('is_active', true)
           .gte('end_time', new Date().toISOString()),
 
-        // c. Total Pesanan = Count dari semua pesanan yang masuk
-        this.adminClient
-          .from('orders')
-          .select('id', { count: 'exact', head: true }),
-
-        // d. Total Pendapatan = Sum dari semua order dengan status paid
-        this.adminClient
-          .from('orders')
-          .select('amount')
-          .eq('status', 'paid'),
-
         // f. Total pengguna = Sum dari tabel users dengan yang sudah terverifikasi
         this.adminClient
           .from('users')
           .select('id', { count: 'exact', head: true })
           .eq('phone_verified', true),
 
-        // g. Pendapatan harian = Count order dengan status paid hari ini
-        this.adminClient
-          .from('orders')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', 'paid')
-          .gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString())
-          .lt('created_at', new Date(new Date().setHours(23, 59, 59, 999)).toISOString()),
-
-        // h. Status Pesanan = Count dari tabel orders berdasarkan status
-        this.adminClient
-          .from('orders')
-          .select('status')
+        // Orders within selected range (for dynamic dashboard)
+        (function(self){
+          let q = self.adminClient
+            .from('orders')
+            .select('id, amount, status, created_at');
+          if (startISO) q = q.gte('created_at', startISO);
+          if (endISO) q = q.lte('created_at', endISO);
+          return q;
+        })(this)
       ]);
 
-      // Calculate totals
+      // Calculate totals (dynamic by range)
       const totalProducts = productsResult.count || 0;
       const flashSales = flashSalesResult.count || 0;
-      const totalOrders = ordersResult.count || 0;
-      
-      // Calculate total revenue
-      const totalRevenue = revenueResult.data?.reduce((sum, order) => 
-        sum + (parseFloat(order.amount) || 0), 0) || 0;
-      
-      // e. Rata-rata pesanan = Average dari semua order dengan status paid
-      const paidOrders = revenueResult.data?.length || 0;
-      const averageOrders = paidOrders > 0 ? totalRevenue / paidOrders : 0;
-      
+      const orders = ordersInRangeResult.data || [];
+      const totalOrders = orders.length;
+
+      // Calculate revenue for paid orders within range
+      const paidOrdersList = orders.filter((o: any) => o.status === 'paid');
+      const totalRevenue = paidOrdersList.reduce((sum: number, o: any) => sum + (parseFloat(o.amount) || 0), 0);
+      const averageOrders = paidOrdersList.length > 0 ? totalRevenue / paidOrdersList.length : 0;
+
       const totalUsers = usersResult.count || 0;
-      const dailyOrders = dailyOrdersResult.count || 0;
+      // dailyOrders: paid orders today within range if today is included, otherwise 0
+      const today = new Date();
+      const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23,59,59,999).toISOString();
+      const dailyOrders = orders.filter((o: any) => o.status === 'paid' && o.created_at >= dayStart && o.created_at <= dayEnd).length;
 
       // Calculate order statuses
       const orderStatuses = { paid: 0, pending: 0, cancelled: 0 };
-      orderStatusesResult.data?.forEach(order => {
+      orders.forEach((order: any) => {
         if (order.status === 'paid') orderStatuses.paid++;
         else if (order.status === 'pending') orderStatuses.pending++;
         else if (order.status === 'cancelled') orderStatuses.cancelled++;
@@ -894,6 +932,26 @@ class AdminService {
 
       // i. Insight performa = tingkat konversi (paid orders / total orders * 100)
       const conversionRate = totalOrders > 0 ? (orderStatuses.paid / totalOrders * 100) : 0;
+
+      // Build daily revenue breakdown for the selected range
+      const dailyMap = new Map<string, { revenue: number; orders: number }>();
+      const startDate = startISO ? new Date(startISO) : new Date(new Date().getTime() - 7*24*60*60*1000);
+      const endDate = endISO ? new Date(endISO) : new Date();
+      // Normalize to date-only (local)
+      const cursor = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const endDay = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      while (cursor <= endDay) {
+        const key = cursor.toISOString().slice(0,10);
+        dailyMap.set(key, { revenue: 0, orders: 0 });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      for (const o of paidOrdersList) {
+        const d = new Date(o.created_at);
+        const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
+        const cur = dailyMap.get(key) || { revenue: 0, orders: 0 };
+        dailyMap.set(key, { revenue: cur.revenue + (parseFloat(o.amount) || 0), orders: cur.orders + 1 });
+      }
+      const dailyRevenue = Array.from(dailyMap.entries()).map(([k, v]) => ({ date: k, revenue: v.revenue, orders: v.orders }));
 
       return {
         success: true,
@@ -906,7 +964,8 @@ class AdminService {
           totalUsers,
           dailyOrders,
           orderStatuses,
-          conversionRate
+          conversionRate,
+          dailyRevenue
         }
       };
 

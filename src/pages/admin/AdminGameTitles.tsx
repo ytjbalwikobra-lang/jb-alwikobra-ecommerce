@@ -185,13 +185,11 @@ const AdminGameTitles: React.FC = () => {
       };
 
       if (!form.id) {
-        const { error } = await (adminService as any).adminClient
-          .from('game_titles').insert(payload);
+        const { error } = await adminService.createGameTitle(payload);
         if (error) throw error;
         push('Game title ditambahkan dengan logo berhasil', 'success');
       } else {
-        const { error } = await (adminService as any).adminClient
-          .from('game_titles').update(payload).eq('id', form.id);
+        const { error } = await adminService.updateGameTitle(form.id, payload);
         if (error) throw error;
         push('Game title diperbarui dengan logo berhasil', 'success');
       }
@@ -217,9 +215,8 @@ const AdminGameTitles: React.FC = () => {
     if (!test.success) return;
     if (!confirm('Hapus game title ini?')) return;
     try {
-      const { error } = await (adminService as any).adminClient
-        .from('game_titles').delete().eq('id', id);
-      if (error) throw error;
+      const { success, error } = await adminService.deleteGameTitle(id);
+      if (!success || error) throw error;
       push('Game title dihapus', 'success');
       await load();
     } catch (e: any) {

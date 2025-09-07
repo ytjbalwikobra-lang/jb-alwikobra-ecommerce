@@ -440,17 +440,14 @@ ${orderData.status === 'paid'
     orderId?: string
   ): Promise<void> {
     try {
-      const supabaseUrl = process.env.REACT_APP_SUPABASE_URL;
-      const supabaseKey = process.env.REACT_APP_SUPABASE_ANON_KEY;
-      
-      if (!supabaseUrl || !supabaseKey) {
+      // Reuse existing singleton supabase client to avoid multiple GoTrueClient instances
+      const { supabase } = await import('./supabase');
+      if (!supabase) {
         console.warn('Supabase not configured, skipping WhatsApp log');
         return;
       }
 
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      
-      await supabase.from('whatsapp_logs').insert({
+      await (supabase as any).from('whatsapp_logs').insert({
         phone_number: phoneNumber,
         message: message.substring(0, 1000), // Limit message length
         status,
