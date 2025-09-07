@@ -24,12 +24,12 @@ const faqs = [
   {
     category: 'Akun & Registrasi',
     q: 'Bagaimana cara membuat akun?',
-    a: 'Klik tombol "Masuk" di header, lalu pilih "Daftar". Masukkan email, password, dan nomor WhatsApp (opsional). Setelah registrasi, Anda akan mendapat pesan selamat datang jika nomor WhatsApp tersedia.'
+    a: 'Klik tombol "Masuk" di header, lalu pilih "Daftar". Masukkan email, password, dan nomor WhatsApp (opsional). Setelah registrasi, Anda bisa langsung login dan menggunakan fitur seperti Wishlist dan Riwayat Order.'
   },
   {
     category: 'Pembelian',
     q: 'Bagaimana cara membeli akun game?',
-    a: 'Pilih produk dari katalog → Klik "Detail" → Pilih "Beli Sekarang" → Isi form pembelian dengan data lengkap → Klik "Proses Pembayaran" → Bayar melalui invoice Xendit yang dikirim → Detail akun akan dikirim setelah pembayaran terkonfirmasi.'
+    a: 'Pilih produk dari katalog → Klik "Detail" → Pilih "Beli Sekarang" → Isi data pembeli → Klik "Proses Pembayaran" → Selesaikan pembayaran di invoice Xendit. Setelah sukses, Anda akan diarahkan ke halaman "Pembayaran Berhasil" dan otomatis kembali ke beranda. Bukti pembayaran dan status dapat dilihat di Riwayat Order.'
   },
   {
     category: 'Pembelian',
@@ -44,7 +44,7 @@ const faqs = [
   {
     category: 'Pembayaran',
     q: 'Berapa lama proses konfirmasi pembayaran?',
-    a: 'Pembayaran otomatis terkonfirmasi melalui webhook Xendit. Transfer bank biasanya 1-15 menit, e-wallet instan, virtual account 1-5 menit. Status pesanan akan diupdate otomatis di halaman "Riwayat Order".'
+    a: 'Konfirmasi dilakukan otomatis (webhook Xendit). Transfer bank umumnya 1–15 menit, e-wallet instan, virtual account 1–5 menit. Setelah terkonfirmasi Anda akan melihat status "Sukses" dan diarahkan ke halaman "Pembayaran Berhasil".'
   },
   {
     category: 'Keamanan',
@@ -58,18 +58,28 @@ const faqs = [
   },
   {
     category: 'Fitur',
+    q: 'Apa itu produk terkait di halaman detail?',
+    a: 'Di bawah detail produk, kami menampilkan maksimal 3 produk terkait dengan rasio gambar 4:5 untuk pengalaman belanja yang konsisten. Bagian ini disembunyikan khusus pada halaman detail Flash Sale.'
+  },
+  {
+    category: 'Fitur',
     q: 'Bagaimana cara menggunakan wishlist?',
     a: 'Klik ikon ❤️ pada produk untuk menambah ke wishlist. Akses wishlist melalui navigasi atau profile dashboard. Wishlist tersimpan otomatis dan tersinkron dengan akun Anda. Anda akan mendapat notifikasi jika ada flash sale untuk item wishlist.'
   },
   {
     category: 'Fitur',
     q: 'Apa itu Flash Sale dan bagaimana cara mengikutinya?',
-    a: 'Flash Sale adalah diskon terbatas waktu dengan stok terbatas. Akses melalui menu "Flash Sale" atau notifikasi. Timer countdown menunjukkan sisa waktu. Tips: Tambahkan item ke wishlist untuk notifikasi flash sale otomatis.'
+    a: 'Flash Sale adalah diskon terbatas waktu dengan stok terbatas. Akses melalui menu "Flash Sale". Setiap halaman menampilkan maksimal 8 produk dengan pagination. Gunakan tombol halaman untuk melihat item lainnya.'
+  },
+  {
+    category: 'Akses Admin',
+    q: 'Saya tidak bisa membuka halaman admin. Kenapa?',
+    a: 'Halaman admin hanya untuk admin. Jika belum login, Anda akan diarahkan ke halaman Masuk. Jika sudah login namun bukan admin, Anda akan melihat halaman "Tidak memiliki akses".'
   },
   {
     category: 'Bantuan',
     q: 'Bagaimana cara menghubungi customer service?',
-    a: 'Customer service tersedia melalui: WhatsApp (respon tercepat, 09:00-21:00 WIB), Email support, atau chat admin melalui tombol bantuan. Untuk masalah urgent, gunakan WhatsApp dengan menyertakan nomor order.'
+    a: 'Customer service tersedia melalui WhatsApp (09:00–21:00 WIB, tercepat) dan Email support. Untuk masalah mendesak, gunakan WhatsApp dan sertakan nomor order.'
   }
 ];
 
@@ -254,7 +264,7 @@ const HelpPage: React.FC = () => {
                 Butuh Bantuan Cepat?
               </h3>
               <p className="text-gray-300 mb-4">
-                Tim support kami siap membantu Anda 24/7 melalui WhatsApp.
+                Tim support kami siap membantu Anda pada jam operasional 09:00–21:00 WIB melalui WhatsApp.
               </p>
               <a
                 href={`https://wa.me/${whatsappNumber}?text=Halo%20admin,%20saya%20butuh%20bantuan%20terkait%20JB%20Alwikobra`}
@@ -268,11 +278,11 @@ const HelpPage: React.FC = () => {
               <div className="mt-4 space-y-2 text-sm text-gray-400">
                 <div className="flex items-center gap-2">
                   <CheckCircle size={16} className="text-green-400" />
-                  <span>Respon dalam 5 menit</span>
+                  <span>Respon ±5 menit (jam operasional)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Clock size={16} className="text-blue-400" />
-                  <span>Online: 09:00 - 21:00 WIB</span>
+                  <span>Online: 09:00 – 21:00 WIB</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Star size={16} className="text-yellow-400" />
