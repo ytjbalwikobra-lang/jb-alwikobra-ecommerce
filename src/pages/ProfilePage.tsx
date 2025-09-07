@@ -178,7 +178,7 @@ const ProfilePage: React.FC = () => {
         if (!res.ok) throw new Error('Gagal menyimpan profil');
         const data = await res.json();
         if (!data?.success) throw new Error(data?.error || 'Gagal menyimpan profil');
-        // Update local auth user and storage
+  // Update local auth user and storage
         const updatedUser = { ...(user as any), name: data.user?.name ?? profile.name, email: data.user?.email ?? profile.email, phone: data.user?.phone ?? profile.whatsapp, avatarUrl: data.user?.avatar_url ?? avatar_url ?? (user as any)?.avatarUrl };
         localStorage.setItem('user_data', JSON.stringify(updatedUser));
         setProfile(p=>({ ...p, avatarUrl: updatedUser.avatarUrl }));
@@ -188,6 +188,7 @@ const ProfilePage: React.FC = () => {
   setRemoveAvatar(false);
         setIsEditing(false);
         showToast('Profil berhasil disimpan', 'success');
+  try { localStorage.setItem('feed_cache_buster', String(Date.now())); } catch {}
       } catch (e:any) {
         console.error('Save profile error:', e);
         showToast(e.message || 'Gagal menyimpan profil', 'error');

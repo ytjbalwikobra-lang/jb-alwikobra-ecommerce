@@ -43,6 +43,11 @@ export const feedService = {
   async list(page = 1, limit = 10, type: 'all'|'announcement'|'review' = 'all') {
     const params = new URLSearchParams({ page: String(page), limit: String(limit) });
     if (type && type !== 'all') params.set('type', type);
+    // Cache-buster to reflect recent profile/avatar changes quickly
+    try {
+      const v = localStorage.getItem('feed_cache_buster');
+      if (v) params.set('_v', v);
+    } catch {}
     const res = await fetch(`/api/feed?action=list&${params.toString()}`);
     return res.json();
   },
