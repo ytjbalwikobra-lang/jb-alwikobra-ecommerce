@@ -79,6 +79,7 @@ const AdminSettings: React.FC = () => {
 
   // Reload settings on mount and when location.key changes to force fresh state
   useEffect(() => {
+    let cancelled = false;
     // Reset local state to avoid stale form when remounted via Router
     setSettings(null);
     setForm({});
@@ -86,8 +87,13 @@ const AdminSettings: React.FC = () => {
     setFaviconFile(null);
     setLogoPreview('');
     setFaviconPreview('');
-  loadSettings();
-  }, [location.key]);
+    (async () => {
+      try {
+        if (!cancelled) await loadSettings();
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [location.key, loadSettings]);
 
   const save = useCallback(async () => {
     // Validate phone numbers before saving

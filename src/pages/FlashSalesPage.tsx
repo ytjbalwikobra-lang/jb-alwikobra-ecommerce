@@ -121,8 +121,8 @@ const FlashSalesPage: React.FC = () => {
                 </p>
               </div>
 
-              {/* Grid of products instead of horizontal scroller */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {/* Grid of products instead of horizontal scroller (2 cols mobile like /products) */}
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
                 {flashSaleProducts
                   .slice((currentPage - 1) * pageSize, (currentPage - 1) * pageSize + pageSize)
                   .map((product) => (

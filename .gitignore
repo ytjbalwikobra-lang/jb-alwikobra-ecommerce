@@ -25,3 +25,7 @@ coverage
 # Supabase
 .supabase
 .vercel
+
+# Lighthouse reports
+lighthouse-*.report.html
+lighthouse-*.report.json

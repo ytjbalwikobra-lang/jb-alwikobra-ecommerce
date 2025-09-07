@@ -39,7 +39,7 @@ const NoAccessPage = React.lazy(() => import('./pages/NoAccessPage.tsx'));
 const PaymentSuccessPage = React.lazy(() => import('./pages/PaymentSuccessPage.tsx'));
 
 // Lazy load admin pages (biggest performance impact)
-const AdminLayout = React.lazy(() => import('./layouts/AdminLayout.tsx'));
+const AdminLayoutWrapper = React.lazy(() => import('./layouts/AdminLayoutWrapper.tsx'));
 const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard.tsx'));
 const AdminProducts = React.lazy(() => import('./pages/admin/AdminProducts.tsx'));
 const AdminFlashSales = React.lazy(() => import('./pages/admin/AdminFlashSales.tsx'));
@@ -131,9 +131,9 @@ function App() {
                 <Routes>
                 {/* Admin branch without global header/footer */}
                 <Route element={<RequireAdmin />}>
-                  <Route path="/admin" element={
+          <Route path="/admin" element={
                     <Suspense fallback={<PageLoader />}>
-                      <AdminLayout />
+            <AdminLayoutWrapper />
                     </Suspense>
                   }>
                     <Route index element={

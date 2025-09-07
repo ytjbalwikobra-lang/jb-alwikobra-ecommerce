@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
 import { useSettings } from '../hooks/useSettings.ts';
 import '../styles/admin.css';
+import AdminRouteBoundary from '../components/admin/AdminRouteBoundary.tsx';
 
 const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -17,9 +18,13 @@ const AdminLayout: React.FC = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  // Close sidebar on route change (mobile)
+  // Close sidebar on route change (mobile) and reset user menu
   useEffect(() => {
     setSidebarOpen(false);
+    setUserMenuOpen(false);
+  // Ensure content scroll position resets on route change
+  const content = document.querySelector('.admin-content');
+  if (content) content.scrollTop = 0;
   }, [location.pathname]);
 
   const navigation = [
@@ -177,8 +182,11 @@ const AdminLayout: React.FC = () => {
 
         {/* Page Content */}
         <main className="admin-content">
-          {/* Force remount on navigation to avoid stale content */}
-          <Outlet key={(location as any).key || location.pathname} />
+          {/* Route error + suspense boundary to prevent stuck pages */}
+          <AdminRouteBoundary>
+            {/* Force remount on navigation to avoid stale content */}
+            <Outlet key={(location as any).key || location.pathname} />
+          </AdminRouteBoundary>
         </main>
       </div>
 
