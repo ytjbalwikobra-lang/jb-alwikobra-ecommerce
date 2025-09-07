@@ -9,6 +9,43 @@ function mapStatus(x: string | undefined): 'pending'|'paid'|'completed'|'cancell
   return 'pending';
 }
 
+// Fetch an active WhatsApp API key from database (prefer primary, then least used)
+async function getActiveWhatsAppApiKey(sb: any): Promise<{ apiKey: string; keyId: string } | null> {
+  try {
+    const { data, error } = await sb
+      .from('whatsapp_api_keys')
+      .select('id, api_key, key_name, is_primary, usage_count, requests_today, requests_this_hour, last_reset_date, last_reset_hour')
+      .eq('is_active', true)
+      .order('is_primary', { ascending: false })
+      .order('requests_this_hour', { ascending: true })
+      .order('usage_count', { ascending: true })
+      .limit(1);
+    if (error) {
+      console.error('[WhatsApp] Error fetching API key:', error);
+      return null;
+    }
+    const row = data?.[0];
+    if (!row?.api_key) return null;
+
+    // Best-effort increment usage counters
+    try {
+      await sb.from('whatsapp_api_keys').update({
+        usage_count: (row.usage_count || 0) + 1,
+        requests_today: (row.requests_today || 0) + 1,
+        requests_this_hour: (row.requests_this_hour || 0) + 1,
+        last_used_at: new Date().toISOString()
+      }).eq('id', row.id);
+    } catch (incErr) {
+      console.warn('[WhatsApp] Unable to increment usage counters:', incErr);
+    }
+
+    return { apiKey: row.api_key, keyId: row.id };
+  } catch (e) {
+    console.error('[WhatsApp] Unexpected error fetching API key:', e);
+    return null;
+  }
+}
+
 async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
   try {
     // Get order details with product information
@@ -63,12 +100,13 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 #OrderPaid`;
 
     // Send to WhatsApp group (admin notification)
-  const API_BASE_URL = 'https://notifapi.com';
-  const API_KEY = process.env.WHATSAPP_API_KEY || process.env.REACT_APP_WHATSAPP_API_KEY;
-    const GROUP_ID = process.env.WHATSAPP_GROUP_ID || '120363421819020887@g.us'; // ORDERAN WEBSITE group
+    const API_BASE_URL = 'https://notifapi.com';
+    const keyRow = await getActiveWhatsAppApiKey(sb);
+    const API_KEY = keyRow?.apiKey;
+  const GROUP_ID = process.env.WHATSAPP_GROUP_ID || '120363421819020887@g.us'; // ORDERAN WEBSITE group
     
     if (!API_KEY) {
-      console.error('WHATSAPP_API_KEY environment variable not set');
+      console.error('[WhatsApp] No active API key found in database');
       return;
     }
 
@@ -79,7 +117,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
       },
       body: JSON.stringify({
         group_id: GROUP_ID,
-        key: API_KEY,
+          key: API_KEY,
         message: message
       })
     });
@@ -145,14 +183,14 @@ Terima kasih! ${order.status === 'completed' ? 'Pesanan Anda telah selesai dipro
 
 Terima kasih telah berbelanja di JB Alwikobra! 🎮`;
 
-        const customerResponse = await fetch(`${API_BASE_URL}/send_message`, {
+    const customerResponse = await fetch(`${API_BASE_URL}/send_message`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             phone_no: customerPhone,
-            key: API_KEY,
+      key: API_KEY,
             message: customerMessage
           })
         });
