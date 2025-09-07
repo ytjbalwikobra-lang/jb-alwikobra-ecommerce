@@ -328,7 +328,13 @@ class AdminService {
         .from('flash_sales')
         .select(`
           id, product_id, sale_price, original_price, start_time, end_time, stock, is_active, created_at,
-          products ( id, name )
+          products (
+            id, name, description, price, original_price, image, images, category,
+            game_title, game_title_id, tier_id, account_level, account_details,
+            has_rental, stock, is_active, archived_at, created_at, updated_at,
+            game_titles:game_title_id ( id, name, slug, logo_url ),
+            tiers:tier_id ( id, name, slug, color, background_gradient, icon )
+          )
         `)
         .order('created_at', { ascending: false });
 
@@ -341,17 +347,80 @@ class AdminService {
 
       const { data, error } = await query;
       if (!error) {
-        const mapped = (data || []).map((row: any) => ({
-          ...row,
-          productId: row.product_id,
-          salePrice: row.sale_price,
-          originalPrice: row.original_price,
-          startTime: row.start_time,
-          endTime: row.end_time,
-          isActive: row.is_active,
-          createdAt: row.created_at,
-          product: row.products ? { id: row.products.id, name: row.products.name } : undefined,
-        }));
+        const mapped = (data || []).map((row: any) => {
+          const p = row.products;
+          const gt = p?.game_titles;
+          const tr = p?.tiers;
+          // Build enriched product with sale overlay
+          const product = p ? {
+            id: p.id,
+            name: p.name,
+            description: p.description || '',
+            // Overlay sale price while preserving original
+            price: row.sale_price ?? p.price,
+            originalPrice: (row.original_price ?? p.original_price ?? p.price) || null,
+            image: p.image || '',
+            images: Array.isArray(p.images) ? p.images : (p.images ? [p.images] : []),
+            category: p.category || 'general',
+            gameTitle: p.game_title || (gt?.name || ''),
+            tier: undefined,
+            tierId: p.tier_id || undefined,
+            gameTitleId: p.game_title_id || undefined,
+            tierData: tr ? {
+              id: tr.id,
+              name: tr.name,
+              slug: tr.slug,
+              color: tr.color,
+              backgroundGradient: tr.background_gradient,
+              icon: tr.icon,
+              description: undefined,
+              borderColor: undefined,
+              priceRangeMin: undefined,
+              priceRangeMax: undefined,
+              isActive: true,
+              sortOrder: 0,
+              createdAt: '',
+              updatedAt: ''
+            } : undefined,
+            gameTitleData: gt ? {
+              id: gt.id,
+              name: gt.name,
+              slug: gt.slug,
+              icon: '',
+              color: '',
+              logoUrl: gt.logo_url || undefined,
+              isPopular: false,
+              isActive: true,
+              sortOrder: 0,
+              createdAt: '',
+              updatedAt: ''
+            } : undefined,
+            accountLevel: p.account_level || undefined,
+            accountDetails: p.account_details || undefined,
+            isFlashSale: true,
+            flashSaleEndTime: row.end_time,
+            hasRental: p.has_rental ?? false,
+            rentalOptions: [],
+            stock: p.stock ?? 0,
+            isActive: p.is_active ?? true,
+            archivedAt: p.archived_at ?? null,
+            createdAt: p.created_at,
+            updatedAt: p.updated_at
+          } : undefined;
+
+          return {
+            id: row.id,
+            productId: row.product_id,
+            salePrice: row.sale_price,
+            originalPrice: row.original_price,
+            startTime: row.start_time,
+            endTime: row.end_time,
+            stock: row.stock,
+            isActive: row.is_active,
+            createdAt: row.created_at,
+            product
+          };
+        });
         return { data: mapped, error: null };
       }
 
@@ -369,27 +438,95 @@ class AdminService {
         return { data: [], error: basicErr };
       }
       const ids = (rows || []).map((r: any) => r.product_id).filter(Boolean);
-      let nameMap = new Map<string, { id: string; name: string }>();
+      // Hydrate full product rows for cards
+      let productMap = new Map<string, any>();
       if (ids.length) {
         try {
           const { data: prods } = await this.adminClient
             .from('products')
-            .select('id, name')
+            .select(`
+              id, name, description, price, original_price, image, images, category,
+              game_title, game_title_id, tier_id, account_level, account_details,
+              has_rental, stock, is_active, archived_at, created_at, updated_at,
+              game_titles:game_title_id ( id, name, slug, logo_url ),
+              tiers:tier_id ( id, name, slug, color, background_gradient, icon )
+            `)
             .in('id', ids);
-          for (const p of prods || []) nameMap.set(p.id, { id: p.id, name: p.name });
+          for (const p of prods || []) productMap.set(p.id, p);
         } catch {}
       }
-      const mapped = (rows || []).map((row: any) => ({
-        ...row,
-        productId: row.product_id,
-        salePrice: row.sale_price,
-        originalPrice: row.original_price,
-        startTime: row.start_time,
-        endTime: row.end_time,
-        isActive: row.is_active,
-        createdAt: row.created_at,
-        product: nameMap.get(row.product_id),
-      }));
+      const mapped = (rows || []).map((row: any) => {
+        const p = productMap.get(row.product_id);
+        const gt = p?.game_titles;
+        const tr = p?.tiers;
+        const product = p ? {
+          id: p.id,
+          name: p.name,
+          description: p.description || '',
+          price: row.sale_price ?? p.price,
+          originalPrice: (row.original_price ?? p.original_price ?? p.price) || null,
+          image: p.image || '',
+          images: Array.isArray(p.images) ? p.images : (p.images ? [p.images] : []),
+          category: p.category || 'general',
+          gameTitle: p.game_title || (gt?.name || ''),
+          tier: undefined,
+          tierId: p.tier_id || undefined,
+          gameTitleId: p.game_title_id || undefined,
+          tierData: tr ? {
+            id: tr.id,
+            name: tr.name,
+            slug: tr.slug,
+            color: tr.color,
+            backgroundGradient: tr.background_gradient,
+            icon: tr.icon,
+            description: undefined,
+            borderColor: undefined,
+            priceRangeMin: undefined,
+            priceRangeMax: undefined,
+            isActive: true,
+            sortOrder: 0,
+            createdAt: '',
+            updatedAt: ''
+          } : undefined,
+          gameTitleData: gt ? {
+            id: gt.id,
+            name: gt.name,
+            slug: gt.slug,
+            icon: '',
+            color: '',
+            logoUrl: gt.logo_url || undefined,
+            isPopular: false,
+            isActive: true,
+            sortOrder: 0,
+            createdAt: '',
+            updatedAt: ''
+          } : undefined,
+          accountLevel: p.account_level || undefined,
+          accountDetails: p.account_details || undefined,
+          isFlashSale: true,
+          flashSaleEndTime: row.end_time,
+          hasRental: p.has_rental ?? false,
+          rentalOptions: [],
+          stock: p.stock ?? 0,
+          isActive: p.is_active ?? true,
+          archivedAt: p.archived_at ?? null,
+          createdAt: p.created_at,
+          updatedAt: p.updated_at
+        } : undefined;
+
+        return {
+          id: row.id,
+          productId: row.product_id,
+          salePrice: row.sale_price,
+          originalPrice: row.original_price,
+          startTime: row.start_time,
+          endTime: row.end_time,
+          stock: row.stock,
+          isActive: row.is_active,
+          createdAt: row.created_at,
+          product
+        };
+      });
       return { data: mapped, error: null };
     } catch (error) {
       console.error('💥 AdminService: Unexpected error:', error);
@@ -443,7 +580,7 @@ class AdminService {
     try {
       const { data, error } = await this.adminClient
         .from('game_titles')
-        .select('id, name, slug, icon, color, is_popular, is_active, sort_order, created_at, updated_at')
+  .select('id, name, slug, icon, color, logo_url, logo_path, is_popular, is_active, sort_order, created_at, updated_at')
         .order('name');
       if (error) return { data: [], error };
       return { data: data || [], error: null };

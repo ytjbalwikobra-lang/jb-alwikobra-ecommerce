@@ -50,8 +50,15 @@ const AdminGameTitles: React.FC = () => {
       if (error) throw error;
 
       const list = (data || []).map((gameTitle: any) => {
-        // Get logo URL - prefer new logo_path with public URL, fallback to legacy logo_url
-        let logoUrl = gameTitle.logo_url || gameTitle.logoUrl || '';
+        // Prefer storage path -> public URL; fallback to legacy logo_url
+        let logoUrl = '';
+        try {
+          if (gameTitle.logo_path) {
+            logoUrl = gameLogoStorage.getGameLogoUrl(gameTitle.logo_path);
+          } else if (gameTitle.logo_url || gameTitle.logoUrl) {
+            logoUrl = gameTitle.logo_url || gameTitle.logoUrl || '';
+          }
+        } catch {}
 
         return {
           ...gameTitle,
@@ -162,7 +169,7 @@ const AdminGameTitles: React.FC = () => {
     setUploading(form.logo_file !== null);
     
     try {
-      let logoPath = form.logo_url || null; // Keep existing URL if no new file
+      let logoPath: string | null = null; // Only set when uploading file
 
       // Handle file upload if a new file is selected
       if (form.logo_file) {
@@ -179,10 +186,12 @@ const AdminGameTitles: React.FC = () => {
         }
       }
 
-      const payload = {
+      const payload: any = {
         ...toDbPayload(form),
-        logo_path: logoPath // Use logo_path for new storage system
       };
+      if (logoPath) {
+        payload.logo_path = logoPath; // Use storage path only when a new file uploaded
+      }
 
       if (!form.id) {
         const { error } = await adminService.createGameTitle(payload);
