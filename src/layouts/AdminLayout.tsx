@@ -174,7 +174,8 @@ const AdminLayout: React.FC = () => {
 
         {/* Page Content */}
         <main className="admin-content">
-          <Outlet />
+          {/* Force remount on path change to avoid stale content */}
+          <Outlet key={location.pathname} />
         </main>
       </div>
 
@@ -189,4 +190,4 @@ const AdminLayout: React.FC = () => {
   );
 };
 
-export default React.memo(AdminLayout);
+export default AdminLayout;

@@ -37,6 +37,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  // Light caching for public feed responses (safe, short-term)
+  if (req.method === 'GET' && (req.query.action === 'list' || req.query.action === 'comments')) {
+    res.setHeader('Cache-Control', 'public, max-age=30, s-maxage=60, stale-while-revalidate=120');
+  }
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   const { action } = req.query as any;
@@ -130,7 +134,7 @@ async function listFeed(req: VercelRequest, res: VercelResponse, me: any) {
   let q = supabase
     .from('feed_posts')
     .select(`
-      *,
+      id, user_id, type, product_id, title, content, rating, image_url, likes_count, comments_count, is_pinned, created_at,
       users:users!feed_posts_user_id_fkey ( id, name, is_admin ),
       products:products!feed_posts_product_id_fkey ( id, name, image )
     `)
