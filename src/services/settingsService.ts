@@ -1,7 +1,6 @@
 import { supabase } from './supabase.ts';
 import { WebsiteSettings } from '../types/index.ts';
 import { uploadFile, deletePublicUrls } from './storageService.ts';
-import { clientCache } from './clientCacheService.ts';
 
 const DEFAULT_SETTINGS: WebsiteSettings = {
   id: 'default',
@@ -14,37 +13,30 @@ export class SettingsService {
   static async get(): Promise<WebsiteSettings> {
     try {
       if (!supabase) return DEFAULT_SETTINGS;
-      
-      return await clientCache.get('website-settings', async () => {
-        const { data, error } = await (supabase as any)
-          .from('website_settings')
-          .select(`
-            id, site_name, logo_url, favicon_url, contact_email, contact_phone, 
-            whatsapp_number, address, facebook_url, instagram_url, tiktok_url, 
-            youtube_url, hero_title, hero_subtitle, updated_at
-          `)
-          .limit(1)
-          .maybeSingle();
-        if (error) throw error;
-        if (!data) return DEFAULT_SETTINGS;
-        return {
-          id: data.id ?? 'default',
-          siteName: data.site_name ?? DEFAULT_SETTINGS.siteName,
-          logoUrl: data.logo_url ?? undefined,
-          faviconUrl: data.favicon_url ?? undefined,
-          contactEmail: data.contact_email ?? undefined,
-          contactPhone: data.contact_phone ?? undefined,
-          whatsappNumber: data.whatsapp_number ?? undefined,
-          address: data.address ?? undefined,
-          facebookUrl: data.facebook_url ?? undefined,
-          instagramUrl: data.instagram_url ?? undefined,
-          tiktokUrl: data.tiktok_url ?? undefined,
-          youtubeUrl: data.youtube_url ?? undefined,
-          heroTitle: data.hero_title ?? undefined,
-          heroSubtitle: data.hero_subtitle ?? undefined,
-          updatedAt: data.updated_at ?? undefined,
-        };
-      }, 15 * 60 * 1000); // 15 minutes cache for settings
+      const { data, error } = await (supabase as any)
+        .from('website_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      if (!data) return DEFAULT_SETTINGS;
+      return {
+        id: data.id ?? 'default',
+        siteName: data.site_name ?? DEFAULT_SETTINGS.siteName,
+        logoUrl: data.logo_url ?? undefined,
+        faviconUrl: data.favicon_url ?? undefined,
+        contactEmail: data.contact_email ?? undefined,
+        contactPhone: data.contact_phone ?? undefined,
+        whatsappNumber: data.whatsapp_number ?? undefined,
+        address: data.address ?? undefined,
+        facebookUrl: data.facebook_url ?? undefined,
+        instagramUrl: data.instagram_url ?? undefined,
+        tiktokUrl: data.tiktok_url ?? undefined,
+        youtubeUrl: data.youtube_url ?? undefined,
+        heroTitle: data.hero_title ?? undefined,
+        heroSubtitle: data.hero_subtitle ?? undefined,
+        updatedAt: data.updated_at ?? undefined,
+      };
     } catch (e) {
       console.error('SettingsService.get error:', e);
       return DEFAULT_SETTINGS;
@@ -86,10 +78,6 @@ export class SettingsService {
         .select()
         .maybeSingle();
       if (error) throw error;
-      
-      // Invalidate cache
-      clientCache.invalidate('website-settings');
-      
       const row = data || payload;
       return {
         id: row.id ?? current.id ?? 'default',

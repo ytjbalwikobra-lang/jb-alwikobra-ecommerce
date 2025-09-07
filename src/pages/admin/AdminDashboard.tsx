@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { TrendingUp, DollarSign, ShoppingBag, Users, Zap, Calendar, BarChart3, PieChart, ArrowUpRight, ArrowDownRight, RefreshCw } from 'lucide-react';
-import { clientCache } from '../../services/clientCacheService.ts';
 
 // Simple cache untuk optimasi
 const dataCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
@@ -179,8 +178,8 @@ const AdminDashboard: React.FC = () => {
       setLoading({ basic: true, analytics: true });
       
       // Fetch basic stats dengan cache 1 menit
-      const basicData = await clientCache.get(
-        'dashboard-basic-stats',
+      const basicData = await getCachedData(
+        'basic-stats',
         async () => {
           const response = await fetch('/api/admin?action=dashboard');
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -201,8 +200,8 @@ const AdminDashboard: React.FC = () => {
       
       // Kemudian fetch analytics dengan cache 5 menit
       try {
-        const analytics = await clientCache.get(
-          'dashboard-analytics',
+        const analytics = await getCachedData(
+          'analytics',
           async () => {
             const response = await fetch('/api/admin?action=dashboard');
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
