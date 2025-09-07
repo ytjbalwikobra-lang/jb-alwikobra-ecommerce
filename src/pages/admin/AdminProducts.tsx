@@ -552,7 +552,7 @@ const AdminProducts: React.FC = () => {
                     </td>
                     <td className="px-6 py-4">
                       <AdminPillStatusBadge 
-                        status={getProductStatus(product) === 'active' ? 'active' : 'cancelled'} 
+                        status={getProductStatus(product) === 'active' ? 'active' : 'terjual'} 
                       />
                     </td>
                     <td className="px-6 py-4 text-right">

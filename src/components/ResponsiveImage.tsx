@@ -57,8 +57,10 @@ class ImageOptimizer {
       dpr?: number;
     } = {}
   ): string {
+  // Guard invalid url
+  if (!originalUrl || typeof originalUrl !== 'string') return '';
     // If it's an Unsplash image, use their optimization API
-    if (originalUrl.includes('unsplash.com')) {
+  if (originalUrl.includes('unsplash.com')) {
       const url = new URL(originalUrl);
       const params = new URLSearchParams(url.search);
       
@@ -84,6 +86,7 @@ class ImageOptimizer {
     breakpoints: number[] = [320, 640, 768, 1024, 1280, 1920],
     format?: 'webp' | 'avif'
   ): string {
+  if (!originalUrl || typeof originalUrl !== 'string') return '';
     return breakpoints
       .map(width => {
         const optimizedUrl = this.optimizeUrl(originalUrl, { width, quality: 80, format });
@@ -168,11 +171,11 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = React.memo(({
 
   // Generate optimized URLs
   const getOptimizedSrc = (format?: 'webp' | 'avif') => {
-    return ImageOptimizer.optimizeUrl(src, { quality, format: format || 'auto' });
+  return ImageOptimizer.optimizeUrl(src, { quality, format: format || 'auto' }) || defaultBlurDataURL;
   };
 
   const getSrcSet = (format?: 'webp' | 'avif') => {
-    return ImageOptimizer.generateSrcSet(src, undefined, format);
+  return ImageOptimizer.generateSrcSet(src, undefined, format) || undefined;
   };
 
   // Generate blur placeholder

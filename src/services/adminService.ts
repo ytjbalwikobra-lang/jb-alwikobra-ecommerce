@@ -26,12 +26,13 @@ class AdminService {
     const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
 
     if (supabaseUrl && serviceRoleKey) {
-      this.adminClient = createClient(supabaseUrl, serviceRoleKey, {
+    this.adminClient = createClient(supabaseUrl, serviceRoleKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
           detectSessionInUrl: false,
-          flowType: 'implicit'
+      flowType: 'implicit',
+      storageKey: 'supabase-admin-service'
         },
         global: {
           headers: {
@@ -923,18 +924,18 @@ class AdminService {
       const dailyOrders = orders.filter((o: any) => o.status === 'paid' && o.created_at >= dayStart && o.created_at <= dayEnd).length;
 
       // Calculate order statuses
-      const orderStatuses = { paid: 0, pending: 0, cancelled: 0 };
+      const orderStatuses = { paid: 0, pending: 0, canceled: 0 } as any;
       orders.forEach((order: any) => {
         if (order.status === 'paid') orderStatuses.paid++;
         else if (order.status === 'pending') orderStatuses.pending++;
-        else if (order.status === 'cancelled') orderStatuses.cancelled++;
+        else if (order.status === 'cancelled' || order.status === 'canceled') orderStatuses.canceled++;
       });
 
       // i. Insight performa = tingkat konversi (paid orders / total orders * 100)
       const conversionRate = totalOrders > 0 ? (orderStatuses.paid / totalOrders * 100) : 0;
 
       // Build daily revenue breakdown for the selected range
-      const dailyMap = new Map<string, { revenue: number; orders: number }>();
+  const dailyMap = new Map<string, { revenue: number; orders: number }>();
       const startDate = startISO ? new Date(startISO) : new Date(new Date().getTime() - 7*24*60*60*1000);
       const endDate = endISO ? new Date(endISO) : new Date();
       // Normalize to date-only (local)
@@ -945,7 +946,7 @@ class AdminService {
         dailyMap.set(key, { revenue: 0, orders: 0 });
         cursor.setDate(cursor.getDate() + 1);
       }
-      for (const o of paidOrdersList) {
+  for (const o of paidOrdersList) {
         const d = new Date(o.created_at);
         const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
         const cur = dailyMap.get(key) || { revenue: 0, orders: 0 };

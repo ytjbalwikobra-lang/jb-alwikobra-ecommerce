@@ -419,9 +419,9 @@ const AdminDashboard: React.FC = () => {
                 flashSales: stats.flashSales,
                 analytics: {
                   statusDistribution: {
-                    'paid': stats.orderStatuses.paid,
-                    'pending': stats.orderStatuses.pending,
-                    'cancelled': stats.orderStatuses.cancelled
+                    paid: stats.orderStatuses.paid,
+                    pending: stats.orderStatuses.pending,
+                    canceled: stats.orderStatuses.canceled
                   } as Record<string, number>,
                   dailyRevenue: stats.dailyRevenue || [],
                   monthlyOrders: stats.totalOrders,
