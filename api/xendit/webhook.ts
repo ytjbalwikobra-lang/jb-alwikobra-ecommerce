@@ -12,7 +12,7 @@ function mapStatus(x: string | undefined): 'pending'|'paid'|'completed'|'cancell
 async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId?: string) {
   try {
     // Get order details with product information
-    let q = sb.from('orders')
+  let q = sb.from('orders')
       .select(`
         id,
         customer_name,
@@ -29,7 +29,6 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
           description
         )
       `)
-      .eq('status', 'paid')
       .limit(1);
     
     if (invoiceId) q = q.eq('xendit_invoice_id', invoiceId);
@@ -43,11 +42,12 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
       return;
     }
 
-    const product = order.products;
+  const product = order.products;
     const productName = product?.name || 'Unknown Product';
+  const statusLabel = (order.status === 'completed') ? 'COMPLETED' : 'PAID';
     
     // Generate notification message
-    const message = `🎮 **ORDERAN BARU - PAID** 
+  const message = `🎮 **ORDERAN BARU - ${statusLabel}** 
 
 👤 **Customer:** ${order.customer_name || 'Guest'}
 📧 **Email:** ${order.customer_email || 'Not provided'}
@@ -56,15 +56,15 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 
 🎯 **Product:** ${productName}
 💰 **Amount:** Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
-✅ **Status:** PAID
+✅ **Status:** ${statusLabel}
 
 📅 **Paid at:** ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Just now'}
 
 #OrderPaid`;
 
     // Send to WhatsApp group (admin notification)
-    const API_BASE_URL = 'https://notifapi.com';
-    const API_KEY = process.env.WHATSAPP_API_KEY;
+  const API_BASE_URL = 'https://notifapi.com';
+  const API_KEY = process.env.WHATSAPP_API_KEY || process.env.REACT_APP_WHATSAPP_API_KEY;
     const GROUP_ID = process.env.WHATSAPP_GROUP_ID || '120363421819020887@g.us'; // ORDERAN WEBSITE group
     
     if (!API_KEY) {
@@ -84,9 +84,9 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
       })
     });
 
-    const result = await response.json();
+  const result = await response.json();
     
-    if (response.ok && result.code === 200) {
+  if (response.ok && (result.code === 200 || result.status === 'success')) {
       console.log(`[WhatsApp] Order paid notification sent successfully: ${result.results?.id_message}`);
     } else {
       console.error('[WhatsApp] Failed to send order paid notification:', result);
@@ -95,7 +95,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
 
 
     // Send notification to customer if phone number is provided
-    if (order.customer_phone) {
+  if (order.customer_phone) {
       try {
         // Clean phone number (remove non-digits and ensure it starts with 62)
         let customerPhone = order.customer_phone.replace(/\D/g, '');
@@ -122,22 +122,22 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
         }
 
         // Generate customer notification message
-        const customerMessage = `🎉 **PEMBAYARAN BERHASIL!**
+  const customerMessage = `${order.status === 'completed' ? '✅ **ORDER SELESAI!**' : '🎉 **PEMBAYARAN BERHASIL!**'}
 
 Halo ${order.customer_name || 'Customer'},
 
-Terima kasih! Pembayaran Anda telah berhasil diproses.
+Terima kasih! ${order.status === 'completed' ? 'Pesanan Anda telah selesai diproses.' : 'Pembayaran Anda telah berhasil diproses.'}
 
 📋 **Order ID:** ${order.id}
 🎯 **Product:** ${productName}
 💰 **Total:** Rp ${Number(order.amount || 0).toLocaleString('id-ID')}
-✅ **Status:** PAID
+✅ **Status:** ${statusLabel}
 
 📅 **Paid at:** ${order.paid_at ? new Date(order.paid_at).toLocaleString('id-ID') : 'Just now'}
 
 🚀 **Selanjutnya:**
-• Tim kami akan segera memproses pesanan Anda
-• Akun game akan dikirim melalui WhatsApp dalam 1-5 Menit
+• ${order.status === 'completed' ? 'Silakan cek WhatsApp Anda untuk detail akun yang telah dikirim.' : 'Tim kami akan segera memproses pesanan Anda'}
+• ${order.status === 'completed' ? 'Jika ada kendala, hubungi support kami.' : 'Akun game akan dikirim melalui WhatsApp dalam 1-5 Menit'}
 • Jika ada pertanyaan, hubungi support kami
 
 💬 **Support:** wa.me/6289653510125
@@ -157,9 +157,9 @@ Terima kasih telah berbelanja di JB Alwikobra! 🎮`;
           })
         });
 
-        const customerResult = await customerResponse.json();
+  const customerResult = await customerResponse.json();
         
-        if (customerResponse.ok && (customerResult.code === 200 || customerResult.status === 'success')) {
+  if (customerResponse.ok && (customerResult.code === 200 || customerResult.status === 'success')) {
           console.log(`[WhatsApp] Customer notification sent successfully to ${customerPhone}: ${customerResult.results?.id_message || customerResult.id_message || customerResult.message_id}`);
         } else {
           console.error('[WhatsApp] Failed to send customer notification:', customerResult);
@@ -305,7 +305,7 @@ export default async function handler(req: any, res: any) {
         }
 
         // Send WhatsApp group notification for paid orders
-        if (status === 'paid') {
+        if (status === 'paid' || status === 'completed') {
           await sendOrderPaidNotification(sb, invoiceId, externalId);
         }
       }
