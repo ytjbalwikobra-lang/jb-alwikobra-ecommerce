@@ -1,7 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { GameTitle } from '../../types/index.ts';
-import { ProductService } from '../../services/productService.ts';
-import { supabase } from '../../services/supabase.ts';
+import { adminService } from '../../services/adminService.ts';
 import { useToast } from '../../components/Toast.tsx';
 import { gameLogoStorage } from '../../services/storageService.ts';
 import { Plus, Pencil, Trash2, RefreshCw, Upload, X, Edit2 } from 'lucide-react';
@@ -46,36 +45,13 @@ const AdminGameTitles: React.FC = () => {
   const load = async () => {
     setLoading(true);
     try {
-      // Load all game titles (including inactive) for admin panel
-      if (!supabase) {
-        const list = await ProductService.getGameTitles();
-        setItems(list);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('game_titles')
-        .select('*')
-        .order('sort_order', { ascending: true });
-
+      // Load via adminService for consistent privileges
+      const { data, error } = await adminService.getGameTitles();
       if (error) throw error;
 
-      const list = data?.map(gameTitle => {
+      const list = (data || []).map((gameTitle: any) => {
         // Get logo URL - prefer new logo_path with public URL, fallback to legacy logo_url
-        let logoUrl = gameTitle.logo_url; // Legacy URL fallback
-        
-        if (gameTitle.logo_path) {
-          // Convert storage path to public URL
-          try {
-            const { data: urlData } = (supabase as any).storage
-              .from('game-logos')
-              .getPublicUrl(gameTitle.logo_path);
-            logoUrl = urlData.publicUrl;
-          } catch (error) {
-            console.warn('Failed to get public URL for logo_path:', gameTitle.logo_path);
-            // Keep legacy logo_url as fallback
-          }
-        }
+        let logoUrl = gameTitle.logo_url || gameTitle.logoUrl || '';
 
         return {
           ...gameTitle,
@@ -179,7 +155,8 @@ const AdminGameTitles: React.FC = () => {
   });
 
   const save = async () => {
-    if (!supabase) { push('Supabase belum dikonfigurasi.', 'error'); return; }
+  const test = await adminService.testConnection();
+  if (!test.success) { push('Admin service belum dikonfigurasi.', 'error'); return; }
     if (!form.name || !form.slug) { push('Nama dan slug wajib diisi', 'error'); return; }
     setSaving(true);
     setUploading(form.logo_file !== null);
@@ -208,11 +185,13 @@ const AdminGameTitles: React.FC = () => {
       };
 
       if (!form.id) {
-        const { error } = await (supabase as any).from('game_titles').insert(payload);
+        const { error } = await (adminService as any).adminClient
+          .from('game_titles').insert(payload);
         if (error) throw error;
         push('Game title ditambahkan dengan logo berhasil', 'success');
       } else {
-        const { error } = await (supabase as any).from('game_titles').update(payload).eq('id', form.id);
+        const { error } = await (adminService as any).adminClient
+          .from('game_titles').update(payload).eq('id', form.id);
         if (error) throw error;
         push('Game title diperbarui dengan logo berhasil', 'success');
       }
@@ -234,10 +213,12 @@ const AdminGameTitles: React.FC = () => {
   };
 
   const remove = async (id: string) => {
-    if (!supabase) return;
+    const test = await adminService.testConnection();
+    if (!test.success) return;
     if (!confirm('Hapus game title ini?')) return;
     try {
-      const { error } = await (supabase as any).from('game_titles').delete().eq('id', id);
+      const { error } = await (adminService as any).adminClient
+        .from('game_titles').delete().eq('id', id);
       if (error) throw error;
       push('Game title dihapus', 'success');
       await load();

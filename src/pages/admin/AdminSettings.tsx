@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
-import { SettingsService } from '../../services/settingsService.ts';
+import { adminService } from '../../services/adminService.ts';
 import { WebsiteSettings } from '../../types/index.ts';
 import { Save, Loader2, Image as ImageIcon } from 'lucide-react';
 import PhoneInput from '../../components/PhoneInput.tsx';
@@ -32,7 +32,25 @@ const AdminSettings: React.FC = () => {
   const loadSettings = useCallback(async () => {
     try {
       setLoading(true);
-      const s = await SettingsService.get();
+      const test = await adminService.testConnection();
+      if (!test.success) throw new Error('Admin service not available');
+      const { data } = await adminService.getWebsiteSettings();
+      const s = {
+        id: data?.id ?? 'default',
+        siteName: data?.site_name ?? '',
+        heroTitle: data?.hero_title ?? '',
+        heroSubtitle: data?.hero_subtitle ?? '',
+        contactEmail: data?.contact_email ?? '',
+        contactPhone: data?.contact_phone ?? '',
+        whatsappNumber: data?.whatsapp_number ?? '',
+        address: data?.address ?? '',
+        facebookUrl: data?.facebook_url ?? '',
+        instagramUrl: data?.instagram_url ?? '',
+        tiktokUrl: data?.tiktok_url ?? '',
+        youtubeUrl: data?.youtube_url ?? '',
+        logoUrl: data?.logo_url ?? '',
+        faviconUrl: data?.favicon_url ?? ''
+      } as any;
       setSettings(s);
       setForm({
         siteName: s.siteName || '',
@@ -70,7 +88,28 @@ const AdminSettings: React.FC = () => {
     
     try {
       setSaving(true);
-      const updated = await SettingsService.upsert({ ...form, logoFile, faviconFile });
+      const { success, data, error } = await adminService.upsertWebsiteSettings({
+        ...form,
+        logoFile,
+        faviconFile
+      });
+      const updated = success ? {
+        id: data?.id ?? 'default',
+        siteName: data?.site_name ?? form.siteName,
+        heroTitle: data?.hero_title ?? form.heroTitle,
+        heroSubtitle: data?.hero_subtitle ?? form.heroSubtitle,
+        contactEmail: data?.contact_email ?? form.contactEmail,
+        contactPhone: data?.contact_phone ?? form.contactPhone,
+        whatsappNumber: data?.whatsapp_number ?? form.whatsappNumber,
+        address: data?.address ?? form.address,
+        facebookUrl: data?.facebook_url ?? form.facebookUrl,
+        instagramUrl: data?.instagram_url ?? form.instagramUrl,
+        tiktokUrl: data?.tiktok_url ?? form.tiktokUrl,
+        youtubeUrl: data?.youtube_url ?? form.youtubeUrl,
+        logoUrl: data?.logo_url ?? form.logoUrl,
+        faviconUrl: data?.favicon_url ?? form.faviconUrl,
+        updatedAt: data?.updated_at
+      } as any : null;
       if (updated) {
         setSettings(updated);
         showToast('Pengaturan berhasil disimpan', 'success');

@@ -21,16 +21,16 @@ const FlashSalesPage: React.FC = () => {
     
     const fetchFlashSales = async () => {
       try {
-        // Dynamic import of ProductService
-        const { ProductService } = await import('../services/productService.ts');
+  // Prefer adminService join mapping for consistent flash sale products
+  const { adminService } = await import('../services/adminService.ts');
         
         if (!mounted) return;
         
-        const flashSales = await ProductService.getFlashSales();
+  const flashSalesResult = await adminService.getFlashSales({ onlyActive: true, notEndedOnly: true });
         
         if (!mounted) return;
         
-        setFlashSaleProducts(flashSales.map(sale => sale.product));
+  setFlashSaleProducts((flashSalesResult.data || []).map((sale: any) => sale.product).filter(Boolean));
       } catch (error) {
         console.error('Error fetching flash sales:', error);
       } finally {

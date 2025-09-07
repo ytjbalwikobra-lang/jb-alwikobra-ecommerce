@@ -24,18 +24,21 @@ const HomePage: React.FC = () => {
     let mounted = true;
     const fetchData = async () => {
       try {
-        // Lazy load ProductService to reduce initial bundle
-        const { ProductService } = await import('../services/productService.ts');
+        // Lazy load services to reduce initial bundle
+        const [{ adminService }, { ProductService }] = await Promise.all([
+          import('../services/adminService.ts'),
+          import('../services/productService.ts')
+        ]);
         
         if (!mounted) return;
 
         const [flashSales, popular] = await Promise.all([
-          ProductService.getFlashSales(),
+          adminService.getFlashSales({ onlyActive: true, notEndedOnly: true }),
           ProductService.getPopularGames(20)
         ]);
 
         if (mounted) {
-          setFlashSaleProducts(flashSales.map(sale => sale.product));
+          setFlashSaleProducts((flashSales.data || []).map((sale: any) => sale.product).filter(Boolean));
           setPopularGames(popular);
         }
       } catch (error) {

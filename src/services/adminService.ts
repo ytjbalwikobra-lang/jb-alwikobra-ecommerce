@@ -488,6 +488,164 @@ class AdminService {
     }
   }
 
+  // --- Game Titles CRUD ---
+  async createGameTitle(payload: any): Promise<{ data: any; error: any }> {
+    if (!this.isAdminClient()) {
+      return { data: null, error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const { data, error } = await this.adminClient
+        .from('game_titles')
+        .insert(payload)
+        .select()
+        .single();
+      if (error) return { data: null, error };
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error } as any;
+    }
+  }
+
+  async updateGameTitle(id: string, payload: any): Promise<{ data: any; error: any }> {
+    if (!this.isAdminClient()) {
+      return { data: null, error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const { data, error } = await this.adminClient
+        .from('game_titles')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) return { data: null, error };
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error } as any;
+    }
+  }
+
+  async deleteGameTitle(id: string): Promise<{ success: boolean; error: any }> {
+    if (!this.isAdminClient()) {
+      return { success: false, error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const { error } = await this.adminClient
+        .from('game_titles')
+        .delete()
+        .eq('id', id);
+      if (error) return { success: false, error };
+      return { success: true, error: null };
+    } catch (error) {
+      return { success: false, error } as any;
+    }
+  }
+
+  // --- Website Settings ---
+  private getStorageBucket(): string {
+    return process.env.REACT_APP_SUPABASE_STORAGE_BUCKET || 'product-images';
+  }
+
+  private async uploadSettingsAsset(file: File, kind: 'logo' | 'favicon'): Promise<string | null> {
+    // Uploads to <bucket>/settings/
+    try {
+      const bucket = this.getStorageBucket();
+      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
+      const safeName = file.name.replace(/[^a-zA-Z0-9-_\.]/g, '_');
+      const path = `settings/${Date.now()}_${Math.random().toString(36).slice(2)}_${kind}.${ext}`;
+      const { error } = await this.adminClient.storage.from(bucket).upload(path, file, {
+        cacheControl: '3600',
+        upsert: false,
+        contentType: file.type || `image/${ext}`
+      });
+      if (error) throw error;
+      const { data } = this.adminClient.storage.from(bucket).getPublicUrl(path);
+      return data?.publicUrl || null;
+    } catch (e) {
+      console.error('AdminService.uploadSettingsAsset error:', e);
+      return null;
+    }
+  }
+
+  async getWebsiteSettings(): Promise<{ data: any | null; error: any }> {
+    if (!this.isAdminClient()) {
+      return { data: null, error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const { data, error } = await this.adminClient
+        .from('website_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      if (error) return { data: null, error };
+      return { data, error: null };
+    } catch (error) {
+      return { data: null, error } as any;
+    }
+  }
+
+  async upsertWebsiteSettings(input: {
+    siteName?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    whatsappNumber?: string;
+    address?: string;
+    facebookUrl?: string;
+    instagramUrl?: string;
+    tiktokUrl?: string;
+    youtubeUrl?: string;
+    heroTitle?: string;
+    heroSubtitle?: string;
+    logoFile?: File | null;
+    faviconFile?: File | null;
+    logoUrl?: string | null;
+    faviconUrl?: string | null;
+  }): Promise<{ success: boolean; error: any; data?: any }> {
+    if (!this.isAdminClient()) {
+      return { success: false, error: { message: 'Admin client not available. Service role key required.' } };
+    }
+    try {
+      const current = await this.getWebsiteSettings();
+      const payload: any = {
+        site_name: input.siteName ?? current.data?.site_name ?? null,
+        contact_email: input.contactEmail ?? current.data?.contact_email ?? null,
+        contact_phone: input.contactPhone ?? current.data?.contact_phone ?? null,
+        whatsapp_number: input.whatsappNumber ?? current.data?.whatsapp_number ?? null,
+        address: input.address ?? current.data?.address ?? null,
+        facebook_url: input.facebookUrl ?? current.data?.facebook_url ?? null,
+        instagram_url: input.instagramUrl ?? current.data?.instagram_url ?? null,
+        tiktok_url: input.tiktokUrl ?? current.data?.tiktok_url ?? null,
+        youtube_url: input.youtubeUrl ?? current.data?.youtube_url ?? null,
+        hero_title: input.heroTitle ?? current.data?.hero_title ?? null,
+        hero_subtitle: input.heroSubtitle ?? current.data?.hero_subtitle ?? null,
+      };
+
+      // Handle uploads first
+      if (input.logoFile instanceof File) {
+        const url = await this.uploadSettingsAsset(input.logoFile, 'logo');
+        if (url) payload.logo_url = url;
+      } else if (input.logoUrl !== undefined) {
+        payload.logo_url = input.logoUrl;
+      }
+
+      if (input.faviconFile instanceof File) {
+        const url = await this.uploadSettingsAsset(input.faviconFile, 'favicon');
+        if (url) payload.favicon_url = url;
+      } else if (input.faviconUrl !== undefined) {
+        payload.favicon_url = input.faviconUrl;
+      }
+
+      const { data, error } = await this.adminClient
+        .from('website_settings')
+        .upsert(payload, { onConflict: 'id' })
+        .select()
+        .maybeSingle();
+      if (error) return { success: false, error };
+      return { success: true, error: null, data };
+    } catch (error) {
+      return { success: false, error } as any;
+    }
+  }
+
   // Product retrieval with filtering and pagination
   async getProducts(options: {
     page?: number;
