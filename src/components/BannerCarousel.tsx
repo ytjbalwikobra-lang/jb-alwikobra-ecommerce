@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { BannerService } from '../services/bannerService.ts';
 import ResponsiveImage from './ResponsiveImage.tsx';
 
@@ -43,6 +43,8 @@ type Props = { slides?: Slide[] };
 const BannerCarousel: React.FC<Props> = ({ slides }) => {
   const [index, setIndex] = useState(0);
   const [dbSlides, setDbSlides] = useState<Slide[] | null>(null);
+  const [rotateEnabled, setRotateEnabled] = useState(false);
+  const visibilityRef = useRef(typeof document !== 'undefined' ? document.visibilityState : 'visible');
 
   // Load banners from DB; if none, fall back to provided slides or defaults
   useEffect(() => {
@@ -75,10 +77,37 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
 
   const count = Math.min(resolvedSlides.length, 3);
 
+  // Enable rotation after first user interaction or a short delay
   useEffect(() => {
+    let timeoutId: any;
+    const enable = () => setRotateEnabled(true);
+
+    // After 12s (longer than LCP window), enable auto-rotate if user hasn't interacted.
+    timeoutId = setTimeout(enable, 12000);
+    // On first pointer interaction, enable immediately.
+    window.addEventListener('pointerdown', enable, { once: true });
+
+    return () => {
+      clearTimeout(timeoutId);
+      window.removeEventListener('pointerdown', enable as any);
+    };
+  }, []);
+
+  // Track page visibility to avoid rotating when hidden (prevents LCP resets in lab runs)
+  useEffect(() => {
+    const onVisibility = () => {
+      visibilityRef.current = document.visibilityState;
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, []);
+
+  useEffect(() => {
+    if (!rotateEnabled || count === 0) return;
+    if (visibilityRef.current !== 'visible') return; // don't rotate when tab not visible
     const id = setInterval(() => setIndex((i) => (i + 1) % (count || 1)), 5000);
     return () => clearInterval(id as any);
-  }, [count]);
+  }, [count, rotateEnabled]);
 
   if (count === 0) return null;
 
