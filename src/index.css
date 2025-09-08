@@ -385,6 +385,32 @@ textarea:focus {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
+/* iOS Safari fallbacks to avoid black screen / rendering glitches */
+.ios .glass {
+  /* Reduce blur on iOS due to known WebKit GPU issues */
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.ios .bg-app-dark {
+  /* Avoid complex images/gradients; keep simple color */
+  background-image: none !important;
+  background-color: #000 !important;
+}
+
+/* Avoid over-blur overlays on iOS */
+.ios .backdrop-blur,
+.ios .backdrop-blur-sm {
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+}
+
+/* Fix fixed-position + overflow issues that can cause blank screens */
+.ios body {
+  position: static !important;
+  overflow-x: hidden;
+}
+
 /* Hover effects */
 .hover-lift {
   transition: transform 0.2s ease-in-out;

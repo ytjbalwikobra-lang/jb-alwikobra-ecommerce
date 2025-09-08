@@ -113,6 +113,12 @@ function App() {
     if (productionMonitor.isProduction()) {
       console.log('🔍 Production monitoring active');
     }
+    // Detect iOS Safari to apply CSS fallbacks (e.g., disable backdrop-filter bugs)
+    try {
+      const ua = navigator.userAgent || '';
+      const isIOS = /iPad|iPhone|iPod/.test(ua) || (ua.includes('Mac') && 'ontouchend' in document);
+      if (isIOS) document.documentElement.classList.add('ios');
+    } catch {}
   }, []);
 
   return (
