@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { feedService } from '../services/feedService.ts';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { useToast } from '../components/Toast.tsx';
 
 function RatingStars({ value }: { value?: number }) {
   if (!value) return null;
@@ -40,6 +41,7 @@ function RolePill({ isAdmin }: { isAdmin?: boolean }) {
 
 const FeedPage: React.FC = () => {
   const { user } = useAuth();
+  const { showToast } = useToast();
   const [posts, setPosts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -67,6 +69,14 @@ const FeedPage: React.FC = () => {
   };
 
   useEffect(() => { load(1); /* eslint-disable-next-line */ }, [filter]);
+  // Mark notifications read and hide badge when entering feed route
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem('session_token') || '';
+      if (token) fetch('/api/feed?action=notifications-read', { method: 'POST', headers: { 'Authorization': `Bearer ${token}` } });
+      // smooth hide via nav components will also clear state
+    } catch {}
+  }, []);
 
   // Create bars
   const [newPost, setNewPost] = useState<{title:string;content:string;type:'post'|'announcement'}>({ title: '', content: '', type: 'post' });
@@ -90,24 +100,42 @@ const FeedPage: React.FC = () => {
   }, [user]);
   const createPost = async () => {
     if (!user) return;
-  setSubmitting(true);
-  await feedService.createPost({ title: newPost.title, content: newPost.content, type: newPost.type, imageFile: newPostImage });
-  setNewPost({ title: '', content: '', type: 'post' });
-  setNewPostImage(null);
-  setNewPostPreview(null);
-  setShowCreatePostModal(false);
-  setSubmitting(false);
-  load(1);
+    setSubmitting(true);
+    try {
+      const res = await feedService.createPost({ title: newPost.title, content: newPost.content, type: newPost.type, imageFile: newPostImage });
+      if (res?.success !== false) {
+        showToast('Post berhasil dibuat', 'success');
+        setNewPost({ title: '', content: '', type: 'post' });
+        setNewPostImage(null);
+        setNewPostPreview(null);
+        setShowCreatePostModal(false);
+        load(1);
+      } else {
+        showToast(res?.error || 'Gagal membuat post', 'error');
+      }
+    } catch (e: any) {
+      showToast(e?.message || 'Gagal membuat post', 'error');
+    } finally {
+      setSubmitting(false);
+    }
   };
   const createReview = async () => {
     if (!user) return;
     if (!newReview.product_id) return;
-  setSubmitting(true);
-  await feedService.createReview({ title: newReview.title, content: newReview.content, rating: newReview.rating, product_id: newReview.product_id });
-  setNewReview({ title: '', content: '', rating: 5, product_id: '' });
-  setShowCreateReviewModal(false);
-  setSubmitting(false);
-  load(1);
+    setSubmitting(true);
+    try {
+      const res = await feedService.createReview({ title: newReview.title, content: newReview.content, rating: newReview.rating, product_id: newReview.product_id });
+      if (res?.success !== false) {
+        showToast('Review berhasil dibuat', 'success');
+        setNewReview({ title: '', content: '', rating: 5, product_id: '' });
+        setShowCreateReviewModal(false);
+        load(1);
+      } else {
+        showToast(res?.error || 'Gagal membuat review', 'error');
+      }
+    } catch (e: any) {
+      showToast(e?.message || 'Gagal membuat review', 'error');
+    } finally { setSubmitting(false); }
   };
 
   const toggleLike = async (post: any) => {
@@ -178,19 +206,39 @@ const FeedPage: React.FC = () => {
   };
   const submitEdit = async () => {
     if (!editPostId) return;
-    await feedService.adminEditPost(editPostId, editFields);
-    setEditPostId(null);
-    setEditFields({ title: '', content: '', type: 'post' });
-    if (editPreview) URL.revokeObjectURL(editPreview);
-    setEditPreview(null);
-    load(page);
+    setSubmitting(true);
+    try {
+      const res = await feedService.adminEditPost(editPostId, editFields);
+      if (res?.success !== false) {
+        showToast('Post berhasil diperbarui', 'success');
+        setEditPostId(null);
+        setEditFields({ title: '', content: '', type: 'post' });
+        if (editPreview) URL.revokeObjectURL(editPreview);
+        setEditPreview(null);
+        load(page);
+      } else {
+        showToast(res?.error || 'Gagal memperbarui post', 'error');
+      }
+    } catch (e: any) {
+      showToast(e?.message || 'Gagal memperbarui post', 'error');
+    } finally { setSubmitting(false); }
   };
   const submitEditReview = async () => {
     if (!editReviewPost) return;
-    await feedService.editReview(editReviewPost.id, editReviewFields);
-    setEditReviewPost(null);
-    setEditReviewFields({ title: '', content: '', rating: 5 });
-    load(page);
+    setSubmitting(true);
+    try {
+      const res = await feedService.editReview(editReviewPost.id, editReviewFields);
+      if (res?.success !== false) {
+        showToast('Review berhasil diperbarui', 'success');
+        setEditReviewPost(null);
+        setEditReviewFields({ title: '', content: '', rating: 5 });
+        load(page);
+      } else {
+        showToast(res?.error || 'Gagal memperbarui review', 'error');
+      }
+    } catch (e: any) {
+      showToast(e?.message || 'Gagal memperbarui review', 'error');
+    } finally { setSubmitting(false); }
   };
 
   // Linkify content

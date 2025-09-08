@@ -57,6 +57,46 @@ interface DashboardData {
   };
 }
 
+// Floating order notifications
+const AdminOrderToasts: React.FC = () => {
+  const [items, setItems] = useState<Array<{ id: string; message: string; type: 'new'|'paid'|'cancelled' }>>([]);
+  React.useEffect(() => {
+    let timer: any;
+    const poll = async () => {
+      try {
+        const res = await fetch('/api/admin?action=orders&limit=5');
+        const j = await res.json();
+        const recent = (j?.data?.orders || []) as Array<any>;
+        // Heuristic: fire toasts for the most recent order by status
+        if (recent.length) {
+          const o = recent[0];
+          const type = o.status === 'paid' ? 'paid' : o.status === 'cancelled' ? 'cancelled' : 'new';
+          const id = `${o.id}-${o.status}`;
+          setItems(prev => prev.find(p => p.id === id) ? prev : [...prev, { id, message: type === 'paid' ? `Pesanan ${o.id} dibayarkan` : type === 'cancelled' ? `Pesanan ${o.id} dibatalkan` : `Pesanan baru ${o.id}` , type }]);
+          setTimeout(() => setItems(prev => prev.filter(p => p.id !== id)), 4000);
+        }
+      } catch {}
+    };
+    poll();
+    timer = setInterval(poll, 30000);
+    return () => clearInterval(timer);
+  }, []);
+  return (
+    <div className="fixed bottom-20 right-4 z-[1000] space-y-2">
+      {items.map(i => (
+        <div key={i.id} className={
+          `px-3 py-2 rounded shadow text-sm backdrop-blur border transition-all duration-300 ` +
+          (i.type === 'paid' ? 'bg-green-500/20 text-green-200 border-green-400/40' :
+           i.type === 'cancelled' ? 'bg-red-500/20 text-red-200 border-red-400/40' :
+           'bg-amber-500/20 text-amber-100 border-amber-400/40')
+        }>
+          {i.message}
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const StatCard: React.FC<{ 
   label: string; 
   value: string; 
@@ -632,6 +672,7 @@ const AdminDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      <AdminOrderToasts />
       {/* Header dengan action buttons */}
       <div className="flex items-center justify-between">
         <div>
@@ -639,18 +680,6 @@ const AdminDashboard: React.FC = () => {
           <p className="text-gray-400">Kelola toko online JB Alwikobra dengan mudah</p>
         </div>
         <div className="flex items-center gap-2">
-          <ActionButton
-            icon={<Download className="w-4 h-4" />}
-            onClick={() => {/* TODO: Export functionality */}}
-            variant="secondary"
-            tooltip="Export Data"
-          />
-          <ActionButton
-            icon={<Eye className="w-4 h-4" />}
-            onClick={() => {/* TODO: View detailed reports */}}
-            variant="secondary"
-            tooltip="View Reports"
-          />
           <ActionButton
             icon={<RefreshCw className="w-4 h-4" />}
             onClick={() => fetchDashboardData(true)}

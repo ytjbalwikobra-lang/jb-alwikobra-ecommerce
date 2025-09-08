@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
-type ToastItem = { id: string; message: string; type?: 'success'|'error'|'info' };
+type ToastItem = { id: string; message: string; type?: 'success'|'error'|'info'|'warning'|'new'|'paid'|'cancelled' };
 
 type ToastCtx = {
   push: (message: string, type?: ToastItem['type']) => void;
@@ -33,9 +33,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       <div className="fixed bottom-4 right-4 z-[1000] space-y-2">
         {items.map(t => (
           <div key={t.id} className={
-            `px-3 py-2 rounded shadow text-sm backdrop-blur border ` +
-            (t.type === 'success' ? 'bg-green-500/20 text-green-200 border-green-400/40' :
-             t.type === 'error' ? 'bg-red-500/20 text-red-200 border-red-400/40' :
+            `px-3 py-2 rounded shadow text-sm backdrop-blur border transition-all duration-300 ` +
+            (t.type === 'success' || t.type === 'paid' ? 'bg-green-500/20 text-green-200 border-green-400/40' :
+             t.type === 'error' || t.type === 'cancelled' ? 'bg-red-500/20 text-red-200 border-red-400/40' :
+             t.type === 'warning' || t.type === 'new' ? 'bg-amber-500/20 text-amber-100 border-amber-400/40' :
              'bg-white/10 text-white border-white/20')
           }>
             {t.message}

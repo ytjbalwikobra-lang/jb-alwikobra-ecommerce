@@ -2,6 +2,7 @@ import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, MessageSquare, Home, Settings, HelpCircle, User } from 'lucide-react';
 import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { supabase } from '../services/supabase.ts';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -32,6 +33,37 @@ const Header: React.FC = () => {
       mounted = false;
       clearTimeout(timer);
     };
+  }, []);
+
+  const [hasNewFeed, setHasNewFeed] = React.useState(false);
+  // Poll feed notifications and indicate new items
+  React.useEffect(() => {
+    let timer: any;
+    let unsub: any;
+    const token = localStorage.getItem('session_token') || '';
+    const load = async () => {
+      try {
+        if (!token) return;
+        const res = await fetch('/api/feed?action=notifications', { headers: { 'Authorization': `Bearer ${token}` } });
+        const j = await res.json();
+        const hasUnread = (j.notifications || []).some((n: any) => !n.read_at);
+        setHasNewFeed(hasUnread);
+      } catch {}
+    };
+    load();
+    timer = setInterval(load, 30000);
+    // Optional realtime hook if supabase available
+    if (supabase) {
+      try {
+        unsub = (supabase as any)
+          .channel('feed_notifications')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'feed_notifications' }, () => {
+            load();
+          })
+          .subscribe();
+      } catch {}
+    }
+    return () => { clearInterval(timer); try { unsub && supabase?.removeChannel(unsub); } catch {} };
   }, []);
 
   const navItems = [
@@ -79,8 +111,18 @@ const Header: React.FC = () => {
                       : 'text-gray-300 hover:text-pink-300 hover:bg-white/5'
                   }`}
                 >
-                  <Icon size={16} />
-                  <span>{item.label}</span>
+                  <div className="relative">
+                    <Icon size={16} />
+                    {item.path === '/feed' && hasNewFeed && !isActive && (
+                      <span className="absolute -top-1 -right-2 w-2.5 h-2.5 bg-pink-500 rounded-full animate-pulse" />
+                    )}
+                  </div>
+                  <span className="relative">
+                    {item.label}
+                    {item.path === '/feed' && hasNewFeed && !isActive && (
+                      <span className="ml-2 inline-flex items-center justify-center px-1.5 h-4 text-[10px] rounded-full bg-pink-600/30 text-pink-200 border border-pink-500/40 transition-opacity duration-500">Baru</span>
+                    )}
+                  </span>
                 </Link>
               );
             })}
