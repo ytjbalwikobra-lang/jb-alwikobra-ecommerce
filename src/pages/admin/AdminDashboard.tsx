@@ -57,7 +57,7 @@ interface DashboardData {
   };
 }
 
-// Floating order notifications
+// Floating order notifications (top-right, stacked, manual dismiss)
 const AdminOrderToasts: React.FC = () => {
   const [items, setItems] = useState<Array<{ id: string; message: string; type: 'new'|'paid'|'cancelled' }>>([]);
   React.useEffect(() => {
@@ -67,13 +67,11 @@ const AdminOrderToasts: React.FC = () => {
         const res = await fetch('/api/admin?action=orders&limit=5');
         const j = await res.json();
         const recent = (j?.data?.orders || []) as Array<any>;
-        // Heuristic: fire toasts for the most recent order by status
         if (recent.length) {
           const o = recent[0];
           const type = o.status === 'paid' ? 'paid' : o.status === 'cancelled' ? 'cancelled' : 'new';
           const id = `${o.id}-${o.status}`;
-          setItems(prev => prev.find(p => p.id === id) ? prev : [...prev, { id, message: type === 'paid' ? `Pesanan ${o.id} dibayarkan` : type === 'cancelled' ? `Pesanan ${o.id} dibatalkan` : `Pesanan baru ${o.id}` , type }]);
-          setTimeout(() => setItems(prev => prev.filter(p => p.id !== id)), 4000);
+          setItems(prev => prev.some(p => p.id === id) ? prev : [{ id, message: type === 'paid' ? `Pesanan ${o.id} dibayarkan` : type === 'cancelled' ? `Pesanan ${o.id} dibatalkan` : `Pesanan baru ${o.id}` , type }, ...prev]);
         }
       } catch {}
     };
@@ -81,16 +79,29 @@ const AdminOrderToasts: React.FC = () => {
     timer = setInterval(poll, 30000);
     return () => clearInterval(timer);
   }, []);
+  const close = (id: string) => setItems(prev => prev.filter(p => p.id !== id));
   return (
-    <div className="fixed bottom-20 right-4 z-[1000] space-y-2">
+    <div className="fixed top-4 right-4 z-[1000] flex flex-col gap-2 items-end">
       {items.map(i => (
-        <div key={i.id} className={
-          `px-3 py-2 rounded shadow text-sm backdrop-blur border transition-all duration-300 ` +
-          (i.type === 'paid' ? 'bg-green-500/20 text-green-200 border-green-400/40' :
-           i.type === 'cancelled' ? 'bg-red-500/20 text-red-200 border-red-400/40' :
-           'bg-amber-500/20 text-amber-100 border-amber-400/40')
-        }>
-          {i.message}
+        <div
+          key={i.id}
+          className={
+            `relative w-[min(92vw,360px)] px-4 py-3 rounded-lg shadow-lg text-sm backdrop-blur border transition-all duration-300 flex items-start gap-3 ` +
+            (i.type === 'paid' ? 'bg-green-500/15 text-green-100 border-green-400/30' :
+             i.type === 'cancelled' ? 'bg-red-500/15 text-red-100 border-red-400/30' :
+             'bg-amber-500/15 text-amber-100 border-amber-400/30')
+          }
+        >
+          <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ` + (i.type === 'paid' ? 'bg-emerald-400' : i.type === 'cancelled' ? 'bg-red-400' : 'bg-amber-400')} />
+          <div className="flex-1 leading-snug">
+            <div className="font-semibold">{i.type === 'paid' ? 'Pembayaran Diterima' : i.type === 'cancelled' ? 'Pesanan Dibatalkan' : 'Pesanan Baru'}</div>
+            <div className="opacity-90">{i.message}</div>
+          </div>
+          <button onClick={() => close(i.id)} aria-label="Tutup" className="opacity-70 hover:opacity-100 transition">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
+              <path fillRule="evenodd" d="M6.225 4.811a1 1 0 0 1 1.414 0L12 9.172l4.361-4.361a1 1 0 1 1 1.414 1.414L13.414 10.586l4.361 4.361a1 1 0 0 1-1.414 1.414L12 12l-4.361 4.361a1 1 0 1 1-1.414-1.414l4.361-4.361-4.361-4.361a1 1 0 0 1 0-1.414Z" clipRule="evenodd" />
+            </svg>
+          </button>
         </div>
       ))}
     </div>
@@ -275,8 +286,8 @@ const DailyOrdersLineChart: React.FC<{
 }> = ({ data, title }) => {
   const padded = data && data.length ? data : [];
   const maxOrders = Math.max(1, ...padded.map(d => d.orders));
-  const width = 700; // virtual width for viewBox
-  const height = 240; // virtual height for viewBox
+  const width = 1000; // virtual width for viewBox
+  const height = 320; // virtual height for viewBox
   const paddingX = 40;
   const paddingY = 30;
   const innerW = width - paddingX * 2;
@@ -294,13 +305,13 @@ const DailyOrdersLineChart: React.FC<{
     : '';
 
   return (
-    <div className="bg-gray-900/60 border border-orange-500/30 rounded-xl p-6">
+  <div className="bg-gray-900/60 border border-orange-500/30 rounded-xl p-6">
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
         <BarChart3 className="w-5 h-5 text-orange-400" />
         {title}
       </h3>
       <div className="w-full">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-56">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-80 md:h-96">
           {/* Axes */}
           <line x1={paddingX} y1={height - paddingY} x2={width - paddingX} y2={height - paddingY} stroke="#374151" strokeWidth="1" />
           <line x1={paddingX} y1={paddingY} x2={paddingX} y2={height - paddingY} stroke="#374151" strokeWidth="1" />
@@ -356,6 +367,88 @@ const DailyOrdersLineChart: React.FC<{
       </div>
       <div className="mt-2 text-sm text-gray-300">
         Total pesanan dibuat: <span className="text-white font-semibold">{padded.reduce((s, d) => s + d.orders, 0)}</span>
+      </div>
+    </div>
+  );
+};
+
+// Area chart for status distribution
+const AreaStatusChart: React.FC<{ data: Record<string, number> }> = ({ data }) => {
+  const entries = Object.entries(data).filter(([, v]) => (v ?? 0) > 0);
+  const labelsMap: Record<string, string> = {
+    pending: 'Menunggu',
+    paid: 'Dibayar',
+    completed: 'Selesai',
+    cancelled: 'Dibatalkan',
+    canceled: 'Dibatalkan'
+  };
+  const colors: Record<string, string> = {
+    pending: '#F59E0B',
+    paid: '#10B981',
+    completed: '#3B82F6',
+    cancelled: '#EF4444',
+    canceled: '#EF4444'
+  };
+
+  const width = 1000; const height = 280; const px = 40; const py = 30;
+  const innerW = width - px * 2; const innerH = height - py * 2;
+  const maxV = Math.max(1, ...entries.map(([, v]) => v));
+  const points = entries.map(([k, v], i) => {
+    const x = entries.length > 1 ? (i / (entries.length - 1)) * innerW + px : px + innerW/2;
+    const y = py + innerH - (v / maxV) * innerH;
+    return { x, y, k, v };
+  });
+  const pathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  const areaD = points.length
+    ? `M ${points[0].x} ${height - py} L ${points.map(p => `${p.x} ${p.y}`).join(' L ')} L ${points[points.length - 1].x} ${height - py} Z`
+    : '';
+
+  return (
+    <div className="bg-gray-900/60 border border-orange-500/30 rounded-xl p-6">
+      <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+        <PieChart className="w-5 h-5 text-orange-400" />
+        Status Pesanan (Area Chart)
+      </h3>
+      <div className="w-full">
+        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-72">
+          <line x1={px} y1={height - py} x2={width - px} y2={height - py} stroke="#374151" strokeWidth="1" />
+          <line x1={px} y1={py} x2={px} y2={height - py} stroke="#374151" strokeWidth="1" />
+          {points.length > 1 && (
+            <path d={areaD} fill="url(#statusArea)" opacity={0.35} />
+          )}
+          <defs>
+            <linearGradient id="statusArea" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#fb923c" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {points.length > 0 && (
+            <path d={pathD} fill="none" stroke="#fb923c" strokeWidth={3} strokeLinejoin="round" strokeLinecap="round" />
+          )}
+          {points.map((p, idx) => (
+            <g key={idx}>
+              <circle cx={p.x} cy={p.y} r={4} fill="#fff" stroke="#fb923c" strokeWidth={2}>
+                <title>{`${labelsMap[p.k] || p.k}: ${p.v}`}</title>
+              </circle>
+              <text x={p.x} y={height - py + 18} textAnchor="middle" fontSize="10" fill="#9CA3AF">
+                {labelsMap[p.k] || p.k}
+              </text>
+            </g>
+          ))}
+          <text x={px - 8} y={py + 4} textAnchor="end" fontSize="10" fill="#9CA3AF">{maxV}</text>
+          <text x={px - 8} y={height - py} textAnchor="end" fontSize="10" fill="#9CA3AF">0</text>
+        </svg>
+      </div>
+      <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
+        {entries.map(([k, v]) => (
+          <div key={k} className="flex items-center justify-between p-3 rounded-lg bg-gray-800/50 border border-gray-700">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full" style={{ backgroundColor: colors[k] || '#9CA3AF' }} />
+              <span className="text-gray-300 text-sm">{labelsMap[k] || k}</span>
+            </div>
+            <div className="text-white text-sm font-semibold">{v}</div>
+          </div>
+        ))}
       </div>
     </div>
   );
@@ -702,8 +795,8 @@ const AdminDashboard: React.FC = () => {
         onCustomDateChange={setCustomDateRange}
       />
 
-      {/* Main Statistics Grid */}
-  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  {/* Main Statistics Grid: 2x2 without Total Pesanan */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <StatCard 
           label="Total Produk" 
           value={String(data.products)} 
@@ -719,15 +812,6 @@ const AdminDashboard: React.FC = () => {
           icon={<Zap className="w-6 h-6" />}
           color="yellow"
           loading={loading.basic}
-        />
-        <StatCard 
-          label="Total Pesanan" 
-          value={String(data.orders.count)} 
-          hint={`Periode ${timePeriod === 'weekly' ? 'mingguan' : timePeriod === 'monthly' ? 'bulanan' : timePeriod === 'quarterly' ? 'kuartalan' : timePeriod === 'yearly' ? 'tahunan' : 'custom'}`}
-          icon={<Calendar className="w-6 h-6" />}
-          color="green"
-          loading={loading.basic}
-          trend={data.analytics?.trends ? { value: data.analytics.trends.orderTrend, label: 'vs periode sebelumnya' } : undefined}
         />
         <StatCard 
           label="Total Pendapatan" 
@@ -759,13 +843,13 @@ const AdminDashboard: React.FC = () => {
         </div>
       ) : data.analytics && (
         <>
-          {/* Charts */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Charts: make line chart larger and full width, then status area chart below */}
+          <div className="grid grid-cols-1 gap-6">
             <DailyOrdersLineChart 
               data={data.analytics.dailyRevenue || []} 
               title={`Pesanan Harian (${timePeriod === 'weekly' ? '7 Hari' : timePeriod === 'monthly' ? '30 Hari' : timePeriod === 'quarterly' ? '90 Hari' : timePeriod === 'yearly' ? '365 Hari' : 'Custom'} Terakhir)`}
             />
-            <DonutStatusChart data={data.analytics.statusDistribution || {}} />
+            <AreaStatusChart data={data.analytics.statusDistribution || {}} />
           </div>
 
           {/* Advanced Insights */}
@@ -775,6 +859,11 @@ const AdminDashboard: React.FC = () => {
               Insight Performa
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-amber-900/30 border border-amber-700 rounded-lg p-4">
+                <div className="text-amber-400 font-semibold mb-2">Total Pesanan</div>
+                <div className="text-2xl font-bold text-white">{data.orders.count}</div>
+                <div className="text-xs text-gray-400 mt-1">Periode saat ini</div>
+              </div>
               <div className="bg-green-900/30 border border-green-700 rounded-lg p-4">
                 <div className="text-green-400 font-semibold mb-2">Rata-rata Pesanan/Hari</div>
                 <div className="text-2xl font-bold text-white">

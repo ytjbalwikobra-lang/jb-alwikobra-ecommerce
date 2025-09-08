@@ -6,6 +6,7 @@ import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
 type OrderRow = {
   id: string;
   product_id: string | null;
+  product_name?: string | null;
   customer_name: string;
   customer_email: string;
   customer_phone: string;
@@ -52,6 +53,7 @@ const AdminOrders: React.FC = () => {
   const mapRow = (r: any): OrderRow => ({
     id: r.id,
     product_id: r.product_id ?? r.productId ?? null,
+    product_name: r.product_name ?? r.productName ?? r.product?.name ?? null,
     customer_name: r.customer_name ?? r.customerName ?? r.customer?.name ?? 'Unknown',
     customer_email: r.customer_email ?? r.customerEmail ?? r.customer?.email ?? '',
     customer_phone: r.customer_phone ?? r.customerPhone ?? r.customer?.phone ?? '',
@@ -285,8 +287,15 @@ const AdminOrders: React.FC = () => {
                   )}
                 </div>
                 <div style={{padding: '12px', color: '#ffffff'}}>
-                  <div style={{fontSize: '14px', fontWeight: '500'}}>Product ID: {r.product_id || 'N/A'}</div>
+                  <div style={{fontSize: '14px', fontWeight: '600'}}>{r.product_name || 'Produk'}</div>
                   <div style={{fontSize: '12px', color: '#999999'}}>Order #{r.id.slice(0, 8)}</div>
+                  {r.product_id && (
+                    <div style={{marginTop: '4px'}}>
+                      <a href={`/products/${r.product_id}`} target="_blank" rel="noreferrer" className="text-pink-400 hover:underline">
+                        Lihat Produk
+                      </a>
+                    </div>
+                  )}
                 </div>
                 <div style={{padding: '12px', color: '#ffffff', fontWeight: '500'}}>Rp {Number(r.amount||0).toLocaleString('id-ID')}</div>
                 <div style={{padding: '12px'}}>

@@ -400,7 +400,7 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
     // Build the query with filters
     let ordersQuery = supabase
       .from('orders')
-      .select('id, product_id, customer_name, customer_email, customer_phone, order_type, amount, status, payment_method, rental_duration, created_at');
+      .select('id, product_id, customer_name, customer_email, customer_phone, order_type, amount, status, payment_method, rental_duration, created_at, products(name)');
 
     // Apply filters
     if (status && status !== 'all') {
@@ -440,10 +440,16 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
 
     if (countError) throw countError;
 
+    // Map product relation to flat product_name for convenience
+    const enriched = (orders || []).map((o: any) => ({
+      ...o,
+      product_name: o.products?.name || null
+    }));
+
     return res.json({
       success: true,
       data: {
-        orders: orders || [],
+        orders: enriched,
         pagination: {
           total: count || 0,
           page: parseInt(page as string),
