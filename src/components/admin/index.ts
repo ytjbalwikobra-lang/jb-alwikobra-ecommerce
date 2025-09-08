@@ -7,3 +7,11 @@ export { AdminTable, AdminTableRow, AdminTableCell } from './AdminTable';
 export { AdminModal, AdminConfirmModal } from './AdminModal';
 export { AdminBadge, AdminStatusBadge } from './AdminBadge';
 export { default as AdminImageUploader } from './AdminImageUploader';
+
+// Export new components
+export { default as AdminDataTable } from './AdminDataTable';
+export { default as AdminErrorBoundary, AdminErrorFallback, NetworkErrorFallback } from './AdminErrorBoundary';
+export * from './LoadingStates';
+
+// Export chart components
+export * from './charts';
