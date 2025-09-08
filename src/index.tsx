@@ -39,8 +39,23 @@ const root = ReactDOM.createRoot(container);
 if (!container.hasChildNodes()) {
   container.innerHTML = '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#000;color:#ccc;font:14px system-ui,sans-serif">Loading…</div>';
 }
+// Set dynamic vh to handle mobile browser chrome
+const setVh = () => {
+  const vh = window.innerHeight * 0.01;
+  document.documentElement.style.setProperty('--vh', `${vh}px`);
+};
+setVh();
+window.addEventListener('resize', setVh);
+window.addEventListener('orientationchange', setVh);
 root.render(
   <React.StrictMode>
     <App />
   </React.StrictMode>
 );
+// Cleanup listeners on HMR/dev
+if ((import.meta as any)?.hot) {
+  (import.meta as any).hot.dispose(() => {
+    window.removeEventListener('resize', setVh);
+    window.removeEventListener('orientationchange', setVh);
+  });
+}

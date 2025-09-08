@@ -192,9 +192,9 @@ function App() {
                 
                 {/* Public routes with global layout */}
                 <Route path="*" element={
-                  <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200">
+                  <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200" style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}>
                     <Header />
-                    <main className="flex-1 pb-16 md:pb-0">
+                    <main className="flex-1 pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
                       {!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY ? (
                         <div className="max-w-3xl mx-auto p-4">
                           <div className="bg-black/60 border border-yellow-500/40 rounded-lg p-4 mb-4">

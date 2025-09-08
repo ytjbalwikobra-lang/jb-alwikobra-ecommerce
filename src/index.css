@@ -7,6 +7,8 @@ html {
   font-size: 14px; /* Smaller base font for mobile */
   scroll-behavior: smooth;
   overflow-x: hidden; /* Prevent horizontal scroll */
+  /* iOS 100vh fix */
+  --vh: 1vh;
 }
 
 @media (min-width: 640px) {
@@ -34,6 +36,10 @@ body {
   font-size: 1rem; /* Uses the responsive html font-size */
   line-height: 1.5; /* Better mobile readability */
   overflow-x: hidden; /* Prevent horizontal scroll */
+  /* Safe area support */
+  padding-top: env(safe-area-inset-top);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 code {
@@ -382,6 +388,7 @@ textarea:focus {
 .glass {
   background: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
@@ -396,6 +403,23 @@ textarea:focus {
   /* Avoid complex images/gradients; keep simple color */
   background-image: none !important;
   background-color: #000 !important;
+}
+
+/* Prevent mobile Safari zoom on inputs */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px;
+  }
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* Avoid over-blur overlays on iOS */

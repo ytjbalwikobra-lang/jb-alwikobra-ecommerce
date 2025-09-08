@@ -50,8 +50,8 @@ const MobileBottomNav: React.FC = () => {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-pink-500/30 bg-black/90 backdrop-blur z-[1000]" style={{height: 64}}>
-      <nav className="flex justify-around py-2 pb-[env(safe-area-inset-bottom)]" style={{height: 64}}>
+    <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-pink-500/30 bg-black/90 backdrop-blur z-[1000]" style={{ height: 'calc(64px + env(safe-area-inset-bottom))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <nav className="flex justify-around py-2" style={{ height: 64 }}>
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = location.pathname === item.path;
