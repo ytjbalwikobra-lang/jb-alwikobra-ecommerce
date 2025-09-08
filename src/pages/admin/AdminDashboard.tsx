@@ -59,7 +59,7 @@ interface DashboardData {
 
 // Floating order notifications (top-right, stacked, manual dismiss)
 const AdminOrderToasts: React.FC = () => {
-  const [items, setItems] = useState<Array<{ id: string; message: string; type: 'new'|'paid'|'cancelled' }>>([]);
+  const [items, setItems] = useState<Array<{ id: string; message: string; summary?: string; type: 'new'|'paid'|'cancelled' }>>([]);
   React.useEffect(() => {
     let timer: any;
     const poll = async () => {
@@ -71,7 +71,11 @@ const AdminOrderToasts: React.FC = () => {
           const o = recent[0];
           const type = o.status === 'paid' ? 'paid' : o.status === 'cancelled' ? 'cancelled' : 'new';
           const id = `${o.id}-${o.status}`;
-          setItems(prev => prev.some(p => p.id === id) ? prev : [{ id, message: type === 'paid' ? `Pesanan ${o.id} dibayarkan` : type === 'cancelled' ? `Pesanan ${o.id} dibatalkan` : `Pesanan baru ${o.id}` , type }, ...prev]);
+          const price = Number(o.amount || 0);
+          const priceStr = `Rp ${price.toLocaleString('id-ID')}`;
+          const title = type === 'paid' ? 'Pembayaran Diterima' : type === 'cancelled' ? 'Pesanan Dibatalkan' : 'Pesanan Baru';
+          const summary = `${o.customer_name || 'Pelanggan'} • ${o.product_name || 'Produk'} • ${priceStr}`;
+          setItems(prev => prev.some(p => p.id === id) ? prev : [{ id, message: title, summary, type }, ...prev]);
         }
       } catch {}
     };
@@ -94,8 +98,10 @@ const AdminOrderToasts: React.FC = () => {
         >
           <div className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ` + (i.type === 'paid' ? 'bg-emerald-400' : i.type === 'cancelled' ? 'bg-red-400' : 'bg-amber-400')} />
           <div className="flex-1 leading-snug">
-            <div className="font-semibold">{i.type === 'paid' ? 'Pembayaran Diterima' : i.type === 'cancelled' ? 'Pesanan Dibatalkan' : 'Pesanan Baru'}</div>
-            <div className="opacity-90">{i.message}</div>
+            <div className="font-semibold">{i.message}</div>
+            {i.summary && (
+              <div className="opacity-90 text-[12px] text-white/90">{i.summary}</div>
+            )}
           </div>
           <button onClick={() => close(i.id)} aria-label="Tutup" className="opacity-70 hover:opacity-100 transition">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
