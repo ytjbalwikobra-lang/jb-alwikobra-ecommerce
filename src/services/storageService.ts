@@ -62,6 +62,14 @@ export class GameLogoStorage {
   private static readonly BUCKET = 'game-logos';
   private static readonly MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
   private static readonly ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'image/svg+xml'];
+  private static async toBase64(file: File): Promise<string> {
+    const buf = await file.arrayBuffer();
+    let binary = '';
+    const bytes = new Uint8Array(buf);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) binary += String.fromCharCode(bytes[i]);
+    return btoa(binary);
+  }
 
   /**
    * Upload game logo to Supabase Storage
@@ -76,19 +84,40 @@ export class GameLogoStorage {
       const fileName = `${gameSlug}-${Date.now()}.${fileExt}`;
       const filePath = `logos/${fileName}`;
 
-      // Upload file to storage
-      const { data, error } = await (supabase as any).storage
-        .from(this.BUCKET)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
+      // Try client upload first (may fail due to RLS)
+      try {
+        const { data, error } = await (supabase as any).storage
+          .from(this.BUCKET)
+          .upload(filePath, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+        if (error) throw error;
+        return data.path;
+      } catch (clientErr: any) {
+        console.warn('Client upload blocked, falling back to admin API:', clientErr?.message || clientErr);
+        // Fallback to server-side upload via admin API (bypasses RLS)
+        const payload = {
+          name: file.name,
+          contentType: file.type || 'application/octet-stream',
+          dataBase64: await this.toBase64(file),
+          slug: gameSlug,
+        };
+        const res = await fetch('/api/admin?action=upload-game-logo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('session_token') || ''}`
+          },
+          body: JSON.stringify(payload)
         });
-
-      if (error) {
-        throw new Error(`Upload failed: ${error.message}`);
+        const json = await res.json();
+        if (!res.ok || !json?.path) {
+          throw new Error(json?.error || 'Admin upload failed');
+        }
+        // Return storage path from server
+        return json.path as string;
       }
-
-      return data.path;
     } catch (error) {
       console.error('Error uploading game logo:', error);
       throw error;

@@ -40,12 +40,80 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return await handleUpdateOrder(req, res);
       case 'whatsapp-settings':
         return await handleWhatsAppSettings(req, res);
+      case 'upload-game-logo':
+        return await handleUploadGameLogo(req, res);
       default:
         return res.status(400).json({ error: 'Invalid action' });
     }
   } catch (error) {
     console.error('Admin API error:', error);
     return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+async function getCurrentUser(req: VercelRequest) {
+  try {
+    const auth = req.headers['authorization'] || '';
+    const token = Array.isArray(auth) ? auth[0] : auth;
+    const bearer = token.startsWith('Bearer ') ? token.slice(7) : null;
+    if (!bearer) return null;
+    const { data: session } = await supabase
+      .from('user_sessions')
+      .select('user_id, expires_at, is_active')
+      .eq('session_token', bearer)
+      .single();
+    if (!session || session.is_active === false) return null;
+    if (session.expires_at && new Date(session.expires_at) < new Date()) return null;
+    const { data: user } = await supabase
+      .from('users')
+      .select('id, is_admin')
+      .eq('id', session.user_id)
+      .single();
+    return user || null;
+  } catch {
+    return null;
+  }
+}
+
+async function handleUploadGameLogo(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const me = await getCurrentUser(req);
+  if (!me || !me.is_admin) {
+    return res.status(403).json({ error: 'Admin only' });
+  }
+
+  try {
+    const { name, contentType, dataBase64, slug } = req.body as any;
+    if (!name || !contentType || !dataBase64 || !slug) {
+      return res.status(400).json({ error: 'Invalid payload' });
+    }
+
+    // Derive extension
+    const extFromName = String(name).split('.').pop()?.toLowerCase() || '';
+    const extFromType = contentType === 'image/svg+xml' ? 'svg' : contentType.split('/')[1] || '';
+    const ext = (extFromName || extFromType || 'png').replace(/[^a-z0-9]/g, '');
+
+    const bucket = 'game-logos';
+    const safeSlug = String(slug).trim().toLowerCase().replace(/[^a-z0-9-]/g, '-');
+    const safeName = String(name).replace(/[^a-zA-Z0-9-_.]/g, '_');
+    const path = `logos/${safeSlug}-${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+
+    const buffer = Buffer.from(dataBase64, 'base64');
+    const { error } = await (supabase as any).storage.from(bucket).upload(path, buffer, {
+      contentType,
+      upsert: false,
+      cacheControl: '3600'
+    });
+    if (error) return res.status(400).json({ error: error.message });
+
+    const { data } = (supabase as any).storage.from(bucket).getPublicUrl(path);
+    return res.status(200).json({ success: true, path, publicUrl: data?.publicUrl || null });
+  } catch (error) {
+    console.error('upload-game-logo error:', error);
+    return res.status(500).json({ error: 'Upload failed' });
   }
 }
 
