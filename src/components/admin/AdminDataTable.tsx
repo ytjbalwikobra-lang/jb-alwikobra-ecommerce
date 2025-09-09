@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Search, Filter, MoreHorizontal } from 'lucide-react';
-import { AdminButton } from './AdminButton.tsx';
+import { AdminButton } from './AdminButton';
 
 interface Column<T = any> {
   key: string;

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Heart, Trash2, ShoppingCart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import Footer from '../components/Footer.tsx';
-import { AuthRequired } from '../components/ProtectedRoute.tsx';
-import { useWishlist } from '../contexts/WishlistContext.tsx';
-import { formatCurrency } from '../utils/helpers.ts';
+import Footer from '../components/Footer';
+import { AuthRequired } from '../components/ProtectedRoute';
+import { useWishlist } from '../contexts/WishlistContext';
+import { formatCurrency } from '../utils/helpers';
 
 const WishlistPage: React.FC = () => {
   const { wishlistItems, removeFromWishlist, clearWishlist } = useWishlist();

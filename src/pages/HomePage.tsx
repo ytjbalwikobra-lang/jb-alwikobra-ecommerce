@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Product } from '../types/index.ts';
-import ProductCard from '../components/ProductCard.tsx';
-import HorizontalScroller from '../components/HorizontalScroller.tsx';
+import { Product } from '../types';
+import ProductCard from '../components/ProductCard';
+import HorizontalScroller from '../components/HorizontalScroller';
 import { 
   Zap, 
   ShoppingBag, 
@@ -13,8 +13,8 @@ import {
   Headphones,
   ChevronRight
 } from 'lucide-react';
-import BannerCarousel from '../components/BannerCarousel.tsx';
-import ResponsiveImage from '../components/ResponsiveImage.tsx';
+import BannerCarousel from '../components/BannerCarousel';
+import ResponsiveImage from '../components/ResponsiveImage';
 
 const HomePage: React.FC = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
@@ -27,8 +27,8 @@ const HomePage: React.FC = () => {
       try {
         // Lazy load services to reduce initial bundle
         const [{ adminService }, { ProductService }] = await Promise.all([
-          import('../services/adminService.ts'),
-          import('../services/productService.ts')
+          import('../services/adminService'),
+          import('../services/productService')
         ]);
         
         if (!mounted) return;

@@ -1,12 +1,12 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { Trash2, Edit, Plus, X, Upload, Search, Filter } from 'lucide-react';
-import { Product, GameTitle, Tier } from '../../types/index.ts';
-import { adminService } from '../../services/adminService.ts';
-import { useToast } from '../../components/Toast.tsx';
-import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
-import { AdminButton } from '../../components/admin/AdminButton.tsx';
-import { AdminPillBadge, AdminPillStatusBadge } from '../../components/admin/AdminPillBadge.tsx';
-import AdminImageUploader from '../../components/admin/AdminImageUploader.tsx';
+import { Product, GameTitle, Tier } from '../../types';
+import { adminService } from '../../services/adminService';
+import { useToast } from '../../components/Toast';
+import { formatNumberID, parseNumberID } from '../../utils/helpers';
+import { AdminButton } from '../../components/admin/AdminButton';
+import { AdminPillBadge, AdminPillStatusBadge } from '../../components/admin/AdminPillBadge';
+import AdminImageUploader from '../../components/admin/AdminImageUploader';
 
 // Form data interface sesuai spesifikasi yang benar
 interface ProductFormData {

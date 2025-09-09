@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { calculateTimeRemaining } from '../utils/helpers.ts';
+// Removed explicit .ts extension for compatibility with CRA TypeScript config
+import { calculateTimeRemaining } from '../utils/helpers';
 import { Clock } from 'lucide-react';
 
 interface FlashSaleTimerProps {

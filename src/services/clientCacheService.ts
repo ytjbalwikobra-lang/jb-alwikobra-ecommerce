@@ -49,11 +49,10 @@ class ClientCacheService {
 
   invalidatePattern(pattern: string): void {
     const regex = new RegExp(pattern);
-    for (const key of this.cache.keys()) {
-      if (regex.test(key)) {
-        this.cache.delete(key);
-      }
-    }
+    // Use Array.from for ES5 compatibility without downlevelIteration
+    Array.from(this.cache.keys()).forEach((key) => {
+      if (regex.test(key)) this.cache.delete(key);
+    });
   }
 
   clear(): void {

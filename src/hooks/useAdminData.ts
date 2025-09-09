@@ -25,15 +25,14 @@ interface UseAdminDataReturn<T> {
 const dataCache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 
 export const clearAdminCache = (pattern?: string) => {
-  if (pattern) {
-    for (const key of dataCache.keys()) {
-      if (key.includes(pattern)) {
-        dataCache.delete(key);
-      }
-    }
-  } else {
+  if (!pattern) {
     dataCache.clear();
+    return;
   }
+  // Avoid direct iterator to prevent need for downlevelIteration
+  Array.from(dataCache.keys()).forEach((k) => {
+    if (k.includes(pattern)) dataCache.delete(k);
+  });
 };
 
 export const useAdminData = <T = any>({

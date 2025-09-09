@@ -1,4 +1,4 @@
-import { supabase } from './supabase.ts';
+import { supabase } from './supabase';
 
 const BUCKET = process.env.REACT_APP_SUPABASE_STORAGE_BUCKET || 'product-images';
 

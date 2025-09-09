@@ -1,10 +1,10 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
-import { adminService } from '../../services/adminService.ts';
-import { WebsiteSettings } from '../../types/index.ts';
+import { adminService } from '../../services/adminService';
+import { WebsiteSettings } from '../../types';
 import { Save, Loader2, Image as ImageIcon } from 'lucide-react';
-import PhoneInput from '../../components/PhoneInput.tsx';
-import { useToast } from '../../components/Toast.tsx';
+import PhoneInput from '../../components/PhoneInput';
+import { useToast } from '../../components/Toast';
 
 const AdminSettings: React.FC = () => {
   const { showToast } = useToast();

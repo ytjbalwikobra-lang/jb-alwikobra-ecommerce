@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { getAuthUserId } from '../../services/authService.ts';
-import { useToast } from '../../components/Toast.tsx';
+import { getAuthUserId } from '../../services/authService';
+import { useToast } from '../../components/Toast';
 import { RefreshCw, Search, User, Shield, Clock } from 'lucide-react';
-import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
-import { adminService } from '../../services/adminService.ts';
+import { AdminPillBadge } from '../../components/admin/AdminPillBadge';
+import { adminService } from '../../services/adminService';
 
 type ProfileRow = { 
   id: string; 

@@ -157,14 +157,13 @@ class WebVitalsMonitor {
     let report = `📊 Performance Report (Score: ${score}/100)\n`;
     report += '━'.repeat(50) + '\n';
 
-    for (const [name, metric] of metrics) {
+    Array.from(metrics.entries()).forEach(([name, metric]) => {
       const emoji = metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌';
       const unit = name === 'CLS' ? '' : 'ms';
       const threshold = WebVitalsMonitor.THRESHOLDS[name];
-      
       report += `${emoji} ${name}: ${metric.value.toFixed(2)}${unit} (${metric.rating})\n`;
       report += `   Target: ≤${threshold.good}${unit} (good), ≤${threshold.poor}${unit} (poor)\n`;
-    }
+    });
 
     return report;
   }

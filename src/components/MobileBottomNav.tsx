@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, MessageSquare, Home, User } from 'lucide-react';
-import { supabase } from '../services/supabase.ts';
+import { supabase } from '../services/supabase';
 
 const MobileBottomNav: React.FC = () => {
   const location = useLocation();

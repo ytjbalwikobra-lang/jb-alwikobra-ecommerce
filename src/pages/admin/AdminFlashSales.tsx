@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
-import { Product } from '../../types/index.ts';
-import { adminService } from '../../services/adminService.ts';
-import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
-import { useToast } from '../../components/Toast.tsx';
-import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
+import { Product } from '../../types';
+import { adminService } from '../../services/adminService';
+import { formatNumberID, parseNumberID } from '../../utils/helpers';
+import { useToast } from '../../components/Toast';
+import { AdminPillBadge } from '../../components/admin/AdminPillBadge';
 
 type FSForm = {
   id?: string;

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ResourcePreloader } from '../utils/resourcePreloader.ts';
+import { ResourcePreloader } from '../utils/resourcePreloader';
 
 interface OptimizedImageProps {
   src: string;

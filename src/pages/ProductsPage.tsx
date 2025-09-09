@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useLocation } from 'react-router-dom';
-import { Product, Tier, GameTitle } from '../types/index.ts';
-import ProductCard from '../components/ProductCard.tsx';
+import { Product, Tier, GameTitle } from '../types';
+import ProductCard from '../components/ProductCard';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
-import SeoBreadcrumbs from '../components/SeoBreadcrumbs.tsx';
+import SeoBreadcrumbs from '../components/SeoBreadcrumbs';
 
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -50,7 +50,7 @@ const ProductsPage: React.FC = () => {
     const fetchData = async () => {
       try {
         // Dynamic import of ProductService
-        const { ProductService } = await import('../services/productService.ts');
+        const { ProductService } = await import('../services/productService');
         
         if (!mounted) return;
         

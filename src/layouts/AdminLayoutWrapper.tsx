@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from 'react-router-dom';
-import AdminLayout from './AdminLayout.tsx';
+import AdminLayout from './AdminLayout';
 
 const AdminLayoutWrapper: React.FC = () => {
   const location = useLocation();

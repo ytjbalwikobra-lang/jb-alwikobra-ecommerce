@@ -1,6 +1,6 @@
-import { supabase } from './supabase.ts';
-import { Banner } from '../types/index.ts';
-import { uploadFile, deletePublicUrls } from './storageService.ts';
+import { supabase } from './supabase';
+import { Banner } from '../types/index';
+import { uploadFile, deletePublicUrls } from './storageService';
 
 const sampleBanners: Banner[] = [
   {

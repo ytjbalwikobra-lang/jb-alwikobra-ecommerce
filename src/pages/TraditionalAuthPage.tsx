@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
-import { useToast } from '../components/Toast.tsx';
-import PhoneInput from '../components/PhoneInput.tsx';
-import PasswordInput from '../components/PasswordInput.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext';
+import { useToast } from '../components/Toast';
+import PhoneInput from '../components/PhoneInput';
+import PasswordInput from '../components/PasswordInput';
 
 const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'verify' | 'complete'>('login');

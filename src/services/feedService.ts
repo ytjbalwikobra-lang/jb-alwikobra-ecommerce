@@ -1,5 +1,5 @@
-import { supabase } from './supabase.ts';
-import { uploadFile } from './storageService.ts';
+import { supabase } from './supabase';
+import { uploadFile } from './storageService';
 
 async function toBase64(file: File): Promise<string> {
   const buf = await file.arrayBuffer();

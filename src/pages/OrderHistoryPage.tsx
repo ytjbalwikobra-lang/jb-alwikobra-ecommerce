@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../services/supabase.ts';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
-import Footer from '../components/Footer.tsx';
-import { AuthRequired } from '../components/ProtectedRoute.tsx';
+import { supabase } from '../services/supabase';
+import { useAuth } from '../contexts/TraditionalAuthContext';
+import Footer from '../components/Footer';
+import { AuthRequired } from '../components/ProtectedRoute';
 
 type Order = {
   id: string;

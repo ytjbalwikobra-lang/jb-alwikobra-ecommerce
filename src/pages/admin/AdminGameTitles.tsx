@@ -1,10 +1,10 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { GameTitle } from '../../types/index.ts';
-import { adminService } from '../../services/adminService.ts';
-import { useToast } from '../../components/Toast.tsx';
-import { gameLogoStorage } from '../../services/storageService.ts';
+import { GameTitle } from '../../types';
+import { adminService } from '../../services/adminService';
+import { useToast } from '../../components/Toast';
+import { gameLogoStorage } from '../../services/storageService';
 import { Plus, Pencil, Trash2, RefreshCw, Upload, X, Edit2 } from 'lucide-react';
-import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
+import { AdminPillBadge } from '../../components/admin/AdminPillBadge';
 
 type FormState = {
   id?: string;

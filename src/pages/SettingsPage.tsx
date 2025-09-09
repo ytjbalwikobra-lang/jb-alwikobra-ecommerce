@@ -10,8 +10,8 @@ import {
   ChevronRight,
   Save
 } from 'lucide-react';
-import Footer from '../components/Footer.tsx';
-import { AuthRequired } from '../components/ProtectedRoute.tsx';
+import Footer from '../components/Footer';
+import { AuthRequired } from '../components/ProtectedRoute';
 
 interface AppSettings {
   theme: 'light' | 'dark' | 'auto';

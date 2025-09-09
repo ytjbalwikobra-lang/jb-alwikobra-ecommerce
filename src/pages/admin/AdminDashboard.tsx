@@ -227,10 +227,17 @@ const AdminDashboard: React.FC = () => {
 
       {/* Statistics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<<<<<<< HEAD
         <StatCardComponent title="Total Orders" value={stats ? formatNumber(stats.totalOrders) : 0} icon={ShoppingBag} loading={loading} change={stats?.monthlyGrowth.orders ? { value: stats.monthlyGrowth.orders, type: stats.monthlyGrowth.orders >=0 ? 'increase':'decrease', period:'this month'}:undefined} />
         <StatCardComponent title="Total Revenue" value={stats ? formatCurrency(stats.totalRevenue) : 0} icon={DollarSign} loading={loading} change={stats?.monthlyGrowth.revenue ? { value: Math.abs(stats.monthlyGrowth.revenue), type: stats.monthlyGrowth.revenue >=0 ? 'increase':'decrease', period:'this month'}:undefined} />
         <StatCardComponent title="Total Users" value={stats ? formatNumber(stats.totalUsers) : 0} icon={Users} loading={loading} change={stats?.monthlyGrowth.users ? { value: stats.monthlyGrowth.users, type: stats.monthlyGrowth.users >=0 ? 'increase':'decrease', period:'this month'}:undefined} />
         <StatCardComponent title="Active Flash Sales" value={stats?.activeFlashSales || 0} icon={Zap} loading={loading} subtitle={`${stats?.totalProducts || 0} total products`} />
+=======
+  <StatCardComponent title="Total Orders" value={stats ? formatNumber(stats.totalOrders) : 0} icon={ShoppingBag} loading={loading} change={stats?.monthlyGrowth.orders ? { value: stats.monthlyGrowth.orders, type: stats.monthlyGrowth.orders >=0 ? 'increase':'decrease', period:'this month'}:undefined} />
+  <StatCardComponent title="Total Revenue" value={stats ? formatCurrency(stats.totalRevenue) : 0} icon={DollarSign} loading={loading} change={stats?.monthlyGrowth.revenue ? { value: Math.abs(stats.monthlyGrowth.revenue), type: stats.monthlyGrowth.revenue >=0 ? 'increase':'decrease', period:'this month'}:undefined} />
+  <StatCardComponent title="Total Users" value={stats ? formatNumber(stats.totalUsers) : 0} icon={Users} loading={loading} change={stats?.monthlyGrowth.users ? { value: stats.monthlyGrowth.users, type: stats.monthlyGrowth.users >=0 ? 'increase':'decrease', period:'this month'}:undefined} />
+  <StatCardComponent title="Active Flash Sales" value={stats?.activeFlashSales || 0} icon={Zap} loading={loading} subtitle={`${stats?.totalProducts || 0} total products`} />
+>>>>>>> 66ba898 (cleanup: remove .ts/.tsx import extensions, restore admin dashboard charts, add stubs, fix iteration for ES5 target)
       </div>
 
       {/* Charts Section */}

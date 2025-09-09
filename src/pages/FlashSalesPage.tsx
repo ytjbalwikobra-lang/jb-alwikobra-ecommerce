@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Product } from '../types/index.ts';
-import ProductCard from '../components/ProductCard.tsx';
+import { Product } from '../types';
+import ProductCard from '../components/ProductCard';
 import { 
   Zap, 
   Clock, 
@@ -9,7 +9,7 @@ import {
   TrendingUp,
   ArrowUpRight
 } from 'lucide-react';
-import SeoBreadcrumbs from '../components/SeoBreadcrumbs.tsx';
+import SeoBreadcrumbs from '../components/SeoBreadcrumbs';
 
 const FlashSalesPage: React.FC = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
@@ -23,7 +23,7 @@ const FlashSalesPage: React.FC = () => {
     const fetchFlashSales = async () => {
       try {
   // Prefer adminService join mapping for consistent flash sale products
-  const { adminService } = await import('../services/adminService.ts');
+  const { adminService } = await import('../services/adminService');
         
         if (!mounted) return;
         

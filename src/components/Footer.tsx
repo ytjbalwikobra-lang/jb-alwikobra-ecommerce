@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Heart, Mail, Phone, MapPin } from 'lucide-react';
-import { SettingsService } from '../services/settingsService.ts';
+import { SettingsService } from '../services/settingsService';
 
 const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();

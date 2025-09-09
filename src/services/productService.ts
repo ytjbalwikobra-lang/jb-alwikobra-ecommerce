@@ -1,6 +1,6 @@
-import { supabase } from './supabase.ts';
-import { deletePublicUrls } from './storageService.ts';
-import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
+import { supabase } from './supabase';
+import { deletePublicUrls } from './storageService';
+import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index';
 
 // Capability detection: whether DB exposes relations (tiers/game_titles) in products
 // Track database capabilities globally

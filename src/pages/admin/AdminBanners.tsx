@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Banner } from '../../types/index.ts';
-import { BannerService } from '../../services/bannerService.ts';
+import { Banner } from '../../types';
+import { BannerService } from '../../services/bannerService';
 import { Plus, Trash2, Save, Edit3, Image as ImageIcon, Link as LinkIcon, Loader2 } from 'lucide-react';
 
 const AdminBanners: React.FC = () => {
