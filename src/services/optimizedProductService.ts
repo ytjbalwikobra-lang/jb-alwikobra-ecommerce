@@ -1,8 +1,8 @@
 // Optimized ProductService with pagination and caching
-import { supabase } from './supabase.ts';
-import { deletePublicUrls } from './storageService.ts';
-import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
-import { clientCache } from './clientCacheService.ts';
+import { supabase } from './supabase';
+import { deletePublicUrls } from './storageService';
+import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types';
+import { clientCache } from './clientCacheService';
 
 interface PaginatedResponse<T> {
   data: T[];

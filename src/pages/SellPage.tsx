@@ -2,9 +2,9 @@ import React, { useEffect, useState } from 'react';
 import {
   generateWhatsAppUrl,
   generateSellAccountMessage
-} from '../utils/helpers.ts';
-import { SettingsService } from '../services/settingsService.ts';
-import { ProductService } from '../services/productService.ts';
+} from '../utils/helpers';
+import { SettingsService } from '../services/settingsService';
+import { ProductService } from '../services/productService';
 import {
   MessageCircle,
   DollarSign,

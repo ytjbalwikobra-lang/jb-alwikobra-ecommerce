@@ -1,5 +1,5 @@
 // Batch operations utility to reduce API calls
-import { supabase } from '../services/supabase.ts';
+import { supabase } from '../services/supabase';
 
 interface BatchOperation {
   table: string;

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { feedService } from '../services/feedService.ts';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
-import { useToast } from '../components/Toast.tsx';
+import { feedService } from '../services/feedService';
+import { useAuth } from '../contexts/TraditionalAuthContext';
+import { useToast } from '../components/Toast';
 
 function RatingStars({ value }: { value?: number }) {
   if (!value) return null;

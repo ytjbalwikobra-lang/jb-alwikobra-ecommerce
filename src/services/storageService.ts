@@ -1,4 +1,4 @@
-import { supabase } from './supabase.ts';
+import { supabase } from './supabase';
 
 const BUCKET = process.env.REACT_APP_SUPABASE_STORAGE_BUCKET || 'product-images';
 
@@ -170,6 +170,21 @@ export class GameLogoStorage {
       .getPublicUrl(filePath);
 
     return data.publicUrl;
+  }
+
+  static async deleteGameLogoByUrl(url: string): Promise<void> {
+    try {
+      const u = new URL(url);
+      const marker = `/storage/v1/object/public/${this.BUCKET}/`;
+      const idx = u.pathname.indexOf(marker);
+      if (idx === -1) return;
+      const path = u.pathname.substring(idx + marker.length);
+      if (path) {
+        await this.deleteGameLogo(path);
+      }
+    } catch (error) {
+      console.error('Error deleting game logo by URL:', error);
+    }
   }
 
   /**

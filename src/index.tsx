@@ -1,10 +1,10 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App.tsx';
-import { injectCriticalCSS, preloadCriticalResources } from './utils/criticalCSS.ts';
-import { initWebVitalsMonitoring } from './utils/webVitalsMonitor.ts';
-import { FontOptimizer } from './utils/fontOptimizer.ts';
+import App from './App';
+import { injectCriticalCSS, preloadCriticalResources } from './utils/criticalCSS';
+import { initWebVitalsMonitoring } from './utils/webVitalsMonitor';
+import { FontOptimizer } from './utils/fontOptimizer';
 
 // Suppress React DevTools warning in development
 if (process.env.NODE_ENV === 'development') {
@@ -52,10 +52,4 @@ root.render(
     <App />
   </React.StrictMode>
 );
-// Cleanup listeners on HMR/dev
-if ((import.meta as any)?.hot) {
-  (import.meta as any).hot.dispose(() => {
-    window.removeEventListener('resize', setVh);
-    window.removeEventListener('orientationchange', setVh);
-  });
-}
+

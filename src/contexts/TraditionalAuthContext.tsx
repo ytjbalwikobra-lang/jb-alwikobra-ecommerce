@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { normalizeLoginIdentifier } from '../utils/phoneUtils.ts';
+import * as React from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
+import { normalizeLoginIdentifier } from '../utils/phoneUtils';
 
 interface User {
   id: string;
@@ -377,4 +378,5 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
+export { AuthContext };
 export default AuthProvider;

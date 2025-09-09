@@ -1,6 +1,6 @@
-import { supabase } from './supabase.ts';
-import { WebsiteSettings } from '../types/index.ts';
-import { uploadFile, deletePublicUrls } from './storageService.ts';
+import { supabase } from './supabase';
+import { WebsiteSettings } from '../types';
+import { uploadFile, deletePublicUrls } from './storageService';
 
 const DEFAULT_SETTINGS: WebsiteSettings = {
   id: 'default',

@@ -1,5 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { feedService } from '../../services/feedService.ts';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
+import { feedService } from '../../services/feedService';
 
 const AdminFeed: React.FC = () => {
   const [posts, setPosts] = useState<any[]>([]);

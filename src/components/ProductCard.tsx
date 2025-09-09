@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Product } from '../types/index.ts';
-import { formatCurrency, calculateTimeRemaining } from '../utils/helpers.ts';
+import { Product } from '../types';
+import { formatCurrency, calculateTimeRemaining } from '../utils/helpers';
 import { Zap, ArrowUpRight, Users, Trophy, Crown, Sparkles } from 'lucide-react';
-import FlashSaleTimer from './FlashSaleTimer.tsx';
-import ResponsiveImage from './ResponsiveImage.tsx';
+import FlashSaleTimer from './FlashSaleTimer';
+import ResponsiveImage from './ResponsiveImage';
 
 interface ProductCardProps {
   product: Product;

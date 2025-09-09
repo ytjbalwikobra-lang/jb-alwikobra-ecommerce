@@ -1,7 +1,7 @@
 // Ultra-optimized ProductService with minimal data fetching
-import { supabase } from './supabase.ts';
-import { Product, Tier, GameTitle, ProductTier } from '../types/index.ts';
-import { clientCache } from './clientCacheService.ts';
+import { supabase } from './supabase';
+import { Product, Tier, GameTitle, ProductTier } from '../types';
+import { clientCache } from './clientCacheService';
 
 interface ProductFilters {
   search?: string;

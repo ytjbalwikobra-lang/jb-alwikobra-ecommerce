@@ -90,6 +90,8 @@ export interface FlashSale {
   isActive: boolean;
 }
 
+export type FlashSaleWithProduct = FlashSale & { product?: Product };
+
 export interface Banner {
   id: string;
   title: string;
@@ -130,6 +132,7 @@ export interface Customer {
 export interface Order {
   id: string;
   productId: string;
+  product?: Product; // Optional populated product
   customer: Customer;
   type: 'purchase' | 'rental';
   amount: number;
@@ -147,4 +150,14 @@ export interface CartItem {
   quantity: 1;
   type: 'purchase' | 'rental';
   rentalOption?: RentalOption;
+}
+
+export interface Notification {
+  id: string;
+  type: 'order' | 'review' | 'mention' | 'system';
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+  link?: string;
 }

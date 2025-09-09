@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from './TraditionalAuthContext.tsx';
+import * as React from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
+import { useAuth } from './TraditionalAuthContext';
 
 interface WishlistItem {
   id: string;

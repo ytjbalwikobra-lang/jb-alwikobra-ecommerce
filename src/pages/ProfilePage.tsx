@@ -19,13 +19,13 @@ import {
   Check,
   X
 } from 'lucide-react';
-import PhoneInput from '../components/PhoneInput.tsx';
-import { AuthRequired } from '../components/ProtectedRoute.tsx';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
-import { useWishlist } from '../contexts/WishlistContext.tsx';
-import { useConfirmation } from '../components/ConfirmationModal.tsx';
-import { useToast } from '../components/Toast.tsx';
-import { supabase } from '../services/supabase.ts';
+import PhoneInput from '../components/PhoneInput';
+import { AuthRequired } from '../components/ProtectedRoute';
+import { useAuth } from '../contexts/TraditionalAuthContext';
+import { useWishlist } from '../contexts/WishlistContext';
+import { useConfirmation } from '../components/ConfirmationModal';
+import { useToast } from '../components/Toast';
+import { supabase } from '../services/supabase';
 // import { uploadFile } from '../services/storageService.ts';
 
 interface UserProfile {

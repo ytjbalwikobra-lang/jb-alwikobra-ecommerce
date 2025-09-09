@@ -1,4 +1,4 @@
-import { SettingsService } from './settingsService.ts';
+import { SettingsService } from './settingsService';
 
 export class FaviconService {
   private static defaultFavicon = '/favicon.ico';

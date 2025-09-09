@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
-import { ProductService } from '../services/productService.ts';
-import { SettingsService } from '../services/settingsService.ts';
-import { Product, Customer, RentalOption } from '../types/index.ts';
+import { ProductService } from '../services/productService';
+import { SettingsService } from '../services/settingsService';
+import { Product, Customer, RentalOption } from '../types';
 import {
   formatCurrency, 
   calculateTimeRemaining,
   generateWhatsAppUrl,
   generateRentalMessage,
   generatePurchaseMessage
-} from '../utils/helpers.ts';
+} from '../utils/helpers';
 import {
   Star,
   Clock,
@@ -25,13 +25,13 @@ import {
   CheckCircle,
   AlertCircle
 } from 'lucide-react';
-import { createXenditInvoice } from '../services/paymentService.ts';
-import { getCurrentUserProfile, isLoggedIn, getAuthUserId } from '../services/authService.ts';
-import { useWishlist } from '../contexts/WishlistContext.tsx';
-import Footer from '../components/Footer.tsx';
-import PhoneInput from '../components/PhoneInput.tsx';
-import { useToast } from '../components/Toast.tsx';
-import SeoBreadcrumbs from '../components/SeoBreadcrumbs.tsx';
+import { createXenditInvoice } from '../services/paymentService';
+import { getCurrentUserProfile, isLoggedIn, getAuthUserId } from '../services/authService';
+import { useWishlist } from '../contexts/WishlistContext';
+import Footer from '../components/Footer';
+import PhoneInput from '../components/PhoneInput';
+import { useToast } from '../components/Toast';
+import SeoBreadcrumbs from '../components/SeoBreadcrumbs';
 
 const ProductDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

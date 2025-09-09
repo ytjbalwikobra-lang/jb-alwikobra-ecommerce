@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { supabase } from '../services/supabase.ts';
-import { isLoggedIn } from '../services/authService.ts';
+import { supabase } from '../services/supabase';
+import { isLoggedIn } from '../services/authService';
 
 type Order = {
   id: string;

@@ -1,11 +1,18 @@
 import React from 'react';
-import { useLocation } from 'react-router-dom';
-import AdminLayout from './AdminLayout.tsx';
+import { AdminLayoutProvider } from '../contexts/AdminLayoutContext';
+import { NotificationProvider } from '../contexts/NotificationContext';
+import AdminLayoutRefactored from './AdminLayoutRefactored';
+import NotificationCenter from '../components/admin/notifications/NotificationCenter';
 
 const AdminLayoutWrapper: React.FC = () => {
-  const location = useLocation();
-  // Force remount of the entire admin layout when the path changes
-  return <AdminLayout key={location.pathname} />;
+  return (
+    <AdminLayoutProvider>
+      <NotificationProvider>
+        <AdminLayoutRefactored />
+        <NotificationCenter />
+      </NotificationProvider>
+    </AdminLayoutProvider>
+  );
 };
 
 export default AdminLayoutWrapper;

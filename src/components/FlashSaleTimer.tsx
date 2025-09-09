@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { calculateTimeRemaining } from '../utils/helpers.ts';
+import { calculateTimeRemaining } from '../utils/helpers';
 import { Clock } from 'lucide-react';
 
 interface FlashSaleTimerProps {

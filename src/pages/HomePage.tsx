@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Product } from '../types/index.ts';
-import ProductCard from '../components/ProductCard.tsx';
-import HorizontalScroller from '../components/HorizontalScroller.tsx';
+import { Product } from '../types';
+import ProductCard from '../components/ProductCard';
+import HorizontalScroller from '../components/HorizontalScroller';
 import { 
   Zap, 
   ShoppingBag, 
@@ -13,49 +14,112 @@ import {
   Headphones,
   ChevronRight
 } from 'lucide-react';
-import BannerCarousel from '../components/BannerCarousel.tsx';
-import ResponsiveImage from '../components/ResponsiveImage.tsx';
+import BannerCarousel from '../components/BannerCarousel';
+import ResponsiveImage from '../components/ResponsiveImage';
 
-const HomePage: React.FC = () => {
+// Lightweight types for popular games
+interface PopularGame { id: string; name: string; slug: string; logoUrl?: string | null; count: number }
+
+// Skeleton card for flash sale/product placeholder
+const FlashSaleSkeleton: React.FC = () => (
+  <div className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start animate-pulse" aria-hidden>
+    <div className="rounded-xl bg-gradient-to-br from-gray-800/70 to-gray-900/70 h-64 w-full mb-3" />
+    <div className="h-4 bg-gray-800 rounded w-3/4 mb-2" />
+    <div className="h-4 bg-gray-800 rounded w-1/2" />
+  </div>
+);
+
+// Feature card extracted (memoized)
+const FeatureCard: React.FC<{ icon: React.ComponentType<any>; title: string; description: string }> = React.memo(({ icon: Icon, title, description }) => (
+  <div className="text-center">
+    <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-4">
+      <Icon className="text-white" size={24} />
+    </div>
+    <h3 className="text-lg font-semibold text-white mb-2">{title}</h3>
+    <p className="text-gray-300">{description}</p>
+  </div>
+));
+FeatureCard.displayName = 'FeatureCard';
+
+// Popular game card extracted
+const PopularGameCard: React.FC<{ game: PopularGame }> = ({ game }) => (
+  <Link
+    key={game.id}
+    to={`/products?game=${encodeURIComponent(game.name)}`}
+    className="bg-black border border-pink-500/40 p-6 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group"
+  >
+    <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mx-auto mb-4 flex items-center justify-center overflow-hidden">
+      {game.logoUrl ? (
+        <img
+          src={game.logoUrl}
+          alt={game.name}
+          className="w-full h-full object-cover rounded-xl"
+          loading="lazy"
+        />
+      ) : (
+        <TrendingUp className="text-white" size={32} />
+      )}
+    </div>
+    <h3 className="font-semibold text-white mb-1 group-hover:text-pink-400 transition-colors text-base">
+      {game.name}
+    </h3>
+    <p className="text-sm text-gray-400">{game.count} akun</p>
+  </Link>
+);
+
+// Hook encapsulating data fetch + cancellation & basic caching (session lifetime)
+const memoryCache: Record<string, any> = {};
+const useHomePageData = () => {
   const [flashSaleProducts, setFlashSaleProducts] = useState<Product[]>([]);
+  const [popularGames, setPopularGames] = useState<PopularGame[]>([]);
   const [loading, setLoading] = useState(true);
-  const [popularGames, setPopularGames] = useState<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>>([]);
-
-  useEffect(() => {
-    let mounted = true;
-    const fetchData = async () => {
-      try {
-        // Lazy load services to reduce initial bundle
-        const [{ adminService }, { ProductService }] = await Promise.all([
-          import('../services/adminService.ts'),
-          import('../services/productService.ts')
-        ]);
-        
-        if (!mounted) return;
-
-        const [flashSales, popular] = await Promise.all([
-          adminService.getFlashSales({ onlyActive: true, notEndedOnly: true }),
-          ProductService.getPopularGames(20)
-        ]);
-
-        if (mounted) {
-          setFlashSaleProducts((flashSales.data || []).map((sale: any) => sale.product).filter(Boolean));
-          setPopularGames(popular);
-        }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      } finally {
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    fetchData();
-    return () => { mounted = false; };
+  const load = useCallback(async () => {
+    setLoading(true);
+    const cacheKey = 'home:data:v1';
+    if (memoryCache[cacheKey]) {
+      const cached = memoryCache[cacheKey];
+      setFlashSaleProducts(cached.flashSaleProducts);
+      setPopularGames(cached.popularGames);
+      setLoading(false);
+      // background refresh
+      void fetchFresh();
+      return;
+    }
+  await fetchFresh();
   }, []);
 
-  const features = [
+  const fetchFresh = async () => {
+    let mounted = true;
+    try {
+      const [{ adminService }, { ProductService }] = await Promise.all([
+        import('../services/adminService'),
+        import('../services/productService')
+      ]);
+      const [flashSales, popular] = await Promise.all([
+        adminService.getFlashSales({ onlyActive: true, notEndedOnly: true }),
+        ProductService.getPopularGames(20)
+      ]);
+      if (!mounted) return;
+      const fs = (flashSales.data || []).map((sale: any) => sale.product).filter(Boolean);
+      setFlashSaleProducts(fs);
+      setPopularGames(popular);
+      memoryCache['home:data:v1'] = { flashSaleProducts: fs, popularGames: popular, ts: Date.now() };
+    } catch (e) {
+      console.error('HomePage data error:', e);
+    } finally {
+      if (mounted) setLoading(false);
+    }
+    return () => { mounted = false; };
+  };
+
+  useEffect(() => { void load(); }, [load]);
+  return { flashSaleProducts, popularGames, loading, reload: load };
+};
+
+const HomePage: React.FC = () => {
+  const { flashSaleProducts, popularGames, loading, reload } = useHomePageData();
+
+  const features = useMemo(() => ([
     {
       icon: Shield,
       title: 'Aman & Terpercaya',
@@ -76,20 +140,48 @@ const HomePage: React.FC = () => {
       title: 'Support 24/7',
       description: 'Tim customer service siap membantu kapan saja'
     }
-  ];
+  ]), []);
 
   // Popular game categories are now loaded from database via ProductService.getPopularGames
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Memuat produk...</p>
+  const flashSaleSection = (
+    <section className="py-16" aria-labelledby="flash-sale-heading">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center">
+              <Zap className="text-white" size={24} />
+            </div>
+            <div>
+              <h2 id="flash-sale-heading" className="text-3xl font-bold text-white">Flash Sale</h2>
+              <p className="text-gray-300">Diskon hingga 70% - Terbatas!</p>
+            </div>
+          </div>
+          <Link
+            to="/flash-sales"
+            className="text-pink-300 hover:text-pink-200 font-medium flex items-center space-x-1"
+          >
+            <span>Lihat Semua</span>
+            <ChevronRight size={20} />
+          </Link>
         </div>
+        <HorizontalScroller ariaLabel="Produk Flash Sale" itemGapClass="gap-4">
+          {loading
+            ? Array.from({ length: 6 }).map((_, i) => <FlashSaleSkeleton key={i} />)
+            : flashSaleProducts.slice(0, 10).map((product, idx) => (
+                <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start">
+                  <ProductCard
+                    product={product}
+                    showFlashSaleTimer={true}
+                    priority={idx < 2}
+                    className="w-full h-auto"
+                  />
+                </div>
+              ))}
+        </HorizontalScroller>
       </div>
-    );
-  }
+    </section>
+  );
 
   return (
     <div className="min-h-screen bg-app-dark">
@@ -140,43 +232,7 @@ const HomePage: React.FC = () => {
       </section>
 
   {/* Flash Sales Section */}
-      {flashSaleProducts.length > 0 && (
-        <section className="py-16">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-pink-500 rounded-xl flex items-center justify-center">
-                  <Zap className="text-white" size={24} />
-                </div>
-                <div>
-                    <h2 id="flash-sale" className="text-3xl font-bold text-white">Flash Sale</h2>
-                    <p className="text-gray-300">Diskon hingga 70% - Terbatas!</p>
-                </div>
-              </div>
-              <Link 
-                to="/flash-sales"
-                  className="text-pink-300 hover:text-pink-200 font-medium flex items-center space-x-1"
-              >
-                <span>Lihat Semua</span>
-                <ChevronRight size={20} />
-              </Link>
-            </div>
-
-      <HorizontalScroller ariaLabel="Produk Flash Sale" itemGapClass="gap-4">
-        {flashSaleProducts.slice(0, 10).map((product, idx) => (
-        <div key={product.id} className="flex-shrink-0 w-[280px] sm:w-[320px] snap-start">
-                  <ProductCard
-                    product={product}
-                    showFlashSaleTimer={true}
-      priority={idx < 2}
-          className="w-full h-auto"
-                  />
-                </div>
-              ))}
-            </HorizontalScroller>
-          </div>
-        </section>
-      )}
+  {(loading || flashSaleProducts.length > 0) && flashSaleSection}
 
   {/* Game Categories */}
   <section className="py-16">
@@ -189,30 +245,12 @@ const HomePage: React.FC = () => {
           </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-            {popularGames.map((game) => (
-              <Link
-                key={game.id}
-                to={`/products?game=${encodeURIComponent(game.name)}`}
-                className="bg-black border border-pink-500/40 p-6 rounded-xl hover:shadow-[0_0_25px_4px_rgba(236,72,153,0.15)] transition-all duration-200 text-center group"
-              >
-                <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl mx-auto mb-4 flex items-center justify-center overflow-hidden">
-                  {game.logoUrl ? (
-                    <img 
-                      src={game.logoUrl} 
-                      alt={game.name}
-                      className="w-full h-full object-cover rounded-xl"
-                    />
-                  ) : (
-                    <TrendingUp className="text-white" size={32} />
-                  )}
-                </div>
-                <h3 className="font-semibold text-white mb-1 group-hover:text-pink-400 transition-colors text-base">
-                  {game.name}
-                </h3>
-                <p className="text-sm text-gray-400">{game.count} akun</p>
-              </Link>
-            ))}
-          </div>
+          {loading
+            ? Array.from({ length: 12 }).map((_, i) => (
+                <div key={i} className="h-44 rounded-xl bg-gradient-to-br from-gray-800/70 to-gray-900/70 animate-pulse" />
+              ))
+            : popularGames.map((game) => <PopularGameCard key={game.id} game={game} />)}
+        </div>
         </div>
       </section>
 
@@ -227,18 +265,9 @@ const HomePage: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-            {features.map((feature, index) => {
-              const Icon = feature.icon;
-              return (
-                <div key={index} className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-xl flex items-center justify-center mx-auto mb-4">
-                      <Icon className="text-white" size={24} />
-                  </div>
-                    <h3 className="text-lg font-semibold text-white mb-2">{feature.title}</h3>
-                    <p className="text-gray-300">{feature.description}</p>
-                </div>
-              );
-            })}
+            {features.map((f, i) => (
+              <FeatureCard key={i} icon={f.icon} title={f.title} description={f.description} />
+            ))}
           </div>
         </div>
       </section>

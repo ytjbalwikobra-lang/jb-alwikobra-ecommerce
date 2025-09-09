@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { useToast } from '../../components/Toast.tsx';
+import * as React from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { useToast } from '../../components/Toast';
 import { RefreshCw, Filter, RotateCcw } from 'lucide-react';
-import { AdminPillBadge } from '../../components/admin/AdminPillBadge.tsx';
+import { AdminPillBadge } from '../../components/admin/AdminPillBadge';
 
 type OrderRow = {
   id: string;
@@ -262,6 +263,7 @@ const AdminOrders: React.FC = () => {
           <div style={{background: '#1a1a1a', border: '1px solid #333333', borderRadius: '8px', overflow: 'hidden'}}>
             {/* Header */}
             <div style={{display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 2.5fr 1fr 1fr', background: '#2a2a2a', borderBottom: '1px solid #333333'}}>
+              <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Tanggal</div>
               <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Customer</div>
               <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>WhatsApp</div>
               <div style={{padding: '12px', color: '#ffffff', fontWeight: '600'}}>Jenis</div>
@@ -272,7 +274,11 @@ const AdminOrders: React.FC = () => {
             
             {/* Rows */}
             {filtered.map((r) => (
-              <div key={r.id} style={{display: 'grid', gridTemplateColumns: '2fr 1.5fr 1fr 2.5fr 1fr 1fr', borderBottom: '1px solid #333333', background: '#1a1a1a'}} className="hover:bg-gray-800">
+              <div key={r.id} style={{display: 'grid', gridTemplateColumns: '1.5fr 2fr 1.5fr 1fr 2.5fr 1fr 1fr', borderBottom: '1px solid #333333', background: '#1a1a1a'}} className="hover:bg-gray-800">
+                <div style={{padding: '12px', color: '#ffffff', fontSize: '12px'}}>
+                    <div>{new Date(r.created_at).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                    <div className="text-gray-400">{new Date(r.created_at).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
                 <div style={{padding: '12px', color: '#ffffff'}}>
                   <div style={{fontWeight: '500'}}>{r.customer_name}</div>
                   <div style={{fontSize: '12px', color: '#999999'}}>{r.customer_email}</div>

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { BannerService } from '../services/bannerService.ts';
-import ResponsiveImage from './ResponsiveImage.tsx';
+import { BannerService } from '../services/bannerService';
+import ResponsiveImage from './ResponsiveImage';
 
 interface Slide {
   id: string;

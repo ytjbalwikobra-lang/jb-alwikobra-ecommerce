@@ -1,4 +1,4 @@
-import { supabase } from '../services/supabase.ts';
+import { supabase } from '../services/supabase';
 
 // Fix RLS policies directly through the client
 export const fixRLSPolicies = async (): Promise<{ success: boolean; message: string }> => {

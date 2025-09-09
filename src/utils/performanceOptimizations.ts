@@ -1,32 +1,23 @@
 // React Performance Optimization Configuration
 // This file contains critical performance improvements for mobile devices
 
-import { StrictMode } from 'react';
-
-// Preload critical chunks for better perceived performance
+// Preload critical route bundles to improve subsequent navigation latency.
 export const preloadCriticalChunks = () => {
-  // Preload the most commonly visited pages after HomePage
-  import { lazy } from 'react';
+  const chunks: Array<() => Promise<unknown>> = [
+    () => import('../pages/ProductsPage'),
+    () => import('../pages/ProfilePage'),
+  ];
 
-// Remove incorrect imports and use existing pages
-const HomePage = lazy(() => import('../pages/HomePage.tsx'));
-const ProductsPage = lazy(() => import('../pages/ProductsPage.tsx'));
-const ProfilePage = lazy(() => import('../pages/ProfilePage.tsx'));
-  
-  // Use requestIdleCallback for better performance
-  if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => {
-      criticalChunks.forEach(chunk => {
-        chunk().catch(() => {}); // Silently fail if preload fails
-      });
+  const run = () => {
+    chunks.forEach(loader => {
+      try { loader().catch(() => {}); } catch {}
     });
+  };
+
+  if ('requestIdleCallback' in window) {
+    (window as any).requestIdleCallback(run);
   } else {
-    // Fallback for browsers without requestIdleCallback
-    setTimeout(() => {
-      criticalChunks.forEach(chunk => {
-        chunk().catch(() => {});
-      });
-    }, 2000);
+    setTimeout(run, 1500);
   }
 };
 
@@ -106,15 +97,19 @@ export const initPerformanceMonitoring = () => {
     // First Input Delay
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        console.log('FID:', entry.processingStart - entry.startTime);
+        const e: any = entry as any; // Cast for FID specific timing fields
+        if (e && typeof e.processingStart === 'number') {
+          console.log('FID:', e.processingStart - e.startTime);
+        }
       }
     }).observe({ entryTypes: ['first-input'] });
 
     // Cumulative Layout Shift
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        if (!entry.hadRecentInput) {
-          console.log('CLS:', entry.value);
+        const e: any = entry as any;
+        if (e && !e.hadRecentInput) {
+          console.log('CLS:', e.value);
         }
       }
     }).observe({ entryTypes: ['layout-shift'] });

@@ -1,5 +1,5 @@
 import React from 'react';
-import { SettingsService } from '../services/settingsService.ts';
+import { SettingsService } from '../services/settingsService';
 import { 
   HelpCircle, 
   ShieldCheck, 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ChevronDown, Search, AlertCircle, CheckCircle } from 'lucide-react';
-import { COUNTRIES, type Country } from '../utils/countryData.ts';
+import { COUNTRIES, type Country } from '../utils/countryData';
 
 interface PhoneInputProps {
   value: string;

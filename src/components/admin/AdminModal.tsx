@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AdminButton from './AdminButton.tsx';
+import AdminButton from './AdminButton';
 
 interface AdminModalProps {
   isOpen: boolean;

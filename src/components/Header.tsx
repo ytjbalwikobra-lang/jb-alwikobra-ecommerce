@@ -1,8 +1,8 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, MessageSquare, Home, Settings, HelpCircle, User } from 'lucide-react';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
-import { supabase } from '../services/supabase.ts';
+import { useAuth } from '../contexts/TraditionalAuthContext';
+import { supabase } from '../services/supabase';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -16,7 +16,7 @@ const Header: React.FC = () => {
     let mounted = true;
     const loadSettings = async () => {
       try {
-        const { SettingsService } = await import('../services/settingsService.ts');
+  const { SettingsService } = await import('../services/settingsService');
         if (!mounted) return;
         const s = await SettingsService.get();
         if (mounted) {

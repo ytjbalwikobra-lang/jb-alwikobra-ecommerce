@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { SettingsService } from '../services/settingsService.ts';
-import { WebsiteSettings } from '../types/index.ts';
-import { clientCache } from '../services/clientCacheService.ts';
+import { SettingsService } from '../services/settingsService';
+import { WebsiteSettings } from '../types';
+import { clientCache } from '../services/clientCacheService';
 
 export const useSettings = () => {
   const [settings, setSettings] = useState<WebsiteSettings | null>(null);
