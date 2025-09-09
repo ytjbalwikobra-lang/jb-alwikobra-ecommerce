@@ -4,11 +4,17 @@
 # Production build
 /build
 
-# Misc
-.DS_Store
+# Environment files - NEVER commit these!
 .env
 .env.local
-.env.*.local
+.env.*
+*.env
+
+# Development backup files - NEVER commit these!
+dev-files-backup/
+
+# Misc
+.DS_Store
 
 # Logs
 npm-debug.log*
