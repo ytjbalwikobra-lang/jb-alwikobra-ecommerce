@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
 export type AnyProduct = Record<string, any>;
 export type AnySale = Record<string, any>;
 

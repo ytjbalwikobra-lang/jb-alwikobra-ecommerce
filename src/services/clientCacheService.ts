@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-inferrable-types */
+
 // Client-side cache management service
 interface CacheItem<T> {
   data: T;

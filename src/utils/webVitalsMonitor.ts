@@ -18,6 +18,9 @@ interface PerformanceThresholds {
   TTFB: { good: number; poor: number };
 }
 
+// Type for web-vitals callback function
+type ReportHandler = (metric: WebVitalMetric) => void;
+
 class WebVitalsMonitor {
   private static instance: WebVitalsMonitor;
   private metrics: Map<string, WebVitalMetric> = new Map();
@@ -41,8 +44,7 @@ class WebVitalsMonitor {
 
   constructor() {
     if (typeof window !== 'undefined') {
-  // Fire-and-forget initialization; explicitly ignored with void
-  void this.initializeWebVitals();
+      void this.initializeWebVitals();
     }
   }
 
@@ -51,13 +53,12 @@ class WebVitalsMonitor {
       // Dynamic import of web-vitals library
       const { getCLS, getFCP, getFID, getLCP, getTTFB } = await import('web-vitals');
 
-  // Monitor all Core Web Vitals (type-safe wrapper)
-  const handle = (m: unknown) => this.onMetric(m as unknown as WebVitalMetric);
-  getCLS(handle);
-  getFCP(handle);
-  getFID(handle);
-  getLCP(handle);
-  getTTFB(handle);
+      // Monitor all Core Web Vitals
+      getCLS(this.onMetric.bind(this) as ReportHandler);
+      getFCP(this.onMetric.bind(this) as ReportHandler);
+      getFID(this.onMetric.bind(this) as ReportHandler);
+      getLCP(this.onMetric.bind(this) as ReportHandler);
+      getTTFB(this.onMetric.bind(this) as ReportHandler);
 
       console.log('🔍 Web Vitals monitoring initialized');
     } catch (error) {
@@ -162,7 +163,7 @@ class WebVitalsMonitor {
     Array.from(metrics.entries()).forEach(([name, metric]) => {
       const emoji = metric.rating === 'good' ? '✅' : metric.rating === 'needs-improvement' ? '⚠️' : '❌';
       const unit = name === 'CLS' ? '' : 'ms';
-      const threshold = WebVitalsMonitor.THRESHOLDS[name];
+      const threshold = WebVitalsMonitor.THRESHOLDS[name as keyof PerformanceThresholds];
       report += `${emoji} ${name}: ${metric.value.toFixed(2)}${unit} (${metric.rating})\n`;
       report += `   Target: ≤${threshold.good}${unit} (good), ≤${threshold.poor}${unit} (poor)\n`;
     });
@@ -222,7 +223,7 @@ export const useWebVitals = () => {
   React.useEffect(() => {
     const monitor = WebVitalsMonitor.getInstance();
     
-    const unsubscribe = monitor.onMetricChange((metric) => {
+    const unsubscribe = monitor.onMetricChange(() => {
       setMetrics(monitor.getMetrics());
       setScore(monitor.getPerformanceScore());
     });
@@ -244,7 +245,7 @@ export const initWebVitalsMonitoring = () => {
   
   // Send metrics to analytics
   monitor.onMetricChange(() => {
-    monitor.sendToAnalytics(metric);
+    monitor.sendToAnalytics();
   });
 
   return monitor;

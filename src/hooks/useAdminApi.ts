@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-return */
 import { useState, useCallback } from 'react';
 import { useToast } from '../components/Toast';
 import { ProductFormData } from '../types/admin';

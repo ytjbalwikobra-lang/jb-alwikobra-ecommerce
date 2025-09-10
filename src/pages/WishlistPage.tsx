@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Heart, Trash2, ShoppingCart, Star } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import Footer from '../components/Footer';

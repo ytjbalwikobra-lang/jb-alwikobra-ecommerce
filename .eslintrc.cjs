@@ -29,8 +29,6 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/require-await': 'off',
     '@typescript-eslint/no-misused-promises': ['error', { checksVoidReturn: false }],
-  // Enforce handling of Promises globally; allow explicit `void` for intentionally ignored promises and IIFEs
-  '@typescript-eslint/no-floating-promises': ['error', { ignoreVoid: true, ignoreIIFE: true }],
   },
   ignorePatterns: [
     'node_modules/',

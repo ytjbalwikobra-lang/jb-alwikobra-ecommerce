@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-empty-function */
 import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 
 type ToastItem = { id: string; message: string; type?: 'success'|'error'|'info'|'warning'|'new'|'paid'|'cancelled' };

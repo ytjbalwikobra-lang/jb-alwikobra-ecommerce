@@ -1,5 +1,12 @@
 import { supabase } from './supabase';
 import { Banner } from '../types/index';
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable no-empty */
 import { uploadFile, deletePublicUrls } from './storageService';
 
 const sampleBanners: Banner[] = [

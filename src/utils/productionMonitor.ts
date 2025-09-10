@@ -20,12 +20,18 @@ export class ProductionMonitor {
   private initializeErrorHandling(): void {
     // Global error handler
     window.addEventListener('error', (event) => {
-      this.logError('JavaScript Error', event.error?.message || event.message);
+      const errorMessage = (event.error && typeof event.error === 'object' && 'message' in event.error) 
+        ? String((event.error as { message: unknown }).message) 
+        : event.message;
+      this.logError('JavaScript Error', errorMessage);
     });
 
     // Unhandled promise rejection handler
     window.addEventListener('unhandledrejection', (event) => {
-      this.logError('Unhandled Promise Rejection', event.reason?.message || String(event.reason));
+      const reasonMessage = (event.reason && typeof event.reason === 'object' && 'message' in event.reason) 
+        ? String((event.reason as { message: unknown }).message) 
+        : String(event.reason);
+      this.logError('Unhandled Promise Rejection', reasonMessage);
     });
 
     // Resource loading error handler

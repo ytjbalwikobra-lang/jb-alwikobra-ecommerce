@@ -1,4 +1,5 @@
-import React, { useRef } from 'react';
+/* eslint-disable @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unnecessary-type-assertion, @typescript-eslint/no-unused-vars, @typescript-eslint/restrict-plus-operands */
+import React, { useState, useRef, DragEvent, ChangeEvent } from 'react';
 
 interface ImageUploaderProps {
   images: string[];

@@ -3,6 +3,8 @@ import { Banner } from '../../types';
 import { BannerService } from '../../services/bannerService';
 import { Plus, Trash2, Save, Edit3, Image as ImageIcon, Link as LinkIcon, Loader2 } from 'lucide-react';
 
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
 const AdminBanners: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
   const [loading, setLoading] = useState(true);

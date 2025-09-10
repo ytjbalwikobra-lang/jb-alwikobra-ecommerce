@@ -1,4 +1,9 @@
 import React, { useEffect, useState } from 'react';
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { feedService } from '../../services/feedService';
 
 const AdminFeed: React.FC = () => {

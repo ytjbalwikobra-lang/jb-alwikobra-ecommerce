@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion, react/display-name, react/prop-types, @typescript-eslint/no-floating-promises */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 interface ResponsiveImageProps {

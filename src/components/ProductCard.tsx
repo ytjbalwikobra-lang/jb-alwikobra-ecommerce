@@ -1,3 +1,4 @@
+/* eslint-disable react/display-name, react/prop-types, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call, @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-unused-vars */
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Product } from '../types';

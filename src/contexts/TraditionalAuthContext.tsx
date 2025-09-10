@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-floating-promises, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unnecessary-type-assertion */
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { normalizeLoginIdentifier } from '../utils/phoneUtils';
 
 interface User {

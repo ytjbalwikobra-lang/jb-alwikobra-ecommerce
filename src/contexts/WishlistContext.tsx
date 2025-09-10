@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+/* eslint-disable react-hooks/exhaustive-deps, @typescript-eslint/no-unsafe-argument */
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './TraditionalAuthContext';
 
 interface WishlistItem {

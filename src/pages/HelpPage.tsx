@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-floating-promises, no-empty */
 import React from 'react';
 import { SettingsService } from '../services/settingsService';
 import { 

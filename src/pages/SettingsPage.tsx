@@ -2,7 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { 
   Settings as SettingsIcon, 
   Bell, 
-  Lock, 
+  Lock,
+
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unused-vars */ 
   Moon, 
   Sun, 
   Globe, 

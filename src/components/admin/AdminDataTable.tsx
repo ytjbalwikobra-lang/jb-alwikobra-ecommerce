@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-assignment */
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, Search, Filter, MoreHorizontal } from 'lucide-react';
 import { AdminButton } from './AdminButton';

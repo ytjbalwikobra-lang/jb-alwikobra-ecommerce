@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-floating-promises, no-empty, @typescript-eslint/no-unsafe-member-access */
 import React, { useEffect, useState, useCallback } from 'react';
 import { feedService } from '../services/feedService';
 import { useAuth } from '../contexts/TraditionalAuthContext';

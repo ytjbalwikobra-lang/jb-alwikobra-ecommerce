@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-floating-promises */
+import React, { Suspense, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';

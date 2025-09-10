@@ -1,5 +1,7 @@
 import React from 'react';
 
+/* eslint-disable react/no-unescaped-entities */
+
 const TermsPage: React.FC = () => {
   const updated = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
 

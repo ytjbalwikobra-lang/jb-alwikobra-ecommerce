@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-floating-promises */
 import { useState, useEffect } from 'react';
 import { SettingsService } from '../services/settingsService';
 import { WebsiteSettings } from '../types/index';

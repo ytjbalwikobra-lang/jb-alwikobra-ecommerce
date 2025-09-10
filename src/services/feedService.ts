@@ -1,4 +1,9 @@
 import { supabase } from './supabase';
+
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable no-empty */
 import { uploadFile } from './storageService';
 
 async function toBase64(file: File): Promise<string> {

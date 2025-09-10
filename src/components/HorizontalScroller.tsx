@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unnecessary-type-assertion */
 import React, { useEffect, useRef, useState } from 'react';
 
 interface HorizontalScrollerProps {

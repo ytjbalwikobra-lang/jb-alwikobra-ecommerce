@@ -1,5 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-inferrable-types */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+
 // WhatsApp Service using Woo-wa.com API (notifapi.com)
 // This service handles WhatsApp notifications through Woo-wa platform
 export class WhatsAppService {

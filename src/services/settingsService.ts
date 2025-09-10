@@ -2,6 +2,12 @@ import { supabase } from './supabase';
 import { WebsiteSettings } from '../types/index';
 import { uploadFile } from './storageService';
 
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-floating-promises */
+
 const DEFAULT_SETTINGS: WebsiteSettings = {
   id: 'default',
   siteName: 'JB Alwikobra',

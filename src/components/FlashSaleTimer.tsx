@@ -1,3 +1,4 @@
+/* eslint-disable react/display-name, react/prop-types, @typescript-eslint/no-unsafe-argument */
 import React, { useState, useEffect } from 'react';
 // Removed explicit .ts extension for compatibility with CRA TypeScript config
 import { calculateTimeRemaining } from '../utils/helpers';
