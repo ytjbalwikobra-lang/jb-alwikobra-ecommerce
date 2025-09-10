@@ -1,0 +1,177 @@
+import { useState, useEffect } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { X, ShoppingCart, CreditCard, XCircle } from 'lucide-react';
+import { Notification } from '@/lib/types';
+import { api } from '@/lib/api';
+
+export default function FloatingNotifications() {
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  useEffect(() => {
+    // Load initial notifications
+    loadNotifications();
+    
+    // Simulate real-time notifications
+    const interval = setInterval(() => {
+      // Randomly add new notifications for demo
+      if (Math.random() > 0.8) {
+        addRandomNotification();
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadNotifications = async () => {
+    try {
+      const data = await api.getAdminNotifications();
+      setNotifications(data);
+    } catch (error) {
+      console.error('Failed to load notifications:', error);
+    }
+  };
+
+  const addRandomNotification = () => {
+    const types: Notification['type'][] = ['new_order', 'payment_received', 'order_cancelled'];
+    const randomType = types[Math.floor(Math.random() * types.length)];
+    const orderId = `ORDER_${Date.now()}`;
+    
+    const messages = {
+      new_order: `Pesanan baru #${orderId} untuk Mobile Legends account`,
+      payment_received: `Pembayaran diterima untuk pesanan #${orderId}`,
+      order_cancelled: `Pesanan #${orderId} dibatalkan oleh customer`
+    };
+
+    const titles = {
+      new_order: 'Pesanan Baru',
+      payment_received: 'Pembayaran Diterima',
+      order_cancelled: 'Pesanan Dibatalkan'
+    };
+
+    const newNotification: Notification = {
+      id: `notif_${Date.now()}`,
+      type: randomType,
+      title: titles[randomType],
+      message: messages[randomType],
+      orderId,
+      isRead: false,
+      createdAt: new Date()
+    };
+
+    setNotifications(prev => [newNotification, ...prev]);
+  };
+
+  const dismissNotification = (id: string) => {
+    setNotifications(prev => prev.filter(notif => notif.id !== id));
+  };
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev => 
+      prev.map(notif => 
+        notif.id === id ? { ...notif, isRead: true } : notif
+      )
+    );
+  };
+
+  const getNotificationIcon = (type: Notification['type']) => {
+    switch (type) {
+      case 'new_order':
+        return <ShoppingCart className="h-4 w-4" />;
+      case 'payment_received':
+        return <CreditCard className="h-4 w-4" />;
+      case 'order_cancelled':
+        return <XCircle className="h-4 w-4" />;
+      default:
+        return <ShoppingCart className="h-4 w-4" />;
+    }
+  };
+
+  const getNotificationColor = (type: Notification['type']) => {
+    switch (type) {
+      case 'new_order':
+        return 'bg-blue-500';
+      case 'payment_received':
+        return 'bg-green-500';
+      case 'order_cancelled':
+        return 'bg-red-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
+  if (notifications.length === 0) return null;
+
+  return (
+    <div className="fixed top-4 right-4 z-50 space-y-2 max-w-sm">
+      {notifications.slice(0, 5).map((notification) => (
+        <Card 
+          key={notification.id}
+          className={`shadow-lg border-l-4 ${
+            notification.isRead ? 'opacity-75' : 'animate-in slide-in-from-right'
+          }`}
+          style={{ borderLeftColor: getNotificationColor(notification.type).replace('bg-', '') }}
+        >
+          <CardContent className="p-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-2 flex-1">
+                <div className={`p-1 rounded-full text-white ${getNotificationColor(notification.type)}`}>
+                  {getNotificationIcon(notification.type)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <h4 className="font-medium text-sm">{notification.title}</h4>
+                    {!notification.isRead && (
+                      <Badge variant="secondary" className="text-xs">
+                        Baru
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2">
+                    {notification.message}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {notification.createdAt.toLocaleTimeString('id-ID', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                onClick={() => dismissNotification(notification.id)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+            
+            {!notification.isRead && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full mt-2 h-6 text-xs"
+                onClick={() => markAsRead(notification.id)}
+              >
+                Tandai Sudah Dibaca
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      ))}
+      
+      {notifications.length > 5 && (
+        <Card className="shadow-lg">
+          <CardContent className="p-2 text-center">
+            <p className="text-xs text-muted-foreground">
+              +{notifications.length - 5} notifikasi lainnya
+            </p>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  );
+}
