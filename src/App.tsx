@@ -9,6 +9,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
 import './App.css';
 import RequireAdmin from './components/RequireAdmin';
+import ProtectedRoute from './components/ProtectedRoute';
 import UnderMaintenancePage from './pages/UnderMaintenancePageAnimated';
 import { ToastProvider } from './components/Toast';
 import { ConfirmationProvider } from './components/ConfirmationModal';
@@ -165,8 +166,169 @@ function App() {
                 <ScrollToTop />
                 <FloatingFeedNotification />
                 <Routes>
-                  {/* MAINTENANCE MODE - ALL ROUTES show maintenance page */}
-                  <Route path="*" element={
+                  {/* Public Routes */}
+                  <Route path="/" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <HomePage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/auth" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <TraditionalAuthPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/products" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <ProductsPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/product/:id" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <ProductDetailPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/flash-sales" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <FlashSalesPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/sell" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <SellPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/payment-status" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PaymentStatusPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/payment-success" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <PaymentSuccessPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/help" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <HelpPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/terms" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <TermsPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/feed" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <FeedPage />
+                    </Suspense>
+                  } />
+                  
+                  <Route path="/no-access" element={
+                    <Suspense fallback={<PageLoader />}>
+                      <NoAccessPage />
+                    </Suspense>
+                  } />
+
+                  {/* Protected Routes */}
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<PageLoader />}>
+                        <ProfilePage />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/wishlist" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<PageLoader />}>
+                        <WishlistPage />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<PageLoader />}>
+                        <SettingsPage />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+                  
+                  <Route path="/orders" element={
+                    <ProtectedRoute>
+                      <Suspense fallback={<PageLoader />}>
+                        <OrderHistoryPage />
+                      </Suspense>
+                    </ProtectedRoute>
+                  } />
+
+                  {/* Admin Routes */}
+                  <Route path="/admin" element={<RequireAdmin />}>
+                    <Route path="" element={
+                      <Suspense fallback={<PageLoader />}>
+                        <AdminLayoutWrapper />
+                      </Suspense>
+                    }>
+                      <Route index element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminDashboard />
+                        </Suspense>
+                      } />
+                      <Route path="products" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminProducts />
+                        </Suspense>
+                      } />
+                      <Route path="flash-sales" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminFlashSales />
+                        </Suspense>
+                      } />
+                      <Route path="users" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminUsers />
+                        </Suspense>
+                      } />
+                      <Route path="banners" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminBanners />
+                        </Suspense>
+                      } />
+                      <Route path="settings" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminSettings />
+                        </Suspense>
+                      } />
+                      <Route path="orders" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminOrders />
+                        </Suspense>
+                      } />
+                      <Route path="game-titles" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminGameTitles />
+                        </Suspense>
+                      } />
+                      <Route path="feed" element={
+                        <Suspense fallback={<PageLoader />}>
+                          <AdminFeed />
+                        </Suspense>
+                      } />
+                    </Route>
+                  </Route>
+
+                  {/* Maintenance Route (for emergency use) */}
+                  <Route path="/maintenance" element={
                     <Suspense fallback={<PageLoader />}>
                       <UnderMaintenancePage />
                     </Suspense>
