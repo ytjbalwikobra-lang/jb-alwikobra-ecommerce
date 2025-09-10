@@ -75,7 +75,7 @@ const FeedPage: React.FC = () => {
   // Optimized state management
   const [page, setPage] = useState(1);
   const [filter, setFilter] = useState<'all'|'announcement'|'review'>('all');
-  const { data: feedData, loading, error, refresh } = useOptimizedFeedData(page, filter, 10);
+  const { data: feedData, loading, refresh } = useOptimizedFeedData(page, filter, 10);
 
   // Legacy state for compatibility with existing UI components
   const [posts, setPosts] = useState<FeedItem[]>([]);
@@ -125,7 +125,6 @@ const FeedPage: React.FC = () => {
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
   const [newPostPreview, setNewPostPreview] = useState<string | null>(null);
   const [newReview, setNewReview] = useState<{title:string;content:string;rating:number;product_id:string}>({ title: '', content: '', rating: 5, product_id: '' });
-  type EligibleProduct = { id: string; name: string };
   
   // Use optimized data instead of separate API calls
   const notReviewedProducts = feedData?.notReviewedProducts || [];
@@ -554,7 +553,7 @@ const FeedPage: React.FC = () => {
                 <label className="block text-xs text-gray-400 mb-2">Produk</label>
                 <select value={newReview.product_id} onChange={e=>setNewReview(p=>({...p,product_id:e.target.value}))} className="w-full bg-black/70 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30">
                   <option className="bg-black text-white" value="">Pilih produk yang pernah dibeli</option>
-                  {notReviewedProducts.map(p => <option className="bg-black text-white" key={p.id} value={p.id}>{p.name}</option>)}
+                  {Array.isArray(notReviewedProducts) && notReviewedProducts.map(p => <option className="bg-black text-white" key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div>

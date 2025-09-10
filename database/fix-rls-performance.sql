@@ -30,12 +30,27 @@ USING (user_id = (select auth.uid()));
 DROP POLICY IF EXISTS "banners_read_all" ON public.banners;
 DROP POLICY IF EXISTS "banners_write_auth" ON public.banners;
 
--- Create single consolidated policy for banners
-CREATE POLICY "banners_unified_policy" ON public.banners
-FOR ALL
+-- Create consolidated policies for banners
+CREATE POLICY "banners_read_policy" ON public.banners
+FOR SELECT
+TO authenticated
+USING (true);
+
+CREATE POLICY "banners_insert_policy" ON public.banners
+FOR INSERT
+TO authenticated
+WITH CHECK (true);
+
+CREATE POLICY "banners_update_policy" ON public.banners
+FOR UPDATE
 TO authenticated
 USING (true)
 WITH CHECK (true);
+
+CREATE POLICY "banners_delete_policy" ON public.banners
+FOR DELETE
+TO authenticated
+USING (true);
 
 -- -------------------------
 -- 2.2 FIX FEED_POSTS TABLE  
@@ -51,12 +66,22 @@ FOR SELECT
 TO anon, authenticated, authenticator, dashboard_user
 USING (is_deleted = false);
 
--- Create separate policy for write operations
-CREATE POLICY "feed_posts_write_auth" ON public.feed_posts
-FOR INSERT, UPDATE, DELETE
+-- Create separate policies for write operations
+CREATE POLICY "feed_posts_insert_auth" ON public.feed_posts
+FOR INSERT
+TO authenticated
+WITH CHECK (user_id = (select auth.uid()));
+
+CREATE POLICY "feed_posts_update_auth" ON public.feed_posts
+FOR UPDATE
 TO authenticated
 USING (user_id = (select auth.uid()))
 WITH CHECK (user_id = (select auth.uid()));
+
+CREATE POLICY "feed_posts_delete_auth" ON public.feed_posts
+FOR DELETE
+TO authenticated
+USING (user_id = (select auth.uid()));
 
 -- -------------------------
 -- 2.3 FIX FLASH_SALES TABLE
@@ -134,17 +159,47 @@ SELECT COUNT(*) as game_titles_count FROM public.game_titles;
 -- =============================================================================
 
 -- Create admin policies for dashboard_user role
-CREATE POLICY "orders_admin_access" ON public.orders
-FOR ALL
+CREATE POLICY "orders_admin_select" ON public.orders
+FOR SELECT
+TO dashboard_user
+USING (true);
+
+CREATE POLICY "orders_admin_insert" ON public.orders
+FOR INSERT
+TO dashboard_user
+WITH CHECK (true);
+
+CREATE POLICY "orders_admin_update" ON public.orders
+FOR UPDATE
 TO dashboard_user
 USING (true)
 WITH CHECK (true);
 
-CREATE POLICY "feed_posts_admin_access" ON public.feed_posts
-FOR ALL
+CREATE POLICY "orders_admin_delete" ON public.orders
+FOR DELETE
+TO dashboard_user
+USING (true);
+
+CREATE POLICY "feed_posts_admin_select" ON public.feed_posts
+FOR SELECT
+TO dashboard_user
+USING (true);
+
+CREATE POLICY "feed_posts_admin_insert" ON public.feed_posts
+FOR INSERT
+TO dashboard_user
+WITH CHECK (true);
+
+CREATE POLICY "feed_posts_admin_update" ON public.feed_posts
+FOR UPDATE
 TO dashboard_user
 USING (true)
 WITH CHECK (true);
+
+CREATE POLICY "feed_posts_admin_delete" ON public.feed_posts
+FOR DELETE
+TO dashboard_user
+USING (true);
 
 -- =============================================================================
 -- SUCCESS CRITERIA:

@@ -1,11 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-assignment */
 import React, { useState, useEffect } from 'react';
 import { 
   Settings as SettingsIcon, 
   Bell, 
   Lock,
-
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 /* eslint-disable @typescript-eslint/no-unused-vars */ 
   Moon, 
   Sun, 

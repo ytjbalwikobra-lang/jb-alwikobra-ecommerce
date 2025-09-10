@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-argument, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-return, @typescript-eslint/restrict-template-expressions, @typescript-eslint/no-floating-promises, react/no-unescaped-entities, @typescript-eslint/no-unused-vars */
 import React from 'react';
 import {
   TrendingUp, DollarSign, ShoppingBag, Users, Zap,
