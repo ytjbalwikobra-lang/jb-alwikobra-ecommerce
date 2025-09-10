@@ -20,7 +20,7 @@ SELECT
     p.created_at,
     p.updated_at,
     p.category as category_name,
-    gt.title as game_title,
+    gt.name as game_title,
     CASE 
         WHEN p.original_price IS NOT NULL AND p.original_price > p.price 
         THEN p.price 
@@ -312,8 +312,8 @@ BEGIN
         COALESCE(fp.likes_count, 0) as likes_count,
         COALESCE(fp.comments_count, 0) as comments_count,
         fp.created_at,
-        COALESCE(u.display_name, 'Anonymous') as author_name,
-        COALESCE(gt.title, '') as game_title,
+        COALESCE(u.email, 'Anonymous') as author_name,
+        COALESCE(gt.name, '') as game_title,
         COALESCE(fp.category, '') as category_name
     FROM public.feed_posts fp
     LEFT JOIN auth.users u ON fp.author_id = u.id
@@ -354,7 +354,7 @@ BEGIN
         p.original_price,
         p.images,
         COALESCE(p.category, '') as category_name,
-        COALESCE(gt.title, '') as game_title,
+        COALESCE(gt.name, '') as game_title,
         CASE WHEN p.is_active THEN 'available' ELSE 'unavailable' END as availability_status,
         CASE 
             WHEN p.original_price IS NOT NULL AND p.original_price > p.price 
@@ -540,6 +540,10 @@ GRANT EXECUTE ON FUNCTION public.get_dashboard_analytics() TO dashboard_user;
 --    - Added SET search_path = '' to all functions (25 fixes)
 --    - Secured materialized view access
 --    - Created controlled dashboard analytics access
+
+-- ✅ COLUMN REFERENCE FIXES:
+--    - Fixed gt.title → gt.name (game_titles table uses 'name' column)
+--    - Fixed u.display_name → u.email (auth.users table uses 'email' for identification)
 
 -- ✅ REMAINING ITEMS (Manual Configuration Needed):
 --    - Auth MFA settings (enable in Supabase Dashboard > Auth > Settings)
