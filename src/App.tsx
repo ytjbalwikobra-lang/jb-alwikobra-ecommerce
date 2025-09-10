@@ -8,6 +8,7 @@ import ScrollToTop from './components/ScrollToTop';
 import Footer from './components/Footer';
 import './App.css';
 import RequireAdmin from './components/RequireAdmin';
+import UnderMaintenancePage from './pages/UnderMaintenancePageAnimated';
 import { ToastProvider } from './components/Toast';
 import { ConfirmationProvider } from './components/ConfirmationModal';
 import { AuthProvider } from './contexts/TraditionalAuthContext';
@@ -135,114 +136,13 @@ function App() {
               >
                 <ScrollToTop />
                 <Routes>
-                {/* Admin branch without global header/footer */}
-                <Route element={<RequireAdmin />}>
-          <Route path="/admin" element={
+                  {/* MAINTENANCE MODE - ALL ROUTES show maintenance page */}
+                  <Route path="*" element={
                     <Suspense fallback={<PageLoader />}>
-            <AdminLayoutWrapper />
+                      <UnderMaintenancePage />
                     </Suspense>
-                  }>
-                    <Route index element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminDashboard />
-                      </Suspense>
-                    } />
-                    <Route path="products" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminProducts />
-                      </Suspense>
-                    } />
-                    <Route path="flash-sales" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminFlashSales />
-                      </Suspense>
-                    } />
-                    <Route path="game-titles" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminGameTitles />
-                      </Suspense>
-                    } />
-                    <Route path="feed" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminFeed />
-                      </Suspense>
-                    } />
-                    <Route path="users" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminUsers />
-                      </Suspense>
-                    } />
-                    <Route path="orders" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminOrders />
-                      </Suspense>
-                    } />
-                    <Route path="banners" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminBanners />
-                      </Suspense>
-                    } />
-                    <Route path="settings" element={
-                      <Suspense fallback={<PageLoader />}>
-                        <AdminSettings />
-                      </Suspense>
-                    } />
-                  </Route>
-                </Route>
-                
-                {/* Public routes with global layout */}
-                <Route path="*" element={
-                  <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200" style={{ minHeight: 'calc(var(--vh, 1vh) * 100)' }}>
-                    <Header />
-                    <main className="flex-1 pb-[calc(64px+env(safe-area-inset-bottom))] md:pb-0">
-                      {!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY ? (
-                        <div className="max-w-3xl mx-auto p-4">
-                          <div className="bg-black/60 border border-yellow-500/40 rounded-lg p-4 mb-4">
-                            <h2 className="text-yellow-400 font-semibold mb-2">⚙️ Setup Required</h2>
-                            <p className="text-gray-300 text-sm mb-3">
-                              Supabase configuration is missing. Please set up your environment variables.
-                            </p>
-                            <p className="text-xs text-gray-400">
-                              Demo mode available with limited functionality.
-                            </p>
-                          </div>
-                        </div>
-                      ) : null}
-                      
-                      <Suspense fallback={<PageLoader />}>
-                        <Routes>
-                          {/* Core pages - loaded immediately */}
-                          <Route path="/" element={<HomePage />} />
-                          <Route path="/auth" element={<TraditionalAuthPage />} />
-                          
-                          {/* Lazy loaded pages */}
-                          <Route path="/products" element={<ProductsPage />} />
-                          <Route path="/products/:id" element={<ProductDetailPage />} />
-                          <Route path="/flash-sales" element={<FlashSalesPage />} />
-                          <Route path="/sell" element={<SellPage />} />
-                          <Route path="/help" element={<HelpPage />} />
-                          <Route path="/feed" element={<FeedPage />} />
-                          <Route path="/profile" element={<ProfilePage />} />
-                          <Route path="/wishlist" element={<WishlistPage />} />
-                          <Route path="/settings" element={<SettingsPage />} />
-                          <Route path="/terms" element={<TermsPage />} />
-                          <Route path="/payment-status" element={<PaymentStatusPage />} />
-                          <Route path="/payment-success" element={<PaymentSuccessPage />} />
-                          <Route path="/no-access" element={<NoAccessPage />} />
-                          <Route path="/orders" element={<OrderHistoryPage />} />
-                          <Route path="*" element={
-                            <div className="min-h-screen flex items-center justify-center">
-                              <p className="text-gray-600">Halaman tidak ditemukan</p>
-                            </div>
-                          } />
-                        </Routes>
-                      </Suspense>
-                    </main>
-                    <Footer />
-                    <MobileBottomNav />
-                  </div>
-                } />
-              </Routes>
+                  } />
+                </Routes>
               <Analytics />
               <SpeedInsights />
             </Router>
