@@ -1,0 +1,6 @@
+node_modules/
+build/
+*.backup.tsx
+*.backup.ts
+fix-*.js
+**/*.backup.*

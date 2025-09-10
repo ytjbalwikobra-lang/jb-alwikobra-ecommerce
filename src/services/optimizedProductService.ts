@@ -117,7 +117,7 @@ class OptimizedProductService {
       if (error) throw error;
 
       const result: PaginatedResponse<Product> = {
-        data: (data || []).map(this.mapDatabaseProduct),
+        data: (data || []).map((item) => this.mapDatabaseProduct(item)),
         total: count || 0,
         page,
         limit,

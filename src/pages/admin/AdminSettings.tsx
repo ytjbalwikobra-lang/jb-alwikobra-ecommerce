@@ -260,7 +260,7 @@ const AdminSettings: React.FC = () => {
                 <input type="file" className="hidden" accept="image/*" onChange={handleLogoChange} />
               </label>
               {(logoPreview || settings?.logoUrl) && (
-                <img src={logoPreview || settings?.logoUrl!} alt="logo" className="h-8 rounded border border-white/10" />
+                <img src={logoPreview || settings?.logoUrl || ''} alt="logo" className="h-8 rounded border border-white/10" />
               )}
             </div>
           </div>
@@ -272,7 +272,7 @@ const AdminSettings: React.FC = () => {
                 <input type="file" className="hidden" accept="image/*" onChange={handleFaviconChange} />
               </label>
               {(faviconPreview || settings?.faviconUrl) && (
-                <img src={faviconPreview || settings?.faviconUrl!} alt="favicon" className="h-8 rounded border border-white/10" />
+                <img src={faviconPreview || settings?.faviconUrl || ''} alt="favicon" className="h-8 rounded border border-white/10" />
               )}
             </div>
           </div>

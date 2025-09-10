@@ -20,6 +20,7 @@ import { productionMonitor } from './utils/productionMonitor';
 
 // Lazy load ALL pages for maximum performance
 const HomePage = React.lazy(() => import('./pages/HomePage'));
+const UnderMaintenancePage = React.lazy(() => import('./pages/UnderMaintenancePageAnimated'));
 const TraditionalAuthPage = React.lazy(() => import('./pages/TraditionalAuthPage'));
 
 // Lazy load all other pages
@@ -211,8 +212,10 @@ function App() {
                       
                       <Suspense fallback={<PageLoader />}>
                         <Routes>
-                          {/* Core pages - loaded immediately */}
-                          <Route path="/" element={<HomePage />} />
+                          {/* Maintenance mode - showing maintenance page as homepage */}
+                          <Route path="/" element={<UnderMaintenancePage />} />
+                          <Route path="/maintenance" element={<UnderMaintenancePage />} />
+                          <Route path="/home" element={<HomePage />} />
                           <Route path="/auth" element={<TraditionalAuthPage />} />
                           
                           {/* Lazy loaded pages */}
