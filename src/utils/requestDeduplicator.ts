@@ -6,7 +6,7 @@ type PromiseResolver<T> = {
   reject: (error: any) => void;
 };
 
-class RequestDeduplicator {
+export class RequestDeduplicator {
   private static instance: RequestDeduplicator;
   private inflightRequests = new Map<string, Promise<any>>();
   
