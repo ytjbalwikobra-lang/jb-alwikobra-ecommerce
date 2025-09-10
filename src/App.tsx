@@ -34,6 +34,7 @@ const WishlistPage = React.lazy(() => import('./pages/WishlistPage.tsx'));
 const SettingsPage = React.lazy(() => import('./pages/SettingsPage.tsx'));
 const OrderHistoryPage = React.lazy(() => import('./pages/OrderHistoryPage.tsx'));
 const TermsPage = React.lazy(() => import('./pages/TermsPage.tsx'));
+const FeedPage = React.lazy(() => import('./pages/FeedPage.tsx'));
 
 // Lazy load admin pages (biggest performance impact)
 const AdminLayout = React.lazy(() => import('./layouts/AdminLayout.tsx'));
@@ -185,7 +186,7 @@ function App() {
                 <Route path="*" element={
                   <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200">
                     <Header />
-                    <main className="flex-1 pb-16 md:pb-0">
+                    <main className="flex-1 with-bottom-nav">
                       {!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY ? (
                         <div className="max-w-3xl mx-auto p-4">
                           <div className="bg-black/60 border border-yellow-500/40 rounded-lg p-4 mb-4">
@@ -212,6 +213,7 @@ function App() {
                           <Route path="/flash-sales" element={<FlashSalesPage />} />
                           <Route path="/sell" element={<SellPage />} />
                           <Route path="/help" element={<HelpPage />} />
+                          <Route path="/feed" element={<FeedPage />} />
                           <Route path="/profile" element={<ProfilePage />} />
                           <Route path="/wishlist" element={<WishlistPage />} />
                           <Route path="/settings" element={<SettingsPage />} />

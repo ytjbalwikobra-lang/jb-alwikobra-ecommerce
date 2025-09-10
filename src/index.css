@@ -34,6 +34,11 @@ body {
   font-size: 1rem; /* Uses the responsive html font-size */
   line-height: 1.5; /* Better mobile readability */
   overflow-x: hidden; /* Prevent horizontal scroll */
+  /* iOS safe area support */
+  padding-left: max(env(safe-area-inset-left), 0px);
+  padding-right: max(env(safe-area-inset-right), 0px);
+  -webkit-tap-highlight-color: transparent; /* iOS tap highlight */
+  touch-action: manipulation; /* Improve scroll/tap on mobile */
 }
 
 code {
@@ -214,6 +219,34 @@ textarea:focus {
     padding-left: 1rem;
     padding-right: 1rem;
   }
+}
+
+/* iOS safe area utilities */
+.pt-safe-top {
+  padding-top: env(safe-area-inset-top);
+}
+.pb-safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.px-safe {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Reserve space for bottom nav on mobile */
+.with-bottom-nav {
+  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+}
+@media (min-width: 768px) {
+  .with-bottom-nav {
+    padding-bottom: 0;
+  }
+}
+
+/* Theme variables */
+:root {
+  --color-pink: #ec4899; /* Tailwind pink-500 */
+  --color-pink-600: #db2777;
 }
 
 /* Print styles */

@@ -16,18 +16,20 @@ LEFT JOIN tiers t ON p.tier_id = t.id
 LEFT JOIN game_titles gt ON p.game_title_id = gt.id
 LIMIT 10;
 
--- Add some additional sample products to showcase dynamic data
 INSERT INTO products (
-    name, description, price, original_price, image, 
-    tier_id, game_title_id, account_level, account_details, 
+    name, description, price, original_price, image,
+    category, game_title,
+    tier_id, game_title_id, account_level, account_details,
     has_rental, stock, is_flash_sale, flash_sale_end_time
-) VALUES
-(
+)
+SELECT
     'Akun Valorant Immortal Rank Dynamic',
     'Akun Valorant Immortal rank dengan skin collection premium dari tabel dinamis.',
     3500000,
     4000000,
     'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400',
+    (SELECT category FROM game_titles WHERE slug = 'valorant'),
+    (SELECT name FROM game_titles WHERE slug = 'valorant'),
     (SELECT id FROM tiers WHERE slug = 'premium'),
     (SELECT id FROM game_titles WHERE slug = 'valorant'),
     'Immortal 2',
@@ -36,13 +38,22 @@ INSERT INTO products (
     3,
     true,
     NOW() + INTERVAL '5 days'
-),
-(
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Akun Valorant Immortal Rank Dynamic');
+
+INSERT INTO products (
+    name, description, price, original_price, image,
+    category, game_title,
+    tier_id, game_title_id, account_level, account_details,
+    has_rental, stock, is_flash_sale, flash_sale_end_time
+)
+SELECT
     'Akun Genshin Impact AR 50 Student Special',
     'Akun Genshin Impact khusus untuk pelajar dengan harga terjangkau.',
     1200000,
     1500000,
     'https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=400',
+    (SELECT category FROM game_titles WHERE slug = 'genshin-impact'),
+    (SELECT name FROM game_titles WHERE slug = 'genshin-impact'),
     (SELECT id FROM tiers WHERE slug = 'pelajar'),
     (SELECT id FROM game_titles WHERE slug = 'genshin-impact'),
     'AR 50',
@@ -51,13 +62,22 @@ INSERT INTO products (
     7,
     false,
     NULL
-),
-(
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Akun Genshin Impact AR 50 Student Special');
+
+INSERT INTO products (
+    name, description, price, original_price, image,
+    category, game_title,
+    tier_id, game_title_id, account_level, account_details,
+    has_rental, stock, is_flash_sale, flash_sale_end_time
+)
+SELECT
     'Akun Mobile Legends Epic Entry Level',
     'Akun Mobile Legends entry level dengan harga terjangkau untuk pemula.',
     350000,
     450000,
     'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400',
+    (SELECT category FROM game_titles WHERE slug = 'mobile-legends'),
+    (SELECT name FROM game_titles WHERE slug = 'mobile-legends'),
     (SELECT id FROM tiers WHERE slug = 'reguler'),
     (SELECT id FROM game_titles WHERE slug = 'mobile-legends'),
     'Epic III',
@@ -66,7 +86,7 @@ INSERT INTO products (
     15,
     false,
     NULL
-);
+WHERE NOT EXISTS (SELECT 1 FROM products WHERE name = 'Akun Mobile Legends Epic Entry Level');
 
 -- Add rental options for new products
 INSERT INTO rental_options (product_id, duration, price, description) VALUES
