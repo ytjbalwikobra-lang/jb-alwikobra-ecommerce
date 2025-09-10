@@ -10,9 +10,21 @@ const DEFAULT_SETTINGS: WebsiteSettings = {
 };
 
 export class SettingsService {
+  // Small in-memory cache to minimize repeated DB fetches across the SPA session
+  private static cache: { v: WebsiteSettings; t: number } | null = null;
+  private static TTL = 5 * 60 * 1000; // 5 minutes
+
   static async get(): Promise<WebsiteSettings> {
     try {
-      if (!supabase) return DEFAULT_SETTINGS;
+      // Serve from cache if fresh
+      if (this.cache && Date.now() - this.cache.t < this.TTL) {
+        return this.cache.v;
+      }
+
+      if (!supabase) {
+        this.cache = { v: DEFAULT_SETTINGS, t: Date.now() };
+        return DEFAULT_SETTINGS;
+      }
       const { data, error } = await (supabase as any)
         .from('website_settings')
         .select('*')
@@ -20,7 +32,7 @@ export class SettingsService {
         .maybeSingle();
       if (error) throw error;
       if (!data) return DEFAULT_SETTINGS;
-      return {
+      const result: WebsiteSettings = {
         id: data.id ?? 'default',
         siteName: data.site_name ?? DEFAULT_SETTINGS.siteName,
         logoUrl: data.logo_url ?? undefined,
@@ -36,6 +48,8 @@ export class SettingsService {
         heroSubtitle: data.hero_subtitle ?? undefined,
         updatedAt: data.updated_at ?? undefined,
       };
+      this.cache = { v: result, t: Date.now() };
+      return result;
     } catch (e) {
       console.error('SettingsService.get error:', e);
       return DEFAULT_SETTINGS;
@@ -77,7 +91,7 @@ export class SettingsService {
         .maybeSingle();
       if (error) throw error;
       const row = data || payload;
-      return {
+  const result: WebsiteSettings = {
         id: row.id ?? current.id ?? 'default',
         siteName: row.site_name ?? current.siteName,
         logoUrl: row.logo_url ?? current.logoUrl,
@@ -93,6 +107,9 @@ export class SettingsService {
         heroSubtitle: row.hero_subtitle ?? current.heroSubtitle,
         updatedAt: row.updated_at ?? new Date().toISOString(),
       };
+  // Invalidate/refresh cache
+  this.cache = { v: result, t: Date.now() };
+  return result;
     } catch (e) {
       console.error('SettingsService.upsert error:', e);
       return null;

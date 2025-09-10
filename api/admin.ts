@@ -55,34 +55,31 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
     const now = new Date();
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
-    // Orders count and revenue
-    const { data: orders, error: ordersError } = await supabase
-      .from('orders')
-      .select('total_amount, created_at')
-      .gte('created_at', sevenDaysAgo.toISOString());
+    const [
+      { data: orders, error: ordersError },
+      { count: usersCount, error: usersError },
+      { count: productsCount, error: productsError },
+      { count: flashSalesCount, error: flashSalesError }
+    ] = await Promise.all([
+      supabase
+        .from('orders')
+        .select('total_amount, created_at')
+        .gte('created_at', sevenDaysAgo.toISOString()),
+      supabase
+        .from('users')
+        .select('id', { count: 'exact', head: true }),
+      supabase
+        .from('products')
+        .select('id', { count: 'exact', head: true }),
+      supabase
+        .from('flash_sales')
+        .select('id', { count: 'exact', head: true })
+        .eq('is_active', true)
+    ]);
 
     if (ordersError) throw ordersError;
-
-    // Users count
-    const { count: usersCount, error: usersError } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true });
-
     if (usersError) throw usersError;
-
-    // Products count
-    const { count: productsCount, error: productsError } = await supabase
-      .from('products')
-      .select('*', { count: 'exact', head: true });
-
     if (productsError) throw productsError;
-
-    // Flash sales count
-    const { count: flashSalesCount, error: flashSalesError } = await supabase
-      .from('flash_sales')
-      .select('*', { count: 'exact', head: true })
-      .eq('is_active', true);
-
     if (flashSalesError) throw flashSalesError;
 
     const totalRevenue = orders?.reduce((sum, order) => sum + (parseFloat(order.total_amount) || 0), 0) || 0;
@@ -102,6 +99,7 @@ async function handleDashboard(req: VercelRequest, res: VercelResponse) {
   }
 }
 
+
 async function handleOrders(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -109,36 +107,31 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { page = '1', limit = '20' } = req.query;
-    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const offset = (pageNum - 1) * limitNum;
 
-    const { data: orders, error } = await supabase
+    const { data: orders, error, count } = await supabase
       .from('orders')
       .select(`
-        *,
+        id, created_at, total_amount, status, user_id, admin_notes,
         products (
           name,
           image
         )
-      `)
+      `, { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(offset, offset + parseInt(limit as string) - 1);
+      .range(offset, offset + limitNum - 1);
 
     if (error) throw error;
-
-    // Get total count
-    const { count, error: countError } = await supabase
-      .from('orders')
-      .select('*', { count: 'exact', head: true });
-
-    if (countError) throw countError;
 
     return res.status(200).json({
       orders: orders || [],
       pagination: {
         total: count || 0,
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        totalPages: Math.ceil((count || 0) / parseInt(limit as string))
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil((count || 0) / limitNum)
       }
     });
   } catch (error) {
@@ -147,6 +140,7 @@ async function handleOrders(req: VercelRequest, res: VercelResponse) {
   }
 }
 
+
 async function handleUsers(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -154,30 +148,25 @@ async function handleUsers(req: VercelRequest, res: VercelResponse) {
 
   try {
     const { page = '1', limit = '20' } = req.query;
-    const offset = (parseInt(page as string) - 1) * parseInt(limit as string);
+    const pageNum = parseInt(page as string);
+    const limitNum = parseInt(limit as string);
+    const offset = (pageNum - 1) * limitNum;
 
-    const { data: users, error } = await supabase
+    const { data: users, error, count } = await supabase
       .from('users')
-      .select('id, phone, email, name, is_admin, is_active, phone_verified, created_at')
+      .select('id, phone, email, name, is_admin, is_active, phone_verified, created_at', { count: 'exact' })
       .order('created_at', { ascending: false })
-      .range(offset, offset + parseInt(limit as string) - 1);
+      .range(offset, offset + limitNum - 1);
 
     if (error) throw error;
-
-    // Get total count
-    const { count, error: countError } = await supabase
-      .from('users')
-      .select('*', { count: 'exact', head: true });
-
-    if (countError) throw countError;
 
     return res.status(200).json({
       users: users || [],
       pagination: {
         total: count || 0,
-        page: parseInt(page as string),
-        limit: parseInt(limit as string),
-        totalPages: Math.ceil((count || 0) / parseInt(limit as string))
+        page: pageNum,
+        limit: limitNum,
+        totalPages: Math.ceil((count || 0) / limitNum)
       }
     });
   } catch (error) {
@@ -185,6 +174,7 @@ async function handleUsers(req: VercelRequest, res: VercelResponse) {
     return res.status(500).json({ error: 'Failed to fetch users' });
   }
 }
+
 
 async function handleUpdateOrder(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'PUT') {

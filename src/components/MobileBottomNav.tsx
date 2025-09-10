@@ -14,7 +14,7 @@ const MobileBottomNav: React.FC = () => {
   ];
 
   return (
-    <div className="md:hidden fixed bottom-0 left-0 right-0 border-t border-pink-500/30 bg-black/90 backdrop-blur z-[1000] pb-safe-bottom">
+    <div className="md:hidden fixed bottom-0 left-0 right-0 backdrop-blur z-[1000] pb-safe-bottom" style={{ backgroundColor: 'rgba(0,0,0,0.9)', borderTop: '1px solid var(--border)' }}>
       <nav className="flex justify-around py-2">
         {navItems.map((item) => {
           const Icon = item.icon;

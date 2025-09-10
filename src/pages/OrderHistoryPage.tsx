@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../services/supabase.ts';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext';
 import Footer from '../components/Footer.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext';
 
 const RequireAdmin: React.FC = () => {
   const { user, loading } = useAuth();

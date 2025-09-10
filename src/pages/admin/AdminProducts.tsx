@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Product, Tier, GameTitle, ProductTier } from '../../types/index.ts';
-import { ProductService } from '../../services/productService.ts';
+import { ProductService } from '../../services/productService';
+import { OptimizedProductService } from '../../services/optimizedProductService';
 import { supabase } from '../../services/supabase.ts';
 import ImageUploader from '../../components/ImageUploader.tsx';
 import { uploadFiles } from '../../services/storageService.ts';
@@ -82,19 +83,19 @@ const AdminProducts: React.FC = () => {
       setLoading(true);
       
       if (!supabase) {
-        // Fallback to existing ProductService if no supabase
-        ProductService.resetCapabilities();
-        await ProductService.detectSchemaCapabilities();
-        
-        const [list, tList, gList] = await Promise.all([
-          ProductService.getAllProducts({ includeArchived: true }),
+        // Fallback: Use OptimizedProductService for better performance
+        const [paginatedResponse, tList, gList] = await Promise.all([
+          OptimizedProductService.getProductsPaginated(
+            { includeArchived: true }, // filters
+            { limit: 1000 } // pagination - large limit for admin view
+          ),
           ProductService.getTiers(),
           ProductService.getGameTitles()
         ]);
-        setProducts(list);
+        setProducts(paginatedResponse.data);
         setTiers(tList);
         setGames(gList);
-        setTotalProducts(list.length);
+        setTotalProducts(paginatedResponse.data.length);
         setLoading(false);
         return;
       }

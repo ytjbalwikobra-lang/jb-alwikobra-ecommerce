@@ -35,7 +35,7 @@ const Footer: React.FC = () => {
   }, []);
 
   return (
-  <footer className="bg-black text-gray-300 border-t border-pink-500/30">
+  <footer className="text-gray-300" style={{ backgroundColor: 'var(--bg)', borderTop: '1px solid var(--border)' }}>
   <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-24 md:pb-12 pb-safe-bottom">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
@@ -48,7 +48,7 @@ const Footer: React.FC = () => {
                   className="w-8 h-8 rounded-lg object-cover"
                 />
               ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-600) 100%)' }}>
                   <span className="text-white font-bold text-sm">JB</span>
                 </div>
               )}
@@ -86,7 +86,7 @@ const Footer: React.FC = () => {
             <h3 className="text-lg font-semibold mb-4">Menu Utama</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to="/" className="text-gray-300 hover:text-pink-300 transition-colors">
                   Beranda
                 </Link>
               </li>
@@ -101,7 +101,7 @@ const Footer: React.FC = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/sell" className="text-gray-300 hover:text-primary-400 transition-colors">
+                <Link to="/sell" className="text-gray-300 hover:text-pink-300 transition-colors">
                   Jual Akun
                 </Link>
               </li>
@@ -144,7 +144,7 @@ const Footer: React.FC = () => {
           </div>
         </div>
 
-  <div className="border-t border-pink-500/30 mt-8 pt-8 flex flex-col md:flex-row justify-between items-center">
+  <div className="mt-8 pt-8 flex flex-col md:flex-row justify-between items-center" style={{ borderTop: '1px solid var(--border)' }}>
           <p className="text-gray-400 text-sm text-center md:text-left">
             © {currentYear} {siteName}. All rights reserved.
           </p>
@@ -153,7 +153,7 @@ const Footer: React.FC = () => {
             <span className="opacity-50 hidden sm:inline">|</span>
             <div className="flex items-center space-x-2">
               <span>Made with</span>
-              <Heart size={14} className="text-primary-500" />
+              <Heart size={14} className="text-pink-500" />
               <span>for Indonesian Gamers</span>
             </div>
           </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Product } from '../../types/index.ts';
-import { ProductService } from '../../services/productService.ts';
+import { ProductService } from '../../services/productService';
+import { OptimizedProductService } from '../../services/optimizedProductService';
 import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
 import { useToast } from '../../components/Toast.tsx';
 
@@ -38,11 +39,14 @@ const AdminFlashSales: React.FC = () => {
   useEffect(() => {
     (async () => {
       try {
-        const [all, fs] = await Promise.all([
-          ProductService.getAllProducts(),
+        const [paginatedResponse, fs] = await Promise.all([
+          OptimizedProductService.getProductsPaginated(
+            {}, // No filters - get all active products  
+            { limit: 500 } // Admin view with large limit
+          ),
           ProductService.getFlashSales(),
         ]);
-        setProducts(all);
+        setProducts(paginatedResponse.data);
         setFlashSales(fs);
       } finally { setLoading(false); }
     })();

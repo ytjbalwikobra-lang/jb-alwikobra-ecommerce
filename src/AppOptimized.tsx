@@ -9,7 +9,7 @@ import Footer from './components/Footer.tsx';
 import './App.css';
 import RequireAdmin from './components/RequireAdmin.tsx';
 import { ToastProvider } from './components/Toast.tsx';
-import { AuthProvider } from './contexts/TraditionalAuthContext.tsx';
+import { AuthProvider } from './contexts/TraditionalAuthContext';
 import { WishlistProvider } from './contexts/WishlistContext.tsx';
 import { FaviconService } from './services/faviconService.ts';
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext';
 import { useToast } from '../components/Toast.tsx';
 import PhoneInput from '../components/PhoneInput.tsx';
 import PasswordInput from '../components/PasswordInput.tsx';

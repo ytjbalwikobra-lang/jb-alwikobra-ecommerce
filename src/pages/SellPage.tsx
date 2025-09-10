@@ -4,7 +4,7 @@ import {
   generateSellAccountMessage
 } from '../utils/helpers.ts';
 import { SettingsService } from '../services/settingsService.ts';
-import { ProductService } from '../services/productService.ts';
+import { ProductService } from '../services/productService';
 import {
   MessageCircle,
   DollarSign,
@@ -69,16 +69,17 @@ const SellPage: React.FC = () => {
         const names = activeGames.map(g=>g.name);
         if (names.length) setGameOptions([...names, 'Lainnya']);
         
-        // Get popular games from database based on sold products
-        const products = await ProductService.getAllProducts({ includeArchived: true });
+        // Use optimized popular games service with built-in product counts
+        const popularGamesData = await ProductService.getPopularGames();
+        
+        // Map to our UI format and include all active games
         const gameStats = activeGames.map(game => {
-          const gameProducts = products.filter(p => 
-            (p.gameTitle === game.name || p.gameTitleId === game.id) && 
-            (p.isActive === false || p.archivedAt !== null) // Sold products: inactive OR archived
-          );
+          const popularGame = popularGamesData.find(pg => pg.name === game.name);
+          const productCount = popularGame?.count || 0;
+          
           return {
             name: game.name,
-            count: gameProducts.length > 0 ? `${gameProducts.length}+` : '0',
+            count: productCount > 0 ? `${productCount}+` : 'Tersedia',
             icon: game.icon || 'Gamepad2',
             color: game.color || '#3b82f6',
             logoUrl: game.logoUrl
@@ -86,15 +87,7 @@ const SellPage: React.FC = () => {
         });
         
         console.log('Game stats calculated:', gameStats);
-        
-        // Always show all games from database, prioritizing those with sales
-        const allGames = gameStats.map(game => ({
-          ...game,
-          // If no sales, show as available for selling
-          count: parseInt(game.count) > 0 ? game.count : 'Tersedia'
-        }));
-        
-        setPopularGames(allGames);
+        setPopularGames(gameStats);
         
       } catch (e) {
         console.error('Failed to load games:', e);

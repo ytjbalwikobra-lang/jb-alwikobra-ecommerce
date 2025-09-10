@@ -35,15 +35,22 @@ async function ensureBannerCapabilities(): Promise<{ ctaText: boolean }> {
 }
 
 export class BannerService {
+  // Simple in-memory cache for banners to reduce egress
+  private static cache: { v: Banner[]; t: number } | null = null;
+  private static TTL = 5 * 60 * 1000; // 5 minutes
+
   static async list(): Promise<Banner[]> {
     try {
+      if (this.cache && Date.now() - this.cache.t < this.TTL) {
+        return this.cache.v;
+      }
       if (!supabase) return sampleBanners;
       const { data, error } = await supabase
         .from('banners')
         .select('*')
         .order('sort_order', { ascending: true });
       if (error) throw error;
-      return (data || []).map((b: any) => ({
+      const result = (data || []).map((b: any) => ({
         id: b.id,
         title: b.title,
         subtitle: b.subtitle,
@@ -55,6 +62,8 @@ export class BannerService {
         createdAt: b.created_at ?? new Date().toISOString(),
         updatedAt: b.updated_at ?? new Date().toISOString(),
       }));
+      this.cache = { v: result, t: Date.now() };
+      return result;
     } catch (e) {
       console.error('BannerService.list error:', e);
       return sampleBanners;
@@ -85,7 +94,7 @@ export class BannerService {
         .select()
         .single();
       if (error) throw error;
-      return {
+  const result = {
         id: data.id,
         title: data.title,
         subtitle: data.subtitle ?? undefined,
@@ -97,6 +106,9 @@ export class BannerService {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
+  // Invalidate cache on mutation
+  this.cache = null;
+  return result;
     } catch (e) {
       console.error('BannerService.create error:', e);
       return null;
@@ -128,7 +140,7 @@ export class BannerService {
         .select()
         .single();
       if (error) throw error;
-      return {
+  const result = {
         id: data.id,
         title: data.title,
         subtitle: data.subtitle ?? undefined,
@@ -140,6 +152,9 @@ export class BannerService {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
+  // Invalidate cache on mutation
+  this.cache = null;
+  return result;
     } catch (e) {
       console.error('BannerService.update error:', e);
       return null;
@@ -157,7 +172,9 @@ export class BannerService {
       if (existingImageUrl) {
         try { await deletePublicUrls([existingImageUrl]); } catch {}
       }
-      return true;
+  // Invalidate cache on mutation
+  this.cache = null;
+  return true;
     } catch (e) {
       console.error('BannerService.remove error:', e);
       return false;

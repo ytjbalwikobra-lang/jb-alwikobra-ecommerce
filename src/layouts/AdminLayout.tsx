@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import { LayoutDashboard, Package, Users, Zap, ListOrdered, Image as ImageIcon, Settings as SettingsIcon, Gamepad2, Menu, LogOut } from 'lucide-react';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext';
 
 const AdminLayout: React.FC = () => {
   const { user, logout } = useAuth();
@@ -12,6 +12,7 @@ const AdminLayout: React.FC = () => {
     { to: '/admin', label: 'Dashboard', icon: LayoutDashboard, end: true },
     { to: '/admin/products', label: 'Produk', icon: Package },
     { to: '/admin/flash-sales', label: 'Flash Sale', icon: Zap },
+    { to: '/admin/posts', label: 'Posts', icon: LayoutDashboard },
     { to: '/admin/game-titles', label: 'Game Titles', icon: Gamepad2 },
     { to: '/admin/orders', label: 'Orders', icon: ListOrdered },
     { to: '/admin/banners', label: 'Banners', icon: ImageIcon },

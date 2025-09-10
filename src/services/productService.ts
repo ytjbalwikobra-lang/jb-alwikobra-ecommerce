@@ -2,6 +2,10 @@ import { supabase } from './supabase.ts';
 import { deletePublicUrls } from './storageService.ts';
 import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
 
+// Global cache for ProductService
+const g = globalThis as any;
+g._productServiceCache = g._productServiceCache || new Map();
+
 // Capability detection: whether DB exposes relations (tiers/game_titles) in products
 // Track database capabilities globally
 let hasRelations: boolean | null = null; // null = unknown, true = supports relations, false = legacy schema
@@ -381,9 +385,15 @@ export class ProductService {
     return sample;
   }
 
+  // Prefer single-call with nested rental options to reduce round-trips
   const { data, error } = await supabase
         .from('products')
-        .select(`*`)
+        .select(`
+          *,
+          rental_options (*),
+          tiers (*),
+          game_titles (*)
+        `)
         .eq('id', id)
         .maybeSingle(); // Use maybeSingle() instead of single() to avoid 406 errors
 
@@ -401,13 +411,16 @@ export class ProductService {
       
       console.log('[ProductService] Found product from DB:', { id: data.id, name: data.name, idType: typeof data.id });
       
-  let rentalOptions: any[] = [];
-      try {
-        const { data: ro } = await supabase.from('rental_options').select('*').eq('product_id', id);
-        rentalOptions = ro || [];
-      } catch {}
-      
-      const result = { ...data, rentalOptions, hasRental: (data as any).has_rental ?? (data as any).hasRental ?? (rentalOptions.length > 0) } as any;
+      const rentalOptions: any[] = (data as any).rental_options || [];
+      const result = {
+        ...data,
+        rentalOptions,
+        hasRental: (data as any).has_rental ?? (data as any).hasRental ?? (rentalOptions.length > 0),
+        tierData: (data as any).tiers,
+        gameTitleData: (data as any).game_titles,
+        tier: (data as any).tiers?.slug,
+        gameTitle: (data as any).game_titles?.name || (data as any).game_title,
+      } as any;
       console.log('[ProductService] Returning final product:', { id: result.id, name: result.name, idType: typeof result.id });
       return result;
     } catch (error) {
@@ -419,6 +432,13 @@ export class ProductService {
   }
 
   static async getFlashSales(): Promise<(FlashSale & { product: Product })[]> {
+    // Check cache first (2 minute TTL for flash sales)
+    const cacheKey = 'flash_sales';
+    const hit = g._productServiceCache.get(cacheKey);
+    if (hit && Date.now() - hit.t < 2 * 60 * 1000) {
+      return hit.v;
+    }
+
     try {
       // Check if Supabase is configured
       if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY) {
@@ -550,7 +570,7 @@ export class ProductService {
         }
       } catch {}
 
-      return data?.map((sale: any) => {
+      const result = data?.map((sale: any) => {
         const prod = sale.products || {};
         const gt = prod.game_titles;
         const tier = prod.tiers;
@@ -599,6 +619,10 @@ export class ProductService {
 
         return { ...sale, product };
       }) || [];
+
+      // Cache the result
+      g._productServiceCache.set(cacheKey, { v: result, t: Date.now() });
+      return result;
     } catch (error) {
       console.error('Error fetching flash sales:', error);
       const flashSaleProducts = sampleProducts.filter(p => p.isFlashSale);
@@ -949,6 +973,13 @@ export class ProductService {
   }
 
   static async getTiers(): Promise<Tier[]> {
+    // Check cache first (5 minute TTL)
+    const cacheKey = 'tiers';
+    const hit = g._productServiceCache.get(cacheKey);
+    if (hit && Date.now() - hit.t < 5 * 60 * 1000) {
+      return hit.v;
+    }
+
     try {
       if (!supabase) {
         return sampleTiers;
@@ -965,7 +996,7 @@ export class ProductService {
         return sampleTiers;
       }
 
-      return data?.map(tier => ({
+      const result = data?.map(tier => ({
         ...tier,
         isActive: tier.is_active,
         sortOrder: tier.sort_order,
@@ -976,6 +1007,10 @@ export class ProductService {
         createdAt: tier.created_at,
         updatedAt: tier.updated_at
       })) || sampleTiers;
+
+      // Cache the result
+      g._productServiceCache.set(cacheKey, { v: result, t: Date.now() });
+      return result;
     } catch (error) {
       console.error('Error fetching tiers:', error);
       return sampleTiers;
@@ -983,6 +1018,13 @@ export class ProductService {
   }
 
   static async getGameTitles(): Promise<GameTitle[]> {
+    // Check cache first (5 minute TTL)
+    const cacheKey = 'game_titles';
+    const hit = g._productServiceCache.get(cacheKey);
+    if (hit && Date.now() - hit.t < 5 * 60 * 1000) {
+      return hit.v;
+    }
+
     try {
       if (!supabase) {
         return sampleGameTitles;
@@ -999,7 +1041,7 @@ export class ProductService {
         return sampleGameTitles;
       }
 
-      return data?.map(gameTitle => {
+      const result = data?.map(gameTitle => {
         // Get logo URL - prefer new logo_path with public URL, fallback to legacy logo_url
         let logoUrl = gameTitle.logo_url; // Legacy URL fallback
         
@@ -1026,6 +1068,10 @@ export class ProductService {
           updatedAt: gameTitle.updated_at
         };
       }) || sampleGameTitles;
+
+      // Cache the result
+      g._productServiceCache.set(cacheKey, { v: result, t: Date.now() });
+      return result;
     } catch (error) {
       console.error('Error fetching game titles:', error);
       return sampleGameTitles;
@@ -1045,6 +1091,15 @@ export class ProductService {
   // Popular games with product counts for the Home page carousel
   static async getPopularGames(limit: number = 12): Promise<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>> {
     try {
+      // Lightweight in-memory cache for popular games query
+      const cacheKey = `popular_games_${limit}`;
+      const g: any = (ProductService as any);
+      g._pgCache = g._pgCache || new Map();
+      const hit = g._pgCache.get(cacheKey);
+      if (hit && Date.now() - hit.t < 2 * 60 * 1000) {
+        return hit.v;
+      }
+
       // Fallback to sample data when Supabase isn't configured
       if (!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY || !supabase) {
         const counts = new Map<string, number>();
@@ -1061,76 +1116,42 @@ export class ProductService {
         })).filter(i => i.count > 0)
           .sort((a, b) => b.count - a.count)
           .slice(0, limit);
+        g._pgCache.set(cacheKey, { v: items, t: Date.now() });
         return items;
       }
 
-      // Load active game titles
-      const { data: games, error: gErr } = await supabase
+      // Single relational query with product counts to reduce egress
+      let relQuery = supabase
         .from('game_titles')
-        .select('id, name, slug, logo_url, logo_path, is_active')
+        .select(`
+          id, name, slug, logo_url, logo_path, is_active,
+          products:products!inner ( id )
+        `)
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
+
+      const { data: games, error: gErr } = await relQuery;
       if (gErr) throw gErr;
 
-      const list = (games || []).map(g => {
-        // Get logo URL - prefer new logo_path with public URL, fallback to legacy logo_url
-        let logoUrl = g.logo_url; // Legacy URL fallback
-        
+      const items = (games || []).map((g: any) => {
+        let logoUrl = g.logo_url;
         if (g.logo_path) {
-          // Convert storage path to public URL
           try {
             const { data: urlData } = (supabase as any).storage
               .from('game-logos')
               .getPublicUrl(g.logo_path);
             logoUrl = urlData.publicUrl;
-          } catch (error) {
-            console.warn('Failed to get public URL for logo_path:', g.logo_path);
-            // Keep legacy logo_url as fallback
-          }
+          } catch {}
         }
+        const count = Array.isArray(g.products) ? g.products.length : 0;
+        return { id: g.id, name: g.name, slug: g.slug, logoUrl, count };
+      })
+      .filter((i: any) => i.count > 0)
+      .sort((a: any, b: any) => b.count - a.count)
+      .slice(0, limit);
 
-        return { 
-          id: g.id as string, 
-          name: g.name as string, 
-          slug: g.slug as string, 
-          logoUrl 
-        };
-      });
-      if (list.length === 0) return [];
-
-      // Capability check: if relational schema is unknown, try detect quickly
-      if (hasRelations === null) {
-        try {
-          const { error } = await supabase.from('products').select('game_title_id').limit(1);
-          hasRelations = !error;
-        } catch { hasRelations = false; }
-      }
-
-      // Count products per game (N queries; game titles expected to be small)
-      const counts = await Promise.all(list.map(async (g) => {
-        try {
-          if (hasRelations) {
-            const { count } = await (supabase as any)
-              .from('products')
-              .select('id', { count: 'exact', head: true })
-              .eq('game_title_id', g.id);
-            return { ...g, count: count || 0 };
-          } else {
-            const { count } = await (supabase as any)
-              .from('products')
-              .select('id', { count: 'exact', head: true })
-              .eq('game_title', g.name);
-            return { ...g, count: count || 0 };
-          }
-        } catch {
-          return { ...g, count: 0 };
-        }
-      }));
-
-      return counts
-        .filter(item => item.count > 0)
-        .sort((a, b) => b.count - a.count)
-        .slice(0, limit);
+      g._pgCache.set(cacheKey, { v: items, t: Date.now() });
+      return items;
     } catch (error) {
       console.error('Error fetching popular games:', error);
       return [];

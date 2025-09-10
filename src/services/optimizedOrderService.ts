@@ -144,29 +144,41 @@ class OptimizedOrderService {
     try {
       if (!supabase) return {};
 
-      // Get counts for different statuses
-      const statusQueries = ['pending', 'confirmed', 'processing', 'completed', 'cancelled'].map(status =>
-        supabase!
-          .from('orders')
-          .select('id', { count: 'exact', head: true })
-          .eq('status', status)
-      );
-
-      const totalQuery = supabase!
-        .from('orders')
-        .select('id', { count: 'exact', head: true });
-
-      const results = await Promise.all([...statusQueries, totalQuery]);
+      // Single aggregated query instead of multiple round-trips
+      const { data, error } = await supabase.rpc('get_order_stats_optimized');
       
-      const stats = {
-        pending: results[0].count || 0,
-        confirmed: results[1].count || 0,
-        processing: results[2].count || 0,
-        completed: results[3].count || 0,
-        cancelled: results[4].count || 0,
-        total: results[5].count || 0
-      };
+      if (error) {
+        console.warn('RPC get_order_stats_optimized not available, falling back to multiple queries');
+        
+        // Fallback: parallel status queries (still better than sequential)
+        const statusQueries = ['pending', 'confirmed', 'processing', 'completed', 'cancelled'].map(status =>
+          supabase!
+            .from('orders')
+            .select('id', { count: 'exact', head: true })
+            .eq('status', status)
+        );
 
+        const totalQuery = supabase!
+          .from('orders')
+          .select('id', { count: 'exact', head: true });
+
+        const results = await Promise.all([...statusQueries, totalQuery]);
+        
+        const stats = {
+          pending: results[0].count || 0,
+          confirmed: results[1].count || 0,
+          processing: results[2].count || 0,
+          completed: results[3].count || 0,
+          cancelled: results[4].count || 0,
+          total: results[5].count || 0
+        };
+
+        this.setCache(cacheKey, stats, 60 * 1000); // Cache for 1 minute
+        return stats;
+      }
+
+      // Use RPC result if available
+      const stats = data || {};
       this.setCache(cacheKey, stats, 60 * 1000); // Cache for 1 minute
       return stats;
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { GameTitle } from '../../types/index.ts';
-import { ProductService } from '../../services/productService.ts';
+import { ProductService } from '../../services/productService';
 import { supabase } from '../../services/supabase.ts';
 import { useToast } from '../../components/Toast.tsx';
 import { gameLogoStorage } from '../../services/storageService.ts';

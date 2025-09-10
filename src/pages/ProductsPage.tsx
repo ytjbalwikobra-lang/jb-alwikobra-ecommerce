@@ -48,20 +48,31 @@ const ProductsPage: React.FC = () => {
     
     const fetchData = async () => {
       try {
-        // Dynamic import of ProductService
-        const { ProductService } = await import('../services/productService.ts');
+        // Dynamic imports for better code splitting
+        const [
+          { ProductService },
+          { OptimizedProductService }
+        ] = await Promise.all([
+          import('../services/productService'),
+          import('../services/optimizedProductService')
+        ]);
         
         if (!mounted) return;
         
-        const [productsData, tiersData, gameTitlesData] = await Promise.all([
-          ProductService.getAllProducts(),
+        const [productsResponse, tiersData, gameTitlesData] = await Promise.all([
+          OptimizedProductService.getProductsPaginated({
+            status: 'active'
+          }, {
+            page: 1,
+            limit: 100 // Large initial load for backwards compatibility
+          }),
           ProductService.getTiers(),
           ProductService.getGameTitles()
         ]);
         
         if (!mounted) return;
         
-        setProducts(productsData);
+        setProducts(productsResponse.data);
         
         // Sort tiers: Pelajar → Reguler → Premium
         const sortedTiers = [...tiersData].sort((a, b) => {

@@ -243,11 +243,38 @@ textarea:focus {
   }
 }
 
-/* Theme variables */
+/* Design system: dark default (iOS-safe), black background with pink accent */
 :root {
-  --color-pink: #ec4899; /* Tailwind pink-500 */
-  --color-pink-600: #db2777;
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: rgba(255,255,255,0.06);
+  --surface-2: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.12);
+  --text: #f3f4f6;
+  --muted: #9ca3af;
+  --accent: #ec4899; /* pink-500 */
+  --accent-600: #db2777;
 }
+
+.dark {
+  color-scheme: dark;
+  --bg: #000000;
+  --surface: rgba(255,255,255,0.06);
+  --surface-2: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.12);
+  --text: #f3f4f6;
+  --muted: #9ca3af;
+  --accent: #ec4899;
+  --accent-600: #db2777;
+}
+
+/* Default dark mode on body */
+html, body { background: var(--bg); color: var(--text); }
+.bg-app-dark { background-color: var(--bg); }
+
+/* iOS blank-screen prevention: ensure background and viewport-fit with safe-areas are set */
+html { background-color: var(--bg); min-height: 100%; }
+body { min-height: 100vh; }
 
 /* Print styles */
 @media print {

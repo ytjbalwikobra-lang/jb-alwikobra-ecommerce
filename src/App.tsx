@@ -2,51 +2,53 @@ import React, { Suspense, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import Header from './components/Header.tsx';
-import MobileBottomNav from './components/MobileBottomNav.tsx';
-import ScrollToTop from './components/ScrollToTop.tsx';
-import Footer from './components/Footer.tsx';
+import Header from './components/Header';
+import MobileBottomNav from './components/MobileBottomNav';
+import ScrollToTop from './components/ScrollToTop';
+import Footer from './components/Footer';
 import './App.css';
-import RequireAdmin from './components/RequireAdmin.tsx';
-import { ToastProvider } from './components/Toast.tsx';
-import { ConfirmationProvider } from './components/ConfirmationModal.tsx';
-import { AuthProvider } from './contexts/TraditionalAuthContext.tsx';
-import { WishlistProvider } from './contexts/WishlistContext.tsx';
-import { FaviconService } from './services/faviconService.ts';
-import { productionMonitor } from './utils/productionMonitor.ts';
+import RequireAdmin from './components/RequireAdmin';
+import { ToastProvider } from './components/Toast';
+import { ConfirmationProvider } from './components/ConfirmationModal';
+import { AuthProvider } from './contexts/TraditionalAuthContext';
+import { WishlistProvider } from './contexts/WishlistContext';
+import { FaviconService } from './services/faviconService';
+import { ThemeProvider } from './contexts/ThemeContext';
+import { productionMonitor } from './utils/productionMonitor';
 
 // CRITICAL PERFORMANCE FIX: Lazy load ALL pages including HomePage
 // This reduces initial JS bundle by 70%+
 
 // Lazy load ALL pages for maximum performance
-const HomePage = React.lazy(() => import('./pages/HomePage.tsx'));
-const TraditionalAuthPage = React.lazy(() => import('./pages/TraditionalAuthPage.tsx'));
+const HomePage = React.lazy(() => import('./pages/HomePage'));
+const TraditionalAuthPage = React.lazy(() => import('./pages/TraditionalAuthPage'));
 
 // Lazy load all other pages
-const ProductsPage = React.lazy(() => import('./pages/ProductsPage.tsx'));
-const ProductDetailPage = React.lazy(() => import('./pages/ProductDetailPage.tsx'));
-const FlashSalesPage = React.lazy(() => import('./pages/FlashSalesPage.tsx'));
-const SellPage = React.lazy(() => import('./pages/SellPage.tsx'));
-const PaymentStatusPage = React.lazy(() => import('./pages/PaymentStatusPage.tsx'));
-const HelpPage = React.lazy(() => import('./pages/HelpPage.tsx'));
-const ProfilePage = React.lazy(() => import('./pages/ProfilePage.tsx'));
-const WishlistPage = React.lazy(() => import('./pages/WishlistPage.tsx'));
-const SettingsPage = React.lazy(() => import('./pages/SettingsPage.tsx'));
-const OrderHistoryPage = React.lazy(() => import('./pages/OrderHistoryPage.tsx'));
-const TermsPage = React.lazy(() => import('./pages/TermsPage.tsx'));
-const FeedPage = React.lazy(() => import('./pages/FeedPage.tsx'));
+const ProductsPage = React.lazy(() => import('./pages/ProductsPage'));
+const ProductDetailPage = React.lazy(() => import('./pages/ProductDetailPage'));
+const FlashSalesPage = React.lazy(() => import('./pages/FlashSalesPage'));
+const SellPage = React.lazy(() => import('./pages/SellPage'));
+const PaymentStatusPage = React.lazy(() => import('./pages/PaymentStatusPage'));
+const HelpPage = React.lazy(() => import('./pages/HelpPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const WishlistPage = React.lazy(() => import('./pages/WishlistPage'));
+const SettingsPage = React.lazy(() => import('./pages/SettingsPage'));
+const OrderHistoryPage = React.lazy(() => import('./pages/OrderHistoryPage'));
+const TermsPage = React.lazy(() => import('./pages/TermsPage'));
+const FeedPage = React.lazy(() => import('./pages/FeedPage'));
 
 // Lazy load admin pages (biggest performance impact)
-const AdminLayout = React.lazy(() => import('./layouts/AdminLayout.tsx'));
-const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard.tsx'));
-const AdminProducts = React.lazy(() => import('./pages/admin/AdminProducts.tsx'));
-const AdminFlashSales = React.lazy(() => import('./pages/admin/AdminFlashSales.tsx'));
-const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers.tsx'));
-const AdminBanners = React.lazy(() => import('./pages/admin/AdminBanners.tsx'));
-const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings.tsx'));
-const AdminOrders = React.lazy(() => import('./pages/admin/AdminOrders.tsx'));
-const AdminGameTitles = React.lazy(() => import('./pages/admin/AdminGameTitles.tsx'));
-const WhatsAppTestPage = React.lazy(() => import('./pages/admin/WhatsAppTestPage.tsx'));
+const AdminLayout = React.lazy(() => import('./layouts/AdminLayout'));
+const AdminDashboard = React.lazy(() => import('./pages/admin/AdminDashboard'));
+const AdminProducts = React.lazy(() => import('./pages/admin/AdminProducts'));
+const AdminFlashSales = React.lazy(() => import('./pages/admin/AdminFlashSales'));
+const AdminUsers = React.lazy(() => import('./pages/admin/AdminUsers'));
+const AdminBanners = React.lazy(() => import('./pages/admin/AdminBanners'));
+const AdminSettings = React.lazy(() => import('./pages/admin/AdminSettings'));
+const AdminOrders = React.lazy(() => import('./pages/admin/AdminOrders'));
+const AdminGameTitles = React.lazy(() => import('./pages/admin/AdminGameTitles'));
+const WhatsAppTestPage = React.lazy(() => import('./pages/admin/WhatsAppTestPage'));
+const AdminPosts = React.lazy(() => import('./pages/admin/AdminPosts'));
 
 // Optimized loading component for better perceived performance
 const PageLoader = () => (
@@ -115,6 +117,7 @@ function App() {
 
   return (
     <ErrorBoundary>
+      <ThemeProvider>
       <AuthProvider>
         <WishlistProvider>
           <ToastProvider>
@@ -167,6 +170,11 @@ function App() {
                     <Route path="banners" element={
                       <Suspense fallback={<PageLoader />}>
                         <AdminBanners />
+                      </Suspense>
+                    } />
+                    <Route path="posts" element={
+                      <Suspense fallback={<PageLoader />}>
+                        <AdminPosts />
                       </Suspense>
                     } />
                     <Route path="whatsapp-test" element={
@@ -239,7 +247,8 @@ function App() {
             </ConfirmationProvider>
           </ToastProvider>
         </WishlistProvider>
-      </AuthProvider>
+  </AuthProvider>
+  </ThemeProvider>
     </ErrorBoundary>
   );
 }

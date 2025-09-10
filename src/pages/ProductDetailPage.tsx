@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useLocation, useNavigate } from 'react-router-dom';
-import { ProductService } from '../services/productService.ts';
+import { ProductService } from '../services/productService';
 import { SettingsService } from '../services/settingsService.ts';
 import { Product, Customer, RentalOption } from '../types/index.ts';
 import {

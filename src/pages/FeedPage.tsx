@@ -1,57 +1,17 @@
 import React from 'react';
 import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
+import { FeedService, type FeedPost } from '../services/feedService';
 
-type FeedMedia = {
-  type: 'image' | 'video';
-  url: string;
-};
-
-type FeedItem = {
-  id: string;
-  user: { name: string; username: string; avatar?: string };
-  createdAt: string; // ISO
-  content: string;
-  media?: FeedMedia[];
-  likes: number;
-  comments: number;
-  shares: number;
-};
-
-const MOCK_ITEMS: FeedItem[] = [
+// Fallback mock if Supabase isn't configured
+const MOCK_ITEMS: Array<Pick<FeedPost, 'id' | 'content' | 'created_at' | 'media' | 'counts'>> = [
   {
-    id: '1',
-    user: { name: 'Raka', username: 'raka.gg' },
-    createdAt: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    content: 'Akhirnya push ke Mythic! Combo hari ini jalan banget 🔥',
+    id: 'mock-1',
+    created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
+    content: 'Contoh postingan. Konfigurasi Supabase untuk melihat feed asli.',
     media: [
-      { type: 'image', url: 'https://images.unsplash.com/photo-1605901309584-818e25960a8e?q=80&w=1200&auto=format&fit=crop' }
+      { id: 'm1', type: 'image', url: 'https://images.unsplash.com/photo-1605901309584-818e25960a8e?q=80&w=1200&auto=format&fit=crop', position: 0 }
     ],
-    likes: 123,
-    comments: 24,
-    shares: 5
-  },
-  {
-    id: '2',
-    user: { name: 'Naya', username: 'nayaplay' },
-    createdAt: new Date(Date.now() - 1000 * 60 * 60).toISOString(),
-    content: 'Lagi coba build baru buat hero marksman, worth it banget buat late game ✨',
-    media: [
-      { type: 'image', url: 'https://images.unsplash.com/photo-1542751110-97427bbecf20?q=80&w=1200&auto=format&fit=crop' },
-      { type: 'image', url: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=1200&auto=format&fit=crop' }
-    ],
-    likes: 89,
-    comments: 12,
-    shares: 3
-  },
-  {
-    id: '3',
-    user: { name: 'Dimas', username: 'dims.exe' },
-    createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
-    content: 'Custom lobby seru bareng komunitas. Minggu depan kita adain lagi! 🙌',
-    media: [],
-    likes: 42,
-    comments: 8,
-    shares: 1
+    counts: { likes: 3, comments: 1 }
   }
 ];
 
@@ -64,18 +24,49 @@ function timeAgo(iso: string) {
 }
 
 const FeedPage: React.FC = () => {
-  const [items, setItems] = React.useState<FeedItem[]>(MOCK_ITEMS);
+  const [items, setItems] = React.useState<FeedPost[] | null>(null);
+  const [cursor, setCursor] = React.useState<string | undefined>(undefined);
+  const [loading, setLoading] = React.useState(true);
   const [loadingMore, setLoadingMore] = React.useState(false);
 
+  const load = React.useCallback(async () => {
+    setLoading(true);
+    const { posts, nextCursor } = await FeedService.list({ limit: 10 });
+    if (!posts.length) {
+      // fallback to mock if no data or supabase not ready
+      setItems(MOCK_ITEMS as unknown as FeedPost[]);
+      setCursor(undefined);
+    } else {
+      setItems(posts);
+      setCursor(nextCursor);
+    }
+    setLoading(false);
+  }, []);
+
+  React.useEffect(() => { load(); }, [load]);
+
   const loadMore = async () => {
+    if (!cursor) return;
     setLoadingMore(true);
-    // Simulate network delay
-    await new Promise((r) => setTimeout(r, 800));
-    setItems((prev) => [
-      ...prev,
-      ...MOCK_ITEMS.map((it) => ({ ...it, id: `${it.id}-${prev.length + Math.random()}` }))
-    ]);
+    const { posts, nextCursor } = await FeedService.list({ limit: 10, cursor });
+    setItems((prev) => ([...(prev || []), ...posts]));
+    setCursor(nextCursor);
     setLoadingMore(false);
+  };
+
+  const toggleLike = async (postId: string) => {
+    // Optimistic update
+    setItems((prev) => (prev || []).map(p => p.id === postId ? { ...p, counts: { ...p.counts, likes: p.counts.likes + 1 } } : p));
+    await FeedService.toggleLike(postId, true);
+  };
+
+  const addComment = async (postId: string) => {
+    const content = prompt('Tulis komentar:');
+    if (!content) return;
+    const ok = await FeedService.addComment(postId, content);
+    if (ok.success) {
+      setItems((prev) => (prev || []).map(p => p.id === postId ? { ...p, counts: { ...p.counts, comments: p.counts.comments + 1 } } : p));
+    }
   };
 
   return (
@@ -89,15 +80,22 @@ const FeedPage: React.FC = () => {
 
         {/* Feed list */}
         <div className="space-y-4">
-          {items.map((post) => (
+          {loading && (
+            <div className="bg-black/60 border border-white/10 rounded-xl p-4 animate-pulse">
+              <div className="h-4 w-24 bg-white/10 rounded mb-2" />
+              <div className="h-3 w-48 bg-white/10 rounded" />
+            </div>
+          )}
+
+          {!loading && (items || []).map((post) => (
             <article key={post.id} className="bg-black/60 border border-white/10 rounded-xl p-3 sm:p-4 animate-fade-in">
               {/* User row */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-xs font-bold">{post.user.name[0]}</div>
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-xs font-bold">P</div>
                   <div>
-                    <div className="text-sm font-medium">{post.user.name}</div>
-                    <div className="text-xs text-gray-400">@{post.user.username} · {timeAgo(post.createdAt)}</div>
+                    <div className="text-sm font-medium">Postingan</div>
+                    <div className="text-xs text-gray-400">{timeAgo(post.created_at)}</div>
                   </div>
                 </div>
                 <button className="text-gray-400 hover:text-gray-200" aria-label="More">
@@ -106,15 +104,17 @@ const FeedPage: React.FC = () => {
               </div>
 
               {/* Content */}
-              <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+              {post.content && (
+                <p className="mt-3 text-sm leading-relaxed whitespace-pre-wrap">{post.content}</p>
+              )}
 
               {/* Media grid */}
               {post.media && post.media.length > 0 && (
                 <div className={`mt-3 grid gap-2 ${post.media.length > 1 ? 'grid-cols-2' : ''}`}>
-                  {post.media.map((m, idx) => (
-                    <div key={idx} className="overflow-hidden rounded-lg border border-white/10">
+                  {post.media.map((m) => (
+                    <div key={m.id} className="overflow-hidden rounded-lg border border-white/10">
                       {m.type === 'image' ? (
-                        <img src={m.url} alt={`Media by ${post.user.username}`} className="w-full h-60 object-cover" loading="lazy" />
+                        <img src={m.url} alt={`media`} className="w-full h-60 object-cover" loading="lazy" />
                       ) : (
                         <video src={m.url} className="w-full h-60 object-cover" controls />
                       )}
@@ -125,14 +125,14 @@ const FeedPage: React.FC = () => {
 
               {/* Actions */}
               <div className="mt-3 flex items-center justify-between text-xs">
-                <button className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300">
-                  <Heart size={16} className="text-pink-400" /> <span>{post.likes}</span>
+                <button onClick={() => toggleLike(post.id)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300">
+                  <Heart size={16} className="text-pink-400" /> <span>{post.counts.likes}</span>
+                </button>
+                <button onClick={() => addComment(post.id)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300">
+                  <MessageCircle size={16} /> <span>{post.counts.comments}</span>
                 </button>
                 <button className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300">
-                  <MessageCircle size={16} /> <span>{post.comments}</span>
-                </button>
-                <button className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300">
-                  <Share2 size={16} /> <span>{post.shares}</span>
+                  <Share2 size={16} /> <span>Bagikan</span>
                 </button>
               </div>
             </article>
@@ -141,10 +141,10 @@ const FeedPage: React.FC = () => {
           <div className="flex justify-center pt-2">
             <button
               onClick={loadMore}
-              disabled={loadingMore}
+              disabled={loadingMore || !cursor}
               className="px-4 py-2 rounded-lg border border-pink-500/40 text-pink-300 hover:bg-pink-500/10 disabled:opacity-60"
             >
-              {loadingMore ? 'Memuat…' : 'Muat lebih banyak'}
+              {loadingMore ? 'Memuat…' : cursor ? 'Muat lebih banyak' : 'Sudah semua'}
             </button>
           </div>
         </div>

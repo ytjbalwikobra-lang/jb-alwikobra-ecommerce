@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingBag, Zap, Home, Settings, HelpCircle, User } from 'lucide-react';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext';
 
 const Header: React.FC = () => {
   const location = useLocation();
@@ -43,7 +43,7 @@ const Header: React.FC = () => {
   ];
 
   return (
-    <header className="bg-black/80 backdrop-blur border-b border-pink-500/30 sticky top-0 z-50 pt-safe-top">
+    <header className="backdrop-blur sticky top-0 z-50 pt-safe-top" style={{ backgroundColor: 'rgba(0,0,0,0.8)', borderBottom: '1px solid var(--border)' }}>
       {/* Mobile compact header */}
       <div className="md:hidden">
         <div className="px-4 py-2 flex items-center justify-between">
@@ -51,11 +51,11 @@ const Header: React.FC = () => {
             {logoUrl ? (
               <img src={logoUrl} alt={siteName} className="h-7 w-auto rounded" />
             ) : (
-              <div className="w-7 h-7 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
+              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-600) 100%)' }}>
                 <span className="text-white font-bold text-xs">JB</span>
               </div>
             )}
-            <span className="text-white font-semibold">{siteName}</span>
+                <span className="text-white font-semibold">{siteName}</span>
           </Link>
           <Link to={user ? '/profile' : '/auth'} className="text-gray-200 hover:text-pink-300">
             <User size={20} />
@@ -72,7 +72,7 @@ const Header: React.FC = () => {
               {logoUrl ? (
                 <img src={logoUrl} alt={siteName} className="h-8 w-auto rounded" />
               ) : (
-                <div className="w-8 h-8 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent) 0%, var(--accent-600) 100%)' }}>
                   <span className="text-white font-bold text-sm">JB</span>
                 </div>
               )}
@@ -94,9 +94,10 @@ const Header: React.FC = () => {
                   to={item.path}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 flex items-center space-x-2 ${
                     isActive
-                      ? 'bg-pink-500/10 text-pink-400 border border-pink-500/40'
-                      : 'text-gray-300 hover:text-pink-300 hover:bg-white/5'
+                      ? 'text-pink-400'
+                      : 'text-gray-300 hover:text-pink-300'
                   }`}
+                  style={isActive ? { backgroundColor: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.4)' } : {}}
                 >
                   <Icon size={16} />
                   <span>{item.label}</span>

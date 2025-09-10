@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import PhoneInput from '../components/PhoneInput.tsx';
 import { AuthRequired } from '../components/ProtectedRoute.tsx';
-import { useAuth } from '../contexts/TraditionalAuthContext.tsx';
+import { useAuth } from '../contexts/TraditionalAuthContext';
 import { useWishlist } from '../contexts/WishlistContext.tsx';
 import { useConfirmation } from '../components/ConfirmationModal.tsx';
 import { useToast } from '../components/Toast.tsx';

@@ -61,6 +61,14 @@
     <title>JB Alwikobra - Jual Beli Rental Akun Game Terpercaya</title>
   </head>
   <body>
+    <script>
+      // Ensure dark mode by default and prevent iOS white flash during load
+      try {
+        document.documentElement.classList.add('dark');
+        document.documentElement.style.backgroundColor = '#000';
+        document.body && (document.body.style.backgroundColor = '#000');
+      } catch (e) {}
+    </script>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="root"></div>
   </body>
