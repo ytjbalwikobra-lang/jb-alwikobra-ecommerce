@@ -1,19 +1,23 @@
 import React from 'react';
 import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
-import { FeedService, type FeedPost } from '../services/feedService';
+import { enhancedFeedService, type FeedPost } from '../services/enhancedFeedService';
 
-// Fallback mock if Supabase isn't configured
-const MOCK_ITEMS: Array<Pick<FeedPost, 'id' | 'content' | 'created_at' | 'media' | 'counts'>> = [
-  {
-    id: 'mock-1',
-    created_at: new Date(Date.now() - 1000 * 60 * 15).toISOString(),
-    content: 'Contoh postingan. Konfigurasi Supabase untuk melihat feed asli.',
-    media: [
-      { id: 'm1', type: 'image', url: 'https://images.unsplash.com/photo-1605901309584-818e25960a8e?q=80&w=1200&auto=format&fit=crop', position: 0 }
-    ],
-    counts: { likes: 3, comments: 1 }
-  }
-];
+// Fallback loading component
+const FeedSkeleton: React.FC = () => (
+  <div className="space-y-6">
+    {[1, 2, 3].map((i) => (
+      <div key={i} className="ios-card p-4">
+        <div className="ios-skeleton h-4 w-3/4 mb-2"></div>
+        <div className="ios-skeleton h-32 w-full mb-3"></div>
+        <div className="flex space-x-4">
+          <div className="ios-skeleton h-6 w-12"></div>
+          <div className="ios-skeleton h-6 w-12"></div>
+          <div className="ios-skeleton h-6 w-12"></div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
 
 function timeAgo(iso: string) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -24,48 +28,86 @@ function timeAgo(iso: string) {
 }
 
 const FeedPage: React.FC = () => {
-  const [items, setItems] = React.useState<FeedPost[] | null>(null);
-  const [cursor, setCursor] = React.useState<string | undefined>(undefined);
+  const [items, setItems] = React.useState<FeedPost[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [loadingMore, setLoadingMore] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [cursor, setCursor] = React.useState<string | undefined>(undefined);
+  const [hasMore, setHasMore] = React.useState(true);
 
-  const load = React.useCallback(async () => {
-    setLoading(true);
-    const { posts, nextCursor } = await FeedService.list({ limit: 10 });
-    if (!posts.length) {
-      // fallback to mock if no data or supabase not ready
-      setItems(MOCK_ITEMS as unknown as FeedPost[]);
-      setCursor(undefined);
-    } else {
-      setItems(posts);
-      setCursor(nextCursor);
+  const loadInitialPosts = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const result = await enhancedFeedService.list({ limit: 10 });
+      setItems(result.posts);
+      setCursor(result.nextCursor);
+      setHasMore(result.hasMore);
+    } catch (err: any) {
+      console.error('Failed to load posts:', err);
+      setError(err.message || 'Gagal memuat feed');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
 
-  React.useEffect(() => { load(); }, [load]);
+  React.useEffect(() => { 
+    loadInitialPosts(); 
+  }, [loadInitialPosts]);
 
   const loadMore = async () => {
-    if (!cursor) return;
-    setLoadingMore(true);
-    const { posts, nextCursor } = await FeedService.list({ limit: 10, cursor });
-    setItems((prev) => ([...(prev || []), ...posts]));
-    setCursor(nextCursor);
-    setLoadingMore(false);
+    if (loadingMore || !hasMore || !cursor) return;
+    
+    try {
+      setLoadingMore(true);
+      const result = await enhancedFeedService.list({ limit: 10, cursor });
+      setItems(prev => [...prev, ...result.posts]);
+      setCursor(result.nextCursor);
+      setHasMore(result.hasMore);
+    } catch (err: any) {
+      console.error('Failed to load more posts:', err);
+    } finally {
+      setLoadingMore(false);
+    }
   };
 
   const toggleLike = async (postId: string) => {
-    // Optimistic update
-    setItems((prev) => (prev || []).map(p => p.id === postId ? { ...p, counts: { ...p.counts, likes: p.counts.likes + 1 } } : p));
-    await FeedService.toggleLike(postId, true);
+    try {
+      // Optimistic update
+      setItems(prev => prev.map(p => 
+        p.id === postId 
+          ? { ...p, counts: { ...p.counts, likes: p.counts.likes + 1 } } 
+          : p
+      ));
+      
+      await enhancedFeedService.toggleLike(postId, true);
+    } catch (err: any) {
+      console.error('Failed to like post:', err);
+      // Revert optimistic update on error
+      setItems(prev => prev.map(p => 
+        p.id === postId 
+          ? { ...p, counts: { ...p.counts, likes: Math.max(0, p.counts.likes - 1) } } 
+          : p
+      ));
+    }
   };
 
   const addComment = async (postId: string) => {
     const content = prompt('Tulis komentar:');
-    if (!content) return;
-    const ok = await FeedService.addComment(postId, content);
-    if (ok.success) {
-      setItems((prev) => (prev || []).map(p => p.id === postId ? { ...p, counts: { ...p.counts, comments: p.counts.comments + 1 } } : p));
+    if (!content?.trim()) return;
+    
+    try {
+      const result = await enhancedFeedService.addComment(postId, content);
+      if (result.success) {
+        setItems(prev => prev.map(p => 
+          p.id === postId 
+            ? { ...p, counts: { ...p.counts, comments: p.counts.comments + 1 } } 
+            : p
+        ));
+      }
+    } catch (err: any) {
+      console.error('Failed to add comment:', err);
     }
   };
 
@@ -141,10 +183,10 @@ const FeedPage: React.FC = () => {
           <div className="flex justify-center pt-2">
             <button
               onClick={loadMore}
-              disabled={loadingMore || !cursor}
+              disabled={loadingMore || !hasMore}
               className="px-4 py-2 rounded-lg border border-pink-500/40 text-pink-300 hover:bg-pink-500/10 disabled:opacity-60"
             >
-              {loadingMore ? 'Memuat…' : cursor ? 'Muat lebih banyak' : 'Sudah semua'}
+              {loadingMore ? 'Memuat…' : hasMore ? 'Muat lebih banyak' : 'Sudah semua'}
             </button>
           </div>
         </div>

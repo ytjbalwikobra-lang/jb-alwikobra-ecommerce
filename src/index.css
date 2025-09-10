@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import iOS compatibility layer */
+@import './styles/ios-compatibility.css';
+
 /* Mobile-first font sizing - like native apps */
 html {
   font-size: 14px; /* Smaller base font for mobile */
