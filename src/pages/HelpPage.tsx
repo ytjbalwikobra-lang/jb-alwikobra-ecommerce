@@ -153,51 +153,121 @@ const HelpPage: React.FC = () => {
   }), []);
 
   return (
-    <div className="min-h-screen bg-app-dark text-gray-200">
-  {/* Hero */}
-      <div className="bg-gradient-to-r from-pink-600/20 to-rose-600/20 border-b border-pink-500/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-black border border-pink-500/40 mb-6">
-              <HelpCircle className="text-pink-400 w-8 h-8" />
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-gray-200">
+      {/* Enhanced Hero */}
+      <div className="relative bg-gradient-to-br from-pink-600/20 via-purple-600/15 to-rose-600/20 border-b border-pink-500/30 overflow-hidden">
+        {/* Background decoration */}
+        <div className="absolute inset-0">
+          <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        </div>
+        
+        <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center space-y-8">
+            {/* Enhanced icon */}
+            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-pink-500/20 to-purple-500/20 border border-pink-500/50 mb-6 backdrop-blur-sm shadow-lg shadow-pink-500/20">
+              <HelpCircle className="text-pink-400 w-10 h-10" />
             </div>
-    <h1 id="pusat-bantuan" className="text-4xl font-bold text-white mb-4">Pusat Bantuan</h1>
-            <p className="text-gray-300 text-lg mb-8 max-w-2xl mx-auto">
-              Temukan jawaban untuk pertanyaan umum, panduan lengkap, dan kontak support untuk pengalaman terbaik di JB Alwikobra
-            </p>
-            <div className="max-w-md mx-auto relative">
-              <input 
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-black/70 border border-pink-500/30 rounded-xl pl-12 pr-4 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:border-pink-500/60" 
-                placeholder="Cari: pembelian, pembayaran, keamanan..." 
-              />
-              <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
+            
+            {/* Enhanced title */}
+            <div className="space-y-4">
+              <h1 id="pusat-bantuan" className="text-5xl sm:text-6xl font-bold bg-gradient-to-r from-pink-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                Pusat Bantuan
+              </h1>
+              <p className="text-gray-300 text-xl mb-8 max-w-3xl mx-auto leading-relaxed">
+                Temukan jawaban untuk pertanyaan umum, panduan lengkap, dan kontak support untuk pengalaman terbaik di JB Alwikobra
+              </p>
+            </div>
+            
+            {/* Enhanced search */}
+            <div className="max-w-lg mx-auto relative">
+              <div className="relative">
+                <input 
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full bg-gradient-to-r from-black/80 to-gray-900/80 border border-pink-500/40 rounded-2xl pl-14 pr-6 py-4 text-white placeholder:text-gray-400 focus:outline-none focus:border-pink-500/80 focus:ring-2 focus:ring-pink-500/30 backdrop-blur-sm transition-all duration-300 text-lg" 
+                  placeholder="Cari: pembelian, pembayaran, keamanan..." 
+                />
+                <Search size={24} className="absolute left-5 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+              
+              {/* Search suggestions */}
+              {searchTerm && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-br from-gray-900/95 to-black/95 border border-gray-700/50 rounded-xl shadow-2xl backdrop-blur-md z-10">
+                  {filteredFaqs.slice(0, 3).map((faq, i) => (
+                    <div key={i} className="p-3 hover:bg-white/5 transition-colors duration-200 first:rounded-t-xl last:rounded-b-xl">
+                      <p className="text-sm text-gray-300 font-medium">{faq.q}</p>
+                      <p className="text-xs text-gray-500 mt-1">{faq.category}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Quick stats */}
+            <div className="flex justify-center items-center space-x-8 text-sm text-gray-400 pt-4">
+              <div className="flex items-center space-x-2">
+                <CheckCircle size={16} className="text-green-500" />
+                <span>24/7 Support</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Zap size={16} className="text-yellow-500" />
+                <span>Respons Cepat</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Star size={16} className="text-purple-500" />
+                <span>Expert Team</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-  {/* FAQPage JSON-LD for rich results */}
-  <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
+      {/* FAQPage JSON-LD for rich results */}
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }} />
 
-  <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="relative max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-8">
 
-        {/* TOC */}
-        <nav aria-label="Daftar Isi" className="mb-8 bg-black/40 border border-pink-500/30 rounded-lg p-4">
-          <p className="text-sm text-gray-400 mb-2">Daftar Isi</p>
-          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-sm list-disc list-inside text-pink-300">
-            <li><a href="#topik-cepat" className="hover:underline">Topik Cepat</a></li>
-            <li><a href="#kategori" className="hover:underline">Kategori</a></li>
-            <li><a href="#faq" className="hover:underline">Pertanyaan Umum</a></li>
-            <li><a href="#kontak-cepat" className="hover:underline">Kontak Cepat</a></li>
-            <li><a href="#panduan" className="hover:underline">Panduan</a></li>
-            <li><a href="#butuh-bantuan" className="hover:underline">Butuh Bantuan?</a></li>
+        {/* Enhanced TOC */}
+        <nav aria-label="Daftar Isi" className="bg-gradient-to-br from-gray-900/80 to-black/80 border border-pink-500/30 rounded-2xl p-6 backdrop-blur-sm">
+          <div className="flex items-center space-x-3 mb-4">
+            <div className="w-8 h-8 bg-gradient-to-br from-pink-500/20 to-purple-500/20 rounded-lg flex items-center justify-center">
+              <Settings size={16} className="text-pink-400" />
+            </div>
+            <h3 className="text-lg font-semibold text-white">Daftar Isi</h3>
+          </div>
+          <ul className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+            {[
+              { href: "#topik-cepat", text: "Topik Cepat", icon: Sparkles },
+              { href: "#kategori", text: "Kategori", icon: ShoppingBag },
+              { href: "#faq", text: "Pertanyaan Umum", icon: HelpCircle },
+              { href: "#kontak-cepat", text: "Kontak Cepat", icon: MessageSquare },
+              { href: "#panduan", text: "Panduan", icon: User },
+              { href: "#butuh-bantuan", text: "Butuh Bantuan?", icon: Heart }
+            ].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <li key={i}>
+                  <a 
+                    href={item.href} 
+                    className="flex items-center space-x-2 p-2 text-gray-300 hover:text-pink-300 hover:bg-white/5 rounded-lg transition-all duration-200 group"
+                  >
+                    <Icon size={16} className="text-pink-400 group-hover:scale-110 transition-transform duration-200" />
+                    <span>{item.text}</span>
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </nav>
 
-  {/* Quick Topics */}
-  <h2 id="topik-cepat" className="text-2xl font-bold text-white mb-4">Topik Cepat</h2>
+        {/* Enhanced Quick Topics Header */}
+        <div className="space-y-3">
+          <h2 id="topik-cepat" className="text-3xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+            Topik Cepat
+          </h2>
+          <p className="text-gray-400">Akses cepat ke informasi yang paling sering dicari</p>
+        </div>
   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
           <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 text-center hover:border-pink-500/50 transition-colors cursor-pointer">
             <User className="mx-auto text-pink-400 mb-2" size={24} />

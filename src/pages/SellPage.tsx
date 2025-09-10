@@ -20,33 +20,43 @@ const SellPageRefactored: React.FC = () => {
   } = useSellPage();
 
   return (
-    <div className="min-h-screen bg-app-dark text-gray-200">
-      {/* Hero Section */}
-      <HeroSection onSellAccount={handleSellAccount} />
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black text-gray-200">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '4s' }}></div>
+      </div>
 
-      {/* Popular Games Section */}
-      <PopularGames games={popularGames} loading={loadingGames} />
+      {/* Content */}
+      <div className="relative">
+        {/* Hero Section */}
+        <HeroSection onSellAccount={handleSellAccount} />
 
-      {/* Sell Form Section */}
-      <SellForm
-        formData={formData}
-        gameOptions={gameOptions}
-        onFormChange={handleFormChange}
-        onPriceChange={handlePriceChange}
-        onSubmit={handleSellAccount}
-      />
+        {/* Popular Games Section */}
+        <PopularGames games={popularGames} loading={loadingGames} />
 
-      {/* Benefits Section */}
-      <BenefitsSection />
+        {/* Sell Form Section */}
+        <SellForm
+          formData={formData}
+          gameOptions={gameOptions}
+          onFormChange={handleFormChange}
+          onPriceChange={handlePriceChange}
+          onSubmit={handleSellAccount}
+        />
 
-      {/* Steps Section */}
-      <StepsSection />
+        {/* Benefits Section */}
+        <BenefitsSection />
 
-      {/* Stats Section */}
-      <StatsSection />
+        {/* Steps Section */}
+        <StepsSection />
 
-      {/* CTA Section */}
-      <CTASection onSellAccount={handleSellAccount} />
+        {/* Stats Section */}
+        <StatsSection />
+
+        {/* CTA Section */}
+        <CTASection onSellAccount={handleSellAccount} />
+      </div>
     </div>
   );
 };

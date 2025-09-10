@@ -258,17 +258,25 @@ const ResponsiveImage: React.FC<ResponsiveImageProps> = React.memo(({
 
       {/* Loading indicator */}
       {!isLoaded && isVisible && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-900/20 backdrop-blur-sm">
-          <div className="w-8 h-8 border-2 border-white/30 border-t-white/80 rounded-full animate-spin"></div>
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-900/40 via-gray-800/40 to-gray-900/40 backdrop-blur-sm">
+          <div className="relative">
+            <div className="w-10 h-10 border-3 border-pink-500/30 border-t-pink-500 rounded-full animate-spin"></div>
+            <div className="absolute inset-0 w-10 h-10 border-3 border-purple-500/20 border-b-purple-500 rounded-full animate-spin animation-delay-150 [animation-direction:reverse]"></div>
+          </div>
         </div>
       )}
 
       {/* Error state */}
       {error && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-800 text-white text-sm">
-          <div className="text-center p-4">
-            <div className="text-gray-400 mb-2">⚠️</div>
-            <div>Image failed to load</div>
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800 via-gray-700 to-gray-800 text-white">
+          <div className="text-center p-6">
+            <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <div className="text-sm font-medium text-gray-200">Gambar gagal dimuat</div>
+            <div className="text-xs text-gray-400 mt-1">Periksa koneksi internet Anda</div>
           </div>
         </div>
       )}

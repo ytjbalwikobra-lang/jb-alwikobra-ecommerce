@@ -94,11 +94,33 @@ const TraditionalAuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-app-dark flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center p-4">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-pink-500/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      </div>
+      
+      <div className="relative w-full max-w-md">
         <AuthHeader mode={mode} />
-        <div className="bg-black/20 backdrop-blur-sm border border-pink-500/30 rounded-xl p-8 shadow-2xl">
+        
+        {/* Enhanced auth card */}
+        <div className="bg-gradient-to-br from-gray-900/90 to-black/90 backdrop-blur-md border border-pink-500/30 rounded-2xl p-8 shadow-2xl shadow-pink-500/10 animate-in slide-in-from-bottom-4 duration-500">
+          {/* Decorative elements */}
+          <div className="absolute -top-px left-8 right-8 h-px bg-gradient-to-r from-transparent via-pink-500/50 to-transparent"></div>
+          <div className="absolute -bottom-px left-8 right-8 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent"></div>
+          
           {renderContent()}
+        </div>
+        
+        {/* Trust indicators */}
+        <div className="mt-6 text-center space-y-2">
+          <p className="text-gray-400 text-sm">🔒 Dilindungi dengan enkripsi end-to-end</p>
+          <div className="flex justify-center items-center space-x-4 text-xs text-gray-500">
+            <span>✨ Trusted by 10k+ gamers</span>
+            <span>•</span>
+            <span>🚀 Fast & Secure</span>
+          </div>
         </div>
       </div>
     </div>

@@ -98,17 +98,17 @@ const SmartPhoneInput: React.FC<SmartPhoneInputProps> = ({
 
   const getBorderColor = () => {
     switch (validationStatus) {
-      case 'valid': return 'border-green-500/60';
-      case 'invalid': return 'border-red-500/60';
-      default: return 'border-pink-500/40';
+      case 'valid': return 'border-green-500/60 shadow-green-500/25';
+      case 'invalid': return 'border-red-500/60 shadow-red-500/25';
+      default: return 'border-pink-500/40 hover:border-pink-500/60';
     }
   };
 
   const getIconColor = () => {
     switch (validationStatus) {
-      case 'valid': return 'text-green-500';
-      case 'invalid': return 'text-red-500';
-      default: return 'text-gray-400';
+      case 'valid': return 'text-green-400';
+      case 'invalid': return 'text-red-400';
+      default: return 'text-pink-300';
     }
   };
 
@@ -122,11 +122,11 @@ const SmartPhoneInput: React.FC<SmartPhoneInputProps> = ({
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative group ${className}`}>
       {/* Phone Icon */}
-      <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+      <div className="absolute left-3 top-1/2 transform -translate-y-1/2 z-10">
         <svg
-          className={`w-5 h-5 ${getIconColor()}`}
+          className={`w-5 h-5 ${getIconColor()} transition-colors duration-200`}
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -150,47 +150,56 @@ const SmartPhoneInput: React.FC<SmartPhoneInputProps> = ({
         placeholder={placeholder}
         disabled={disabled}
         required={required}
-        className={`w-full pl-12 ${showCountrySelector && detectedCountry ? 'pr-16' : 'pr-12'} py-3 rounded-lg border ${getBorderColor()} bg-black text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 transition-all duration-200`}
+        className={`w-full pl-12 ${showCountrySelector && detectedCountry ? 'pr-20' : 'pr-12'} py-3.5 rounded-xl border ${getBorderColor()} bg-gradient-to-r from-gray-900 to-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/80 transition-all duration-300 shadow-lg backdrop-blur-sm disabled:opacity-50 disabled:cursor-not-allowed`}
       />
 
       {/* Country Flag & Validation Icons */}
-      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2">
+      <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center space-x-2.5 z-10">
         {/* Country Flag */}
         {showCountrySelector && detectedCountry && (
-          <span className="text-lg" title={detectedCountry}>
+          <span className="text-xl animate-fadeIn" title={detectedCountry}>
             {getCountryFlag()}
           </span>
         )}
         
         {/* Validation Icon */}
         {validationStatus === 'valid' && (
-          <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-          </svg>
+          <div className="w-6 h-6 rounded-full bg-green-500/20 flex items-center justify-center animate-fadeIn">
+            <svg className="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
         )}
         {validationStatus === 'invalid' && value && (
-          <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-          </svg>
+          <div className="w-6 h-6 rounded-full bg-red-500/20 flex items-center justify-center animate-fadeIn">
+            <svg className="w-4 h-4 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </div>
         )}
       </div>
 
       {/* Helper Text */}
       {isFocused && !value && (
-        <div className="absolute top-full left-0 mt-1 text-xs text-gray-400">
-          Supports: Indonesia, Malaysia, Singapore, Thailand, Philippines, Vietnam, China, Japan, Korea, India, and more...
+        <div className="absolute top-full left-0 mt-2 text-xs text-gray-400 animate-fadeIn bg-gray-800/80 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-gray-700/50">
+          Mendukung: Indonesia, Malaysia, Singapura, Thailand, Filipina, Vietnam, China, Jepang, Korea, India, dll.
         </div>
       )}
       
       {isFocused && validationStatus === 'invalid' && value && (
-        <div className="absolute top-full left-0 mt-1 text-xs text-red-400">
-          Use local format (08xxx) or international (+62xxx, +65xxx, etc.)
+        <div className="absolute top-full left-0 mt-2 text-xs text-red-400 animate-fadeIn bg-red-900/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-red-500/30">
+          Gunakan format lokal (08xxx) atau internasional (+62xxx, +65xxx, dll.)
         </div>
       )}
       
       {!isFocused && validationStatus === 'valid' && value && detectedCountry && (
-        <div className="absolute top-full left-0 mt-1 text-xs text-green-400">
-          {detectedCountry} phone number ✓
+        <div className="absolute top-full left-0 mt-2 text-xs text-green-400 animate-fadeIn bg-green-900/20 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-green-500/30">
+          <span className="flex items-center gap-1.5">
+            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            Nomor {detectedCountry} valid
+          </span>
         </div>
       )}
     </div>

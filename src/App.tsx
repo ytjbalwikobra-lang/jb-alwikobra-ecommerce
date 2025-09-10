@@ -82,10 +82,39 @@ const AdminFeed = React.lazy(() => import('./pages/admin/AdminFeed'));
 
 // Optimized loading component for better perceived performance
 const PageLoader = () => (
-  <div className="min-h-screen bg-black flex items-center justify-center">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-2 border-pink-500 border-t-transparent mx-auto mb-3"></div>
-      <div className="text-gray-400 text-sm">Loading...</div>
+  <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-black flex items-center justify-center">
+    <div className="text-center space-y-6">
+      {/* Modern multi-ring loader */}
+      <div className="relative">
+        <div className="w-20 h-20 mx-auto">
+          <div className="absolute top-0 left-0 w-full h-full border-4 border-pink-500/20 rounded-full"></div>
+          <div className="absolute top-0 left-0 w-full h-full border-4 border-transparent border-t-pink-500 rounded-full animate-spin"></div>
+          <div className="absolute top-2 left-2 w-16 h-16 border-4 border-transparent border-t-purple-500 rounded-full animate-spin animate-reverse"></div>
+          <div className="absolute top-4 left-4 w-12 h-12 border-4 border-transparent border-t-blue-500 rounded-full animate-spin" style={{ animationDuration: '3s' }}></div>
+        </div>
+      </div>
+      
+      {/* Loading text with gradient */}
+      <div className="space-y-3">
+        <div className="text-xl font-bold bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+          Memuat Halaman
+        </div>
+        <div className="text-gray-400 text-sm">Sedang menyiapkan konten untuk Anda...</div>
+      </div>
+      
+      {/* Animated dots */}
+      <div className="flex justify-center space-x-2">
+        <div className="w-2 h-2 bg-pink-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+        <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+        <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+      </div>
+      
+      {/* Progress bar simulation */}
+      <div className="w-48 mx-auto">
+        <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-pink-500 to-purple-500 rounded-full animate-pulse"></div>
+        </div>
+      </div>
     </div>
   </div>
 );

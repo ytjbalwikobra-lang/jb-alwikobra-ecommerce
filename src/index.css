@@ -473,3 +473,13 @@ textarea:focus {
     page-break-before: always;
   }
 }
+
+/* Toast animations */
+@keyframes shrink {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
+}

@@ -268,9 +268,9 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   }, [value, selectedCountry, onValidationChange]);
 
   const getBorderColor = () => {
-    if (!phoneNumber) return 'border-pink-500/40';
-    if (isValid) return 'border-green-500/60';
-    return 'border-red-500/60';
+    if (!phoneNumber) return 'border-gray-600/50 focus-within:border-pink-500/60';
+    if (isValid) return 'border-green-500/60 focus-within:border-green-500/80';
+    return 'border-red-500/60 focus-within:border-red-500/80';
   };
 
   const getIconColor = () => {
@@ -281,17 +281,17 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
   return (
     <div className={`relative ${className}`}>
-      <div className={`flex rounded-lg border ${getBorderColor()} bg-black text-white overflow-hidden`}>
+      <div className={`flex rounded-xl border ${getBorderColor()} bg-gradient-to-r from-white/10 to-white/5 text-white overflow-hidden backdrop-blur-sm transition-all duration-300 hover:bg-white/12 focus-within:ring-2 focus-within:ring-pink-500/50 shadow-lg`}>
         
         {/* Country Selector */}
         <button
           type="button"
           onClick={() => setShowDropdown(!showDropdown)}
-          className="flex items-center gap-2 px-3 py-2 border-r border-pink-500/40 hover:bg-gray-800 transition-colors cursor-pointer"
+          className="flex items-center gap-2 px-3 py-3 border-r border-pink-500/30 hover:bg-white/10 transition-all duration-200 cursor-pointer group"
         >
-          <span className="text-lg">{selectedCountry.flag}</span>
-          <span className="text-sm font-medium text-gray-300">{selectedCountry.phoneCode}</span>
-          <ChevronDown size={16} className={`text-gray-400 transition-transform ${showDropdown ? 'rotate-180' : ''}`} />
+          <span className="text-lg transition-transform duration-200 group-hover:scale-110">{selectedCountry.flag}</span>
+          <span className="text-sm font-semibold text-gray-300 group-hover:text-white transition-colors duration-200">{selectedCountry.phoneCode}</span>
+          <ChevronDown size={16} className={`text-gray-400 group-hover:text-white transition-all duration-300 ${showDropdown ? 'rotate-180' : ''}`} />
         </button>
 
         {/* Phone Number Input */}
@@ -303,53 +303,53 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           placeholder={placeholder || selectedCountry.placeholder}
           required={required}
           maxLength={Math.max(selectedCountry.maxLength || 15, 15)}
-          className="flex-1 px-3 py-2 bg-transparent border-0 focus:outline-none focus:ring-0 text-white placeholder-gray-400"
+          className="flex-1 px-3 py-3 bg-transparent border-0 focus:outline-none focus:ring-0 text-white placeholder-gray-400 transition-all duration-200"
         />
 
         {/* Validation Icon */}
         {phoneNumber && (
-          <div className={`flex items-center px-3 ${getIconColor()}`}>
-            {isValid ? <CheckCircle size={16} /> : <AlertCircle size={16} />}
+          <div className={`flex items-center px-3 transition-all duration-200 ${getIconColor()}`}>
+            {isValid ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
           </div>
         )}
       </div>
 
       {/* Country Dropdown */}
       {showDropdown && (
-        <div ref={dropdownRef} className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-600 rounded-lg shadow-lg z-50 max-h-64 overflow-hidden">
+        <div ref={dropdownRef} className="absolute top-full left-0 right-0 mt-2 bg-gradient-to-br from-gray-800/95 to-gray-900/95 border border-gray-600/50 rounded-xl shadow-2xl shadow-black/20 z-50 max-h-64 overflow-hidden backdrop-blur-md">
           {/* Search */}
-          <div className="p-2 border-b border-gray-600">
+          <div className="p-3 border-b border-gray-600/50">
             <div className="relative">
               <Search size={16} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search countries..."
+                placeholder="Cari negara..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-3 py-2 text-sm bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-pink-500"
+                className="w-full pl-9 pr-3 py-2 text-sm bg-gradient-to-r from-gray-700/50 to-gray-600/50 border border-gray-600/50 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-pink-500/50 focus:border-pink-500/60 backdrop-blur-sm transition-all duration-200"
               />
             </div>
           </div>
 
           {/* Countries List */}
-          <div className="overflow-y-auto max-h-48">
+          <div className="overflow-y-auto max-h-48 scrollbar-hide">
             {filteredCountries.map((country) => (
               <button
                 key={country.code}
                 onClick={() => handleCountrySelect(country)}
-                className={`w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-gray-700 transition-colors ${
-                  selectedCountry.code === country.code ? 'bg-pink-600/20 text-pink-300' : 'text-gray-300'
+                className={`w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-white/10 transition-all duration-200 ${
+                  selectedCountry.code === country.code ? 'bg-pink-500/20 text-pink-200' : 'text-white'
                 }`}
               >
                 <span className="text-lg">{country.flag}</span>
-                <span className="font-medium">{country.phoneCode}</span>
+                <span className="font-semibold">{country.phoneCode}</span>
                 <span className="flex-1 truncate">{country.name}</span>
               </button>
             ))}
             
             {filteredCountries.length === 0 && (
               <div className="px-3 py-4 text-center text-gray-500 text-sm">
-                No countries found
+                Negara tidak ditemukan
               </div>
             )}
           </div>
@@ -358,23 +358,23 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
 
       {/* Error message */}
       {error && (
-        <div className="text-xs text-red-400 mt-1 flex items-center space-x-1">
-          <AlertCircle size={12} />
+        <div className="text-sm text-red-400 mt-2 flex items-center gap-2 font-medium animate-in slide-in-from-top-1 duration-300">
+          <AlertCircle size={16} />
           <span>{error}</span>
         </div>
       )}
       
       {/* Help text */}
-      {!error && (
-        <div className="text-xs text-gray-500 mt-1">
+      {!error && !phoneNumber && (
+        <div className="text-xs text-gray-500 mt-2">
           Format: {selectedCountry.phoneCode} {selectedCountry.placeholder}
         </div>
       )}
       
       {/* Valid confirmation */}
       {phoneNumber && isValid && !error && (
-        <div className="text-xs text-green-400 mt-1 flex items-center space-x-1">
-          <CheckCircle size={12} />
+        <div className="text-sm text-green-400 mt-2 flex items-center gap-2 font-medium animate-in slide-in-from-top-1 duration-300">
+          <CheckCircle size={16} />
           <span>Nomor telepon valid</span>
         </div>
       )}

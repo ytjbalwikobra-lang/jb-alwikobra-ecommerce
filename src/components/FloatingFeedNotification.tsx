@@ -100,26 +100,63 @@ const FloatingFeedNotification: React.FC = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-[60]">
-      <div className="max-w-xs rounded-2xl border border-pink-500/30 bg-gradient-to-b from-gray-950 to-black shadow-2xl p-4 text-gray-200 animate-in fade-in slide-in-from-bottom-2">
-        <div className="text-xs text-pink-300/90">Aktivitas baru di Feed</div>
-        <div className="mt-1 text-sm leading-snug">{notif.message || 'Ada update baru di feed komunitas.'}</div>
-        <div className="mt-3 flex items-center gap-2">
-          <button
-            onClick={() => { onClose(); navigate('/feed'); }}
-            className="px-3 py-1.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-sm"
-            disabled={loading}
-          >
-            Lihat sekarang
-          </button>
-          <button
-            onClick={() => onClose(5 * 60 * 1000)}
-            className="px-3 py-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-sm"
-            disabled={loading}
-          >
-            Nanti
-          </button>
+    <div className="fixed bottom-6 right-6 z-[60] animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <div className="relative max-w-sm rounded-2xl border border-pink-500/30 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 backdrop-blur-lg shadow-2xl p-5 text-white group hover:shadow-pink-500/20 transition-all duration-300 hover:-translate-y-1">
+        {/* Animated background decoration */}
+        <div className="absolute inset-0 bg-gradient-to-br from-pink-500/10 via-purple-500/5 to-transparent rounded-2xl animate-pulse opacity-60" />
+        
+        {/* Close button */}
+        <button
+          onClick={() => onClose()}
+          className="absolute top-3 right-3 p-1 rounded-full hover:bg-white/10 transition-colors duration-200 text-gray-400 hover:text-white"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-2 h-2 bg-gradient-to-r from-pink-400 to-purple-400 rounded-full animate-pulse" />
+            <div className="text-xs font-medium text-pink-300 uppercase tracking-wide">Aktivitas Baru di Feed</div>
+          </div>
+          
+          <div className="mb-4 text-sm leading-relaxed text-gray-100 font-medium">
+            {notif.message || 'Ada update baru di feed komunitas.'}
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => { onClose(); navigate('/feed'); }}
+              className="flex-1 px-4 py-2.5 rounded-xl bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white text-sm font-semibold transition-all duration-300 shadow-lg hover:shadow-pink-500/25 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              <span className="flex items-center justify-center gap-2">
+                {loading ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                    </svg>
+                    Lihat Sekarang
+                  </>
+                )}
+              </span>
+            </button>
+            <button
+              onClick={() => onClose(5 * 60 * 1000)}
+              className="px-4 py-2.5 rounded-xl border border-white/20 hover:bg-white/10 text-white text-sm font-medium transition-all duration-300 hover:border-white/40 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
+            >
+              Nanti
+            </button>
+          </div>
         </div>
+        
+        {/* Animated border glow */}
+        <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-pink-500/20 via-purple-500/20 to-pink-500/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10 blur-sm" />
       </div>
     </div>
   );
