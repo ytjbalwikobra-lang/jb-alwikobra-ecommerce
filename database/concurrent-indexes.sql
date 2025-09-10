@@ -9,9 +9,9 @@
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_feed_posts_optimized 
 ON feed_posts (is_deleted, type, is_pinned DESC, created_at DESC);
 
--- 2. Orders customer and status index  
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_customer_status 
-ON orders (customer_id, status, created_at DESC);
+-- 2. Orders user and status index  
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_orders_user_status 
+ON orders (user_id, status, created_at DESC);  -- Changed from customer_id to user_id
 
 -- 3. Feed likes user-post index
 CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_feed_likes_user_post 

@@ -6601,6 +6601,14 @@
   },
   {
     "schema_name": "public",
+    "table_name": "idx_dashboard_analytics_unique",
+    "column_name": "last_updated",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
     "table_name": "idx_feed_comments_post",
     "column_name": "post_id",
     "data_type": "uuid",
@@ -6634,6 +6642,14 @@
   {
     "schema_name": "public",
     "table_name": "idx_feed_comments_post_deleted_created",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_feed_post_likes_created",
     "column_name": "created_at",
     "data_type": "timestamp with time zone",
     "is_nullable": true,
@@ -6729,6 +6745,38 @@
   },
   {
     "schema_name": "public",
+    "table_name": "idx_feed_posts_optimized",
+    "column_name": "is_deleted",
+    "data_type": "boolean",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_feed_posts_optimized",
+    "column_name": "type",
+    "data_type": "text",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_feed_posts_optimized",
+    "column_name": "is_pinned",
+    "data_type": "boolean",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_feed_posts_optimized",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
     "table_name": "idx_feed_posts_pinned_created",
     "column_name": "is_pinned",
     "data_type": "boolean",
@@ -6748,6 +6796,30 @@
     "table_name": "idx_feed_posts_user",
     "column_name": "user_id",
     "data_type": "uuid",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_feed_posts_user_activity",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_feed_posts_user_activity",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_feed_posts_user_activity",
+    "column_name": "is_deleted",
+    "data_type": "boolean",
     "is_nullable": true,
     "comment": null
   },
@@ -6833,6 +6905,54 @@
   },
   {
     "schema_name": "public",
+    "table_name": "idx_orders_revenue",
+    "column_name": "status",
+    "data_type": "character varying(20)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_revenue",
+    "column_name": "amount",
+    "data_type": "numeric(12,2)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_revenue",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_revenue_optimized",
+    "column_name": "status",
+    "data_type": "character varying(20)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_revenue_optimized",
+    "column_name": "amount",
+    "data_type": "numeric(12,2)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_revenue_optimized",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
     "table_name": "idx_orders_status",
     "column_name": "status",
     "data_type": "character varying(20)",
@@ -6857,9 +6977,49 @@
   },
   {
     "schema_name": "public",
+    "table_name": "idx_orders_user_activity",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_user_activity",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
     "table_name": "idx_orders_user_id",
     "column_name": "user_id",
     "data_type": "uuid",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_user_status",
+    "column_name": "user_id",
+    "data_type": "uuid",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_user_status",
+    "column_name": "status",
+    "data_type": "character varying(20)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_orders_user_status",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
     "is_nullable": true,
     "comment": null
   },
@@ -6937,8 +7097,88 @@
   },
   {
     "schema_name": "public",
+    "table_name": "idx_products_active_categories",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_active_categories",
+    "column_name": "category",
+    "data_type": "character varying(100)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_active_categories",
+    "column_name": "game_title",
+    "data_type": "character varying(100)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_active_categories",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_active_status",
+    "column_name": "is_active",
+    "data_type": "boolean",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_active_status",
+    "column_name": "category",
+    "data_type": "character varying(100)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_active_status",
+    "column_name": "game_title",
+    "data_type": "character varying(100)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_active_status",
+    "column_name": "created_at",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
     "table_name": "idx_products_category",
     "column_name": "category",
+    "data_type": "character varying(100)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_category_game",
+    "column_name": "category",
+    "data_type": "character varying(100)",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_category_game",
+    "column_name": "game_title",
     "data_type": "character varying(100)",
     "is_nullable": true,
     "comment": null
@@ -6948,6 +7188,30 @@
     "table_name": "idx_products_created_at",
     "column_name": "created_at",
     "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_flash_sales",
+    "column_name": "is_flash_sale",
+    "data_type": "boolean",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_flash_sales",
+    "column_name": "flash_sale_end_time",
+    "data_type": "timestamp with time zone",
+    "is_nullable": true,
+    "comment": null
+  },
+  {
+    "schema_name": "public",
+    "table_name": "idx_products_flash_sales",
+    "column_name": "is_active",
+    "data_type": "boolean",
     "is_nullable": true,
     "comment": null
   },

@@ -73,7 +73,7 @@ BEGIN
   INNER JOIN order_items oi ON p.id = oi.product_id
   INNER JOIN orders o ON oi.order_id = o.id
   LEFT JOIN feed_posts fp ON (p.id = fp.product_id AND fp.user_id = user_id AND fp.type = 'review')
-  WHERE o.customer_id = user_id
+  WHERE o.user_id = user_id  -- Changed from customer_id to user_id
     AND o.status = 'completed'
     AND p.status = 'active';
 END;
@@ -210,7 +210,7 @@ BEGIN
     (SELECT COUNT(*) FROM users)::BIGINT,
     
     -- Active users in last 30 days (users with orders)
-    (SELECT COUNT(DISTINCT customer_id) 
+    (SELECT COUNT(DISTINCT user_id)  -- Changed from customer_id to user_id
      FROM orders 
      WHERE created_at >= NOW() - INTERVAL '30 days')::BIGINT,
     
@@ -224,13 +224,13 @@ BEGIN
     u.name AS top_user_name,
     order_counts.order_count
   FROM (
-    SELECT customer_id, COUNT(*) as order_count
+    SELECT user_id, COUNT(*) as order_count  -- Changed from customer_id to user_id
     FROM orders
-    GROUP BY customer_id
+    GROUP BY user_id  -- Changed from customer_id to user_id
     ORDER BY COUNT(*) DESC
     LIMIT 1
   ) order_counts
-  LEFT JOIN users u ON order_counts.customer_id = u.id;
+  LEFT JOIN users u ON order_counts.user_id = u.id;  -- Changed from customer_id to user_id
 END;
 $$;
 
@@ -243,8 +243,8 @@ CREATE INDEX IF NOT EXISTS idx_feed_posts_optimized
 ON feed_posts (is_deleted, type, is_pinned DESC, created_at DESC);
 
 -- Index for orders by customer and status
-CREATE INDEX IF NOT EXISTS idx_orders_customer_status 
-ON orders (customer_id, status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_orders_user_status 
+ON orders (user_id, status, created_at DESC);  -- Changed from customer_id to user_id
 
 -- Index for feed likes by user
 CREATE INDEX IF NOT EXISTS idx_feed_likes_user_post 
@@ -311,7 +311,7 @@ ALTER TABLE IF EXISTS feed_likes ENABLE ROW LEVEL SECURITY;
 -- Optimized RLS policies (replace existing if needed)
 DROP POLICY IF EXISTS "Users can view their own orders" ON orders;
 CREATE POLICY "Users can view their own orders" ON orders
-  FOR SELECT USING (auth.uid() = customer_id OR auth.jwt() ->> 'user_metadata' ->> 'is_admin' = 'true');
+  FOR SELECT USING (auth.uid() = user_id OR auth.jwt() ->> 'user_metadata' ->> 'is_admin' = 'true');  -- Changed from customer_id to user_id
 
 DROP POLICY IF EXISTS "Users can view public feed posts" ON feed_posts;
 CREATE POLICY "Users can view public feed posts" ON feed_posts
