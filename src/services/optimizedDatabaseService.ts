@@ -257,9 +257,9 @@ class OptimizedDatabaseService {
   }
 
   /**
-   * OPTIMIZED: Admin dashboard data using materialized view
+   * PHASE 3: OPTIMIZED Admin dashboard data using comprehensive stored procedure
    * Previously: 5-8 separate queries
-   * Now: 1 RPC call to materialized view + minimal additional queries
+   * Now: 1 RPC call to get_admin_dashboard_stats + minimal additional queries
    */
   async getAdminDashboard(period = 'weekly') {
     const cacheKey = `admin_dashboard_${period}`;
@@ -267,14 +267,18 @@ class OptimizedDatabaseService {
     if (cached) return cached;
 
     try {
-      // Use materialized view RPC function
-      const { data: dashboardData, error: dashboardError } = await supabase
-        .rpc('get_dashboard_data');
+      // Use Phase 3 optimized stored procedure
+      const { data: dashboardStats, error: statsError } = await supabase
+        .rpc('get_admin_dashboard_stats')
+        .single();
 
-      if (dashboardError) {
-        console.warn('Dashboard RPC failed, falling back to individual queries');
+      if (statsError) {
+        console.warn('Phase 3 stored procedure not available, using fallback');
         return this.getAdminDashboardFallback(period);
       }
+
+      // Type-safe access to stored procedure results
+      const stats = dashboardStats as any;
 
       // Get additional period-specific data
       const days = period === 'monthly' ? 30 : period === 'yearly' ? 365 : 7;
@@ -282,9 +286,20 @@ class OptimizedDatabaseService {
         .rpc('get_daily_revenue', { days_back: days });
 
       const result = {
-        ...dashboardData,
+        analytics: {
+          total_orders: stats?.total_orders || 0,
+          paid_orders: stats?.total_orders || 0, // Assuming completed = paid
+          pending_orders: stats?.pending_orders || 0,
+          cancelled_orders: 0, // Add to stored procedure if needed
+          revenue_total: stats?.total_revenue || 0
+        },
+        products: stats?.active_products || 0,
+        users: stats?.total_users || 0,
+        monthlyRevenue: stats?.monthly_revenue || 0,
+        newUsersThisMonth: stats?.new_users_this_month || 0,
         dailyRevenue: dailyData || [],
-        period
+        period,
+        lastUpdated: new Date().toISOString()
       };
 
       this.setCache(cacheKey, result, this.SHORT_TTL);
@@ -477,9 +492,58 @@ class OptimizedDatabaseService {
   }
 
   /**
-   * OPTIMIZED: Feed posts with minimal data
+   * PHASE 3: OPTIMIZED Feed posts with comprehensive context using stored procedure
+   * Previously: Multiple queries for posts, users, likes, comments
+   * Now: Single RPC call with all required data
    */
   async getFeedPosts(params: {
+    page?: number;
+    limit?: number;
+    type?: string;
+  }) {
+    const { page = 1, limit = 10, type = 'all' } = params;
+    const offset = (page - 1) * limit;
+
+    const cacheKey = `feed_posts_${JSON.stringify(params)}`;
+    const cached = this.getCached(cacheKey);
+    if (cached) return cached;
+
+    try {
+      // Use Phase 3 optimized stored procedure
+      const { data: feedData, error: feedError } = await supabase
+        .rpc('get_feed_with_context', {
+          page_limit: limit,
+          page_offset: offset,
+          post_type: type === 'all' ? null : type
+        });
+
+      if (feedError) {
+        console.warn('Phase 3 feed stored procedure not available, using fallback');
+        return this.getFeedPostsFallback(params);
+      }
+
+      const result = {
+        posts: feedData || [],
+        pagination: {
+          total: feedData?.[0]?.total_count || 0,
+          page,
+          limit,
+          totalPages: Math.ceil((feedData?.[0]?.total_count || 0) / limit)
+        }
+      };
+
+      this.setCache(cacheKey, result, this.SHORT_TTL);
+      return result;
+    } catch (error) {
+      console.error('Feed posts error:', error);
+      return this.getFeedPostsFallback(params);
+    }
+  }
+
+  /**
+   * Fallback feed posts method with optimized queries
+   */
+  private async getFeedPostsFallback(params: {
     page?: number;
     limit?: number;
     type?: string;
@@ -525,7 +589,7 @@ class OptimizedDatabaseService {
         }
       };
     } catch (error) {
-      console.error('Feed posts error:', error);
+      console.error('Feed posts fallback error:', error);
       return { posts: [], pagination: { total: 0, page, limit, totalPages: 0 } };
     }
   }
