@@ -3,7 +3,6 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { feedService } from '../services/feedService';
 import { useAuth } from '../contexts/TraditionalAuthContext';
 import { useToast } from '../components/Toast';
-import { useOptimizedFeedData } from '../hooks/useOptimizedFetch';
 
 function RatingStars({ value }: { value?: number }) {
   if (!value) return null;
@@ -71,24 +70,11 @@ const FeedPage: React.FC = () => {
     comments_count?: number;
     is_pinned?: boolean;
   };
-  
-  // Optimized state management
-  const [page, setPage] = useState(1);
-  const [filter, setFilter] = useState<'all'|'announcement'|'review'>('all');
-  const { data: feedData, loading, error, refresh } = useOptimizedFeedData(page, filter, 10);
-
-  // Legacy state for compatibility with existing UI components
   const [posts, setPosts] = useState<FeedItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  
-  // Sync optimized data to legacy state
-  useEffect(() => {
-    if (feedData?.posts) {
-      setPosts(feedData.posts);
-      setTotal(feedData.total || 0);
-    }
-  }, [feedData]);
-
+  const [filter, setFilter] = useState<'all'|'announcement'|'review'>('all');
   const limit = 10;
   const isGuest = !user;
   const isAdmin = !!user?.isAdmin;
@@ -103,12 +89,12 @@ const FeedPage: React.FC = () => {
   const [editReviewFields, setEditReviewFields] = useState<{ title: string; content: string; rating: number }>({ title: '', content: '', rating: 5 });
 
   const load = useCallback(async (p = 1) => {
-    if (p !== page) {
-      setPage(p); // This will trigger the optimized hook to reload
-    } else {
-      await refresh(); // Use optimized refresh
-    }
-  }, [page, refresh]);
+    setLoading(true);
+    const { data, total } = await feedService.list(p, limit, filter);
+    setPosts(data || []);
+    setTotal(total || 0);
+    setLoading(false);
+  }, [filter]);
 
   useEffect(() => { load(1); }, [load]);
   // Mark notifications read and hide badge when entering feed route
@@ -126,12 +112,21 @@ const FeedPage: React.FC = () => {
   const [newPostPreview, setNewPostPreview] = useState<string | null>(null);
   const [newReview, setNewReview] = useState<{title:string;content:string;rating:number;product_id:string}>({ title: '', content: '', rating: 5, product_id: '' });
   type EligibleProduct = { id: string; name: string };
-  
-  // Use optimized data instead of separate API calls
-  const notReviewedProducts = feedData?.notReviewedProducts || [];
-  const hasPurchases = feedData?.hasPurchases || false;
-  
+  // const [eligibleProducts, setEligibleProducts] = useState<EligibleProduct[]>([]);
+  const [notReviewedProducts, setNotReviewedProducts] = useState<EligibleProduct[]>([]);
+  const [hasPurchases, setHasPurchases] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
+  useEffect(() => {
+    (async () => {
+      if (user) {
+        const res = await fetch('/api/feed?action=eligible-products', { headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')||''}` } });
+        const j = await res.json();
+  // setEligibleProducts(j.products || []);
+  setNotReviewedProducts(j.notReviewedProducts || []);
+  setHasPurchases(!!j.hasPurchases);
+      }
+    })();
+  }, [user]);
   const createPost = async () => {
     if (!user) return;
     setSubmitting(true);
@@ -143,7 +138,7 @@ const FeedPage: React.FC = () => {
         setNewPostImage(null);
         setNewPostPreview(null);
         setShowCreatePostModal(false);
-        await refresh(); // Use optimized refresh
+        load(1);
       } else {
         showToast(res?.error || 'Gagal membuat post', 'error');
       }
@@ -276,7 +271,7 @@ const FeedPage: React.FC = () => {
         showToast('Review berhasil diperbarui', 'success');
         setEditReviewPost(null);
         setEditReviewFields({ title: '', content: '', rating: 5 });
-        await refresh(); // Use optimized refresh
+        load(page);
       } else {
         showToast(res?.error || 'Gagal memperbarui review', 'error');
       }

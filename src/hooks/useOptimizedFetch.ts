@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import React from 'react';
 import { globalAPICache } from '../services/globalAPICache';
 import { batchRequestService } from '../services/batchRequestService';
 
@@ -224,6 +225,168 @@ export function useOptimizedProducts(page: number = 1, category?: string) {
     enableCache: true,
     enableBatching: true,
   });
+}
+
+/**
+ * Hook for optimized products data including products, tiers, and game titles
+ */
+export function useOptimizedProductsData() {
+  const [productsData, setProductsData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const loadProductsData = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Check cache first
+      const cacheKey = 'products_data_combined';
+      const cached = globalAPICache.get(cacheKey);
+      if (cached) {
+        setProductsData(cached);
+        setLoading(false);
+        return;
+      }
+
+      // Dynamic import and parallel loading
+      const { ProductService } = await import('../services/productService');
+      
+      const [productsResult, tiersResult, gameTitlesResult] = await Promise.all([
+        ProductService.getAllProducts(),
+        ProductService.getTiers(),
+        ProductService.getGameTitles()
+      ]);
+
+      // Sort tiers: Pelajar → Reguler → Premium
+      const sortedTiers = [...tiersResult].sort((a, b) => {
+        const order = { 'pelajar': 1, 'reguler': 2, 'premium': 3 };
+        const aOrder = order[a.slug] || 999;
+        const bOrder = order[b.slug] || 999;
+        return aOrder - bOrder;
+      });
+
+      const combinedData = {
+        products: productsResult || [],
+        tiers: sortedTiers || [],
+        gameTitles: gameTitlesResult || []
+      };
+
+      // Cache the result for 5 minutes
+      globalAPICache.set(cacheKey, combinedData, 5 * 60 * 1000);
+
+      setProductsData(combinedData);
+
+    } catch (err) {
+      console.error('Products data loading error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load products data');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void loadProductsData();
+  }, [loadProductsData]);
+
+  return {
+    data: productsData,
+    loading,
+    error,
+    refresh: loadProductsData
+  };
+}
+
+/**
+ * Hook for optimized feed data including posts, user products, and notifications
+ */
+export function useOptimizedFeedData(page = 1, filter = 'all', limit = 10) {
+  const [feedData, setFeedData] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  const loadFeedData = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Use individual API calls with caching for now
+      const feedEndpoint = `/api/feed?page=${page}&limit=${limit}&type=${filter}`;
+      
+      // Check cache first
+      const cached = globalAPICache.get(feedEndpoint);
+      if (cached) {
+        setFeedData(cached);
+        setLoading(false);
+        return;
+      }
+
+      // Load feed data
+      const token = localStorage.getItem('session_token') || '';
+      const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+
+      const feedResponse = await fetch(feedEndpoint, { headers });
+      const feedResult = await feedResponse.json();
+
+      // Load eligible products if authenticated
+      let eligibleResult = null;
+      if (token) {
+        try {
+          const eligibleResponse = await fetch('/api/feed?action=eligible-products', { headers });
+          eligibleResult = await eligibleResponse.json();
+        } catch (e) {
+          console.warn('Could not load eligible products:', e);
+        }
+      }
+
+      // Mark notifications as read if authenticated
+      if (token) {
+        try {
+          fetch('/api/feed?action=notifications-read', { 
+            method: 'POST', 
+            headers 
+          }).catch(() => {/* silent fail */});
+        } catch (e) {
+          // silent fail
+        }
+      }
+
+      const combinedData = {
+        posts: feedResult?.data || [],
+        total: feedResult?.total || 0,
+        pagination: {
+          page,
+          limit,
+          totalPages: Math.ceil((feedResult?.total || 0) / limit)
+        },
+        eligibleProducts: eligibleResult?.products || [],
+        notReviewedProducts: eligibleResult?.notReviewedProducts || [],
+        hasPurchases: !!eligibleResult?.hasPurchases
+      };
+
+      // Cache the result
+      globalAPICache.set(feedEndpoint, combinedData, 2 * 60 * 1000); // 2 minute cache
+
+      setFeedData(combinedData);
+
+    } catch (err) {
+      console.error('Feed data loading error:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load feed data');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, filter, limit]);
+
+  React.useEffect(() => {
+    loadFeedData();
+  }, [loadFeedData]);
+
+  return {
+    data: feedData,
+    loading,
+    error,
+    refresh: loadFeedData
+  };
 }
 
 /**

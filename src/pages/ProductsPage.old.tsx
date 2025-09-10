@@ -5,30 +5,15 @@ import { Product, Tier, GameTitle } from '../types';
 import ProductCard from '../components/ProductCard';
 import { Search, SlidersHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import SeoBreadcrumbs from '../components/SeoBreadcrumbs';
-import { useOptimizedProductsData } from '../hooks/useOptimizedFetch';
 
 const ProductsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const location = useLocation();
-  
-  // Optimized data loading
-  const { data: productsData, loading, error, refresh } = useOptimizedProductsData();
-  
-  // Legacy state for compatibility with existing UI components
   const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [gameTitles, setGameTitles] = useState<GameTitle[]>([]);
-  
-  // Sync optimized data to legacy state
-  useEffect(() => {
-    if (productsData?.products) {
-      setProducts(productsData.products);
-      setTiers(productsData.tiers || []);
-      setGameTitles(productsData.gameTitles || []);
-    }
-  }, [productsData]);
-
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedGame, setSelectedGame] = useState(searchParams.get('game') || '');
   const [selectedTier, setSelectedTier] = useState(searchParams.get('tier') || '');
@@ -60,7 +45,51 @@ const ProductsPage: React.FC = () => {
     { value: 'name-za', label: 'Nama Z-A' }
   ];
 
-  // Optimized data loading is handled by the hook automatically
+  useEffect(() => {
+    let mounted = true;
+    
+    const fetchData = async () => {
+      try {
+        // Dynamic import of ProductService
+        const { ProductService } = await import('../services/productService');
+        
+        if (!mounted) return;
+        
+        const [productsData, tiersData, gameTitlesData] = await Promise.all([
+          ProductService.getAllProducts(),
+          ProductService.getTiers(),
+          ProductService.getGameTitles()
+        ]);
+        
+        if (!mounted) return;
+        
+        setProducts(productsData);
+        
+        // Sort tiers: Pelajar → Reguler → Premium
+        const sortedTiers = [...tiersData].sort((a, b) => {
+          const order = { 'pelajar': 1, 'reguler': 2, 'premium': 3 };
+          const aOrder = order[a.slug] || 999;
+          const bOrder = order[b.slug] || 999;
+          return aOrder - bOrder;
+        });
+        setTiers(sortedTiers);
+        
+        setGameTitles(gameTitlesData);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+    
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   // Restore filter state jika user kembali dari detail produk
   useEffect(() => {
