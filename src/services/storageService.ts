@@ -2,12 +2,18 @@ import { supabase } from './supabase';
 
 const BUCKET = process.env.REACT_APP_SUPABASE_STORAGE_BUCKET || 'product-images';
 
-export async function uploadFile(file: File, folder = 'products'): Promise<string | null> {
+function requireSupabase() {
   if (!supabase) throw new Error('Supabase not initialized');
+  return supabase;
+}
+
+export async function uploadFile(file: File, folder = 'products'): Promise<string | null> {
+  const sb = requireSupabase();
   const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const safeName = file.name.replace(/[^a-zA-Z0-9-_\.]/g, '_');
+  // dot doesn't need escaping inside a character class
+  const safeName = file.name.replace(/[^a-zA-Z0-9-_.]/g, '_');
   const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
-  const { error } = await (supabase as any).storage.from(BUCKET).upload(path, file, {
+  const { error } = await sb.storage.from(BUCKET).upload(path, file, {
     upsert: false,
     cacheControl: '3600',
     contentType: file.type || `image/${ext}`
@@ -16,7 +22,7 @@ export async function uploadFile(file: File, folder = 'products'): Promise<strin
     console.error('Upload error:', error);
     throw error;
   }
-  const { data } = (supabase as any).storage.from(BUCKET).getPublicUrl(path);
+  const { data } = sb.storage.from(BUCKET).getPublicUrl(path);
   return data?.publicUrl || null;
 }
 
@@ -32,7 +38,7 @@ export async function uploadFiles(
     const url = await uploadFile(f, folder);
     if (url) urls.push(url);
     done += 1;
-    try { onProgress?.(done, total); } catch {}
+  try { onProgress?.(done, total); } catch { /* no-op */ }
   }
   return urls;
 }
@@ -50,10 +56,11 @@ function urlToPath(url: string): string | null {
 }
 
 export async function deletePublicUrls(urls: string[]): Promise<void> {
-  if (!supabase || !urls.length) return;
-  const paths = urls.map(urlToPath).filter(Boolean) as string[];
+  const sb = supabase;
+  if (!sb || !urls.length) return;
+  const paths = urls.map(urlToPath).filter((p): p is string => Boolean(p));
   if (!paths.length) return;
-  const { error } = await (supabase as any).storage.from(BUCKET).remove(paths);
+  const { error } = await sb.storage.from(BUCKET).remove(paths);
   if (error) console.warn('Storage delete warning:', error);
 }
 
@@ -86,7 +93,8 @@ export class GameLogoStorage {
 
       // Try client upload first (may fail due to RLS)
       try {
-        const { data, error } = await (supabase as any).storage
+        const sb = requireSupabase();
+        const { data, error } = await sb.storage
           .from(this.BUCKET)
           .upload(filePath, file, {
             cacheControl: '3600',
@@ -94,8 +102,9 @@ export class GameLogoStorage {
           });
         if (error) throw error;
         return data.path;
-      } catch (clientErr: any) {
-        console.warn('Client upload blocked, falling back to admin API:', clientErr?.message || clientErr);
+      } catch (clientErr: unknown) {
+        const msg = clientErr instanceof Error ? clientErr.message : String(clientErr ?? 'Unknown error');
+        console.warn('Client upload blocked, falling back to admin API:', msg);
         // Fallback to server-side upload via admin API (bypasses RLS)
         const payload = {
           name: file.name,
@@ -111,12 +120,15 @@ export class GameLogoStorage {
           },
           body: JSON.stringify(payload)
         });
-        const json = await res.json();
-        if (!res.ok || !json?.path) {
-          throw new Error(json?.error || 'Admin upload failed');
+        const json: unknown = await res.json();
+        const obj = (json && typeof json === 'object') ? (json as Record<string, unknown>) : {};
+        const pathVal = typeof obj.path === 'string' ? obj.path : undefined;
+        const errVal = typeof obj.error === 'string' ? obj.error : undefined;
+        if (!res.ok || !pathVal) {
+          throw new Error(errVal || 'Admin upload failed');
         }
         // Return storage path from server
-        return json.path as string;
+        return pathVal;
       }
     } catch (error) {
       console.error('Error uploading game logo:', error);
@@ -147,7 +159,8 @@ export class GameLogoStorage {
    */
   static async deleteGameLogo(filePath: string): Promise<void> {
     try {
-      const { error } = await (supabase as any).storage
+      const sb = requireSupabase();
+      const { error } = await sb.storage
         .from(this.BUCKET)
         .remove([filePath]);
 
@@ -165,7 +178,8 @@ export class GameLogoStorage {
    * Get public URL for uploaded game logo
    */
   static getGameLogoUrl(filePath: string): string {
-    const { data } = (supabase as any).storage
+  const sb = requireSupabase();
+  const { data } = sb.storage
       .from(this.BUCKET)
       .getPublicUrl(filePath);
 

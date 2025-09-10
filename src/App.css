@@ -4,6 +4,24 @@
   min-height: 100vh;
 }
 
+/* iOS viewport and backdrop-filter fallbacks to prevent black screens */
+html, body, #root {
+  height: 100%;
+  background-color: #000;
+}
+
+/* Disable costly backdrop-filter on iOS Safari */
+.ios .backdrop-blur {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+/* Utility: safer viewport height on iOS */
+.ios .ios-fixed-safe {
+  min-height: 100svh;
+  min-height: -webkit-fill-available;
+}
+
 /* Additional utility classes for the redesigned profile */
 .text-gradient {
   background: linear-gradient(135deg, #ec4899, #8b5cf6);

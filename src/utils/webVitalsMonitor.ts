@@ -41,7 +41,8 @@ class WebVitalsMonitor {
 
   constructor() {
     if (typeof window !== 'undefined') {
-      this.initializeWebVitals();
+  // Fire-and-forget initialization; explicitly ignored with void
+  void this.initializeWebVitals();
     }
   }
 
@@ -50,12 +51,13 @@ class WebVitalsMonitor {
       // Dynamic import of web-vitals library
       const { getCLS, getFCP, getFID, getLCP, getTTFB } = await import('web-vitals');
 
-      // Monitor all Core Web Vitals
-      getCLS(this.onMetric.bind(this));
-      getFCP(this.onMetric.bind(this));
-      getFID(this.onMetric.bind(this));
-      getLCP(this.onMetric.bind(this));
-      getTTFB(this.onMetric.bind(this));
+  // Monitor all Core Web Vitals (type-safe wrapper)
+  const handle = (m: unknown) => this.onMetric(m as unknown as WebVitalMetric);
+  getCLS(handle);
+  getFCP(handle);
+  getFID(handle);
+  getLCP(handle);
+  getTTFB(handle);
 
       console.log('🔍 Web Vitals monitoring initialized');
     } catch (error) {
@@ -169,7 +171,7 @@ class WebVitalsMonitor {
   }
 
   // Send metrics to analytics: disabled (we use Vercel Analytics only now)
-  sendToAnalytics(_: WebVitalMetric): void {
+  sendToAnalytics(): void {
     // no-op
   }
 
@@ -241,7 +243,7 @@ export const initWebVitalsMonitoring = () => {
   const monitor = WebVitalsMonitor.getInstance();
   
   // Send metrics to analytics
-  monitor.onMetricChange((metric) => {
+  monitor.onMetricChange(() => {
     monitor.sendToAnalytics(metric);
   });
 

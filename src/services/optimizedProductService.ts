@@ -1,8 +1,35 @@
 // Optimized ProductService with pagination and caching
 import { supabase } from './supabase';
-import { deletePublicUrls } from './storageService';
-import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types';
-import { clientCache } from './clientCacheService';
+import { Product, Tier, GameTitle, ProductTier } from '../types';
+
+// Shape of DB row returned by the select in getProductsPaginated
+type ProductDbRow = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  original_price?: number | null;
+  account_level?: string | null;
+  account_details?: string | null;
+  image?: string | null;
+  images?: string[] | string | null;
+  is_active?: boolean | null;
+  archived_at?: string | null;
+  created_at: string;
+  updated_at?: string;
+  stock?: number | null;
+  game_title_id?: string | null;
+  tier_id?: string | null;
+  has_rental?: boolean | null;
+  tiers?:
+    | { id: string; name: string; slug: string; color?: string | null; background_gradient?: string | null; icon?: string | null }
+    | { id: string; name: string; slug: string; color?: string | null; background_gradient?: string | null; icon?: string | null }[]
+    | null;
+  game_titles?:
+    | { id: string; name: string; slug: string; icon?: string | null; logo_url?: string | null }
+    | { id: string; name: string; slug: string; icon?: string | null; logo_url?: string | null }[]
+    | null;
+};
 
 interface PaginatedResponse<T> {
   data: T[];
@@ -26,7 +53,7 @@ interface PaginationOptions {
 }
 
 // Cache for frequently accessed data
-const cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
+const cache = new Map<string, { data: unknown; timestamp: number; ttl: number }>();
 
 class OptimizedProductService {
   private static CACHE_TTL = 5 * 60 * 1000; // 5 minutes
@@ -38,7 +65,7 @@ class OptimizedProductService {
   private static getFromCache<T>(key: string): T | null {
     const cached = cache.get(key);
     if (cached && Date.now() - cached.timestamp < cached.ttl) {
-      return cached.data;
+      return cached.data as T;
     }
     cache.delete(key);
     return null;
@@ -77,7 +104,8 @@ class OptimizedProductService {
         .from('products')
         .select(`
           id, name, description, price, original_price, account_level,
-          account_details, images, is_active, archived_at, created_at,
+          account_details, image, images, is_active, archived_at, created_at, updated_at,
+          stock,
           game_title_id, tier_id, has_rental,
           tiers!inner (
             id, name, slug, color, background_gradient, icon
@@ -117,7 +145,7 @@ class OptimizedProductService {
       if (error) throw error;
 
       const result: PaginatedResponse<Product> = {
-        data: (data || []).map((item) => this.mapDatabaseProduct(item)),
+        data: (data || []).map((row) => OptimizedProductService.mapDatabaseProduct((row as unknown) as ProductDbRow)),
         total: count || 0,
         page,
         limit,
@@ -189,17 +217,29 @@ class OptimizedProductService {
 
       const { data, error } = await supabase
         .from('game_titles')
-        .select('id, name, slug, icon, logo_url, is_active, color, is_popular')
+        .select('id, name, slug, icon, logo_url, is_active, color, is_popular, created_at, updated_at')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
 
-      const result = (data || []).map((item: any) => ({
-        ...item,
+      type GameTitleRow = {
+        id: string; name: string; slug: string; icon: string | null; color: string | null;
+        logo_url: string | null; is_active: boolean; is_popular: boolean | null;
+        created_at?: string; updated_at?: string;
+      };
+      const result: GameTitle[] = (data as GameTitleRow[] | null || []).map((item) => ({
+        id: item.id,
+        name: item.name,
+        slug: item.slug,
+        icon: item.icon || '',
+        color: item.color || '',
+        logoUrl: item.logo_url || undefined,
         isActive: item.is_active,
         isPopular: item.is_popular ?? false,
-        logoUrl: item.logo_url
+        sortOrder: 0,
+        createdAt: item.created_at,
+        updatedAt: item.updated_at
       }));
       this.setCache(cacheKey, result, 10 * 60 * 1000); // Cache for 10 minutes
       return result;
@@ -223,13 +263,33 @@ class OptimizedProductService {
 
       const { data, error } = await supabase
         .from('tiers')
-        .select('*')
+        .select('id, name, slug, description, color, background_gradient, icon, is_active, sort_order, created_at, updated_at')
         .eq('is_active', true)
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
 
-      const result = data || [];
+      type TierRow = {
+        id: string; name: string; slug: string; description: string | null; color: string | null;
+        background_gradient: string | null; icon: string | null; is_active: boolean;
+        sort_order: number; created_at: string; updated_at: string;
+      };
+      const result: Tier[] = ((data as TierRow[] | null) || []).map((t) => ({
+        id: t.id,
+        name: t.name,
+        slug: t.slug,
+        description: t.description || undefined,
+        color: t.color || undefined,
+        borderColor: undefined,
+        backgroundGradient: t.background_gradient || undefined,
+        icon: t.icon || undefined,
+        priceRangeMin: undefined,
+        priceRangeMax: undefined,
+        isActive: t.is_active,
+        sortOrder: t.sort_order,
+        createdAt: t.created_at,
+        updatedAt: t.updated_at
+      }));
       this.setCache(cacheKey, result, 10 * 60 * 1000); // Cache for 10 minutes
       return result;
 
@@ -239,20 +299,76 @@ class OptimizedProductService {
     }
   }
 
-  private static mapDatabaseProduct(product: any): Product {
+  // Minimal shape for the DB row we select above
+  // Keep snake_case for raw DB fields
+  private static mapDatabaseProduct(product: ProductDbRow): Product {
+    const images = Array.isArray(product.images)
+      ? product.images
+      : product.images
+        ? [product.images]
+        : [];
+
+    // Some joins may come as arrays; pick the first item if so
+    const tierJoin = Array.isArray(product.tiers) ? product.tiers[0] : product.tiers || undefined;
+    const gameTitleJoin = Array.isArray(product.game_titles) ? product.game_titles[0] : product.game_titles || undefined;
+
     return {
-      ...product,
-      isActive: product.is_active ?? product.isActive,
-      archivedAt: product.archived_at ?? product.archivedAt,
-      originalPrice: product.original_price ?? product.originalPrice,
-      accountLevel: product.account_level ?? product.accountLevel,
-      accountDetails: product.account_details ?? product.accountDetails,
-      tierData: product.tiers,
-      gameTitleData: product.game_titles,
-      tier: product.tiers?.slug as ProductTier,
-      gameTitle: product.game_titles?.name,
+      id: product.id,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      originalPrice: product.original_price ?? undefined,
+      image: product.image || images[0] || '',
+      images,
+      category: undefined,
+      gameTitle: gameTitleJoin?.name || '',
+      tier: (tierJoin?.slug as ProductTier) || undefined,
+      tierId: product.tier_id || undefined,
+      gameTitleId: product.game_title_id || undefined,
+      tierData: tierJoin
+        ? {
+            id: tierJoin.id,
+            name: tierJoin.name,
+            slug: tierJoin.slug,
+            color: tierJoin.color || undefined,
+            backgroundGradient: tierJoin.background_gradient || undefined,
+            icon: tierJoin.icon || undefined,
+            description: undefined,
+            borderColor: undefined,
+            priceRangeMin: undefined,
+            priceRangeMax: undefined,
+            isActive: true,
+            sortOrder: 0,
+            createdAt: product.created_at,
+            updatedAt: product.updated_at || product.created_at
+          }
+        : undefined,
+      gameTitleData: gameTitleJoin
+        ? {
+            id: gameTitleJoin.id,
+            name: gameTitleJoin.name,
+            slug: gameTitleJoin.slug,
+            icon: gameTitleJoin.icon || '',
+            color: '',
+            logoUrl: gameTitleJoin.logo_url || undefined,
+            isPopular: false,
+            isActive: true,
+            sortOrder: 0,
+            createdAt: product.created_at,
+            updatedAt: product.updated_at || product.created_at
+          }
+        : undefined,
+      accountLevel: product.account_level || undefined,
+      accountDetails: product.account_details || undefined,
+      isFlashSale: false,
+      flashSaleEndTime: undefined,
       hasRental: product.has_rental ?? false,
-      rentalOptions: [] // Load separately if needed
+      rentalOptions: [],
+      stock: product.stock ?? 0,
+      isActive: product.is_active ?? true,
+      archivedAt: product.archived_at ?? null,
+      createdAt: product.created_at,
+      updatedAt: product.updated_at || product.created_at
     };
   }
 

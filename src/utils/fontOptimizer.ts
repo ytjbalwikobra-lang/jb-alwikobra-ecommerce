@@ -114,12 +114,20 @@ class FontOptimizer {
   static loadOptionalFonts(): void {
     if (document.readyState === 'complete') {
       this.OPTIONAL_FONTS.forEach(font => {
-        this.loadFont(font);
+        void this.loadFont(font).catch((e) => {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Optional font load failed:', e);
+          }
+        });
       });
     } else {
       window.addEventListener('load', () => {
         this.OPTIONAL_FONTS.forEach(font => {
-          this.loadFont(font);
+          void this.loadFont(font).catch((e) => {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('Optional font load failed:', e);
+            }
+          });
         });
       });
     }
@@ -198,7 +206,7 @@ if (typeof window !== 'undefined') {
   // Add font loading class management
   document.documentElement.classList.add('font-loading');
   
-  FontOptimizer.waitForFonts().then(() => {
+  void FontOptimizer.waitForFonts().then(() => {
     document.documentElement.classList.remove('font-loading');
     document.documentElement.classList.add('font-loaded');
   });

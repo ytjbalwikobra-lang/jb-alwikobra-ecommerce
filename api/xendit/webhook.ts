@@ -141,7 +141,7 @@ async function sendOrderPaidNotification(sb: any, invoiceId?: string, externalId
         // Handle different input formats
         if (customerPhone.startsWith('62')) {
           // Already in correct format (62xxxxxxxx)
-          // No modification needed
+          customerPhone = customerPhone;
         } else if (customerPhone.startsWith('08')) {
           // Indonesian format starting with 08 (08xxxxxxxx -> 62xxxxxxxx)
           customerPhone = '62' + customerPhone.substring(1);

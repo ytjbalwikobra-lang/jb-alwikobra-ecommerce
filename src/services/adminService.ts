@@ -1,22 +1,189 @@
-import { createClient } from '@supabase/supabase-js';
+/* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-argument, @typescript-eslint/restrict-template-expressions */
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+
+// Minimal Supabase Database typing for the tables used here
+type Json = string | number | boolean | null | { [key: string]: Json } | Json[];
+
+interface Database {
+  public: {
+    Tables: {
+      products: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          price: number;
+          original_price: number | null;
+          image: string | null;
+          images: Json | null;
+          category: string | null;
+          account_level: string | null;
+          account_details: string | null;
+          is_flash_sale: boolean | null;
+          has_rental: boolean | null;
+          stock: number | null;
+          game_title_id: string | null;
+          tier_id: string | null;
+          game_title: string | null;
+          is_active: boolean | null;
+          archived_at: string | null;
+          created_at: string;
+          updated_at: string | null;
+        };
+        Insert: {
+          name: string;
+          description?: string | null;
+          price: number;
+          original_price?: number | null;
+          image?: string | null;
+          images?: Json | null;
+          category?: string | null;
+          account_level?: string | null;
+          account_details?: string | null;
+          is_flash_sale?: boolean | null;
+          has_rental?: boolean | null;
+          stock?: number | null;
+          game_title_id?: string | null;
+          tier_id?: string | null;
+          game_title?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['products']['Row']>;
+        Relationships: [];
+      };
+      flash_sales: {
+        Row: {
+          id: string;
+          product_id: string;
+          sale_price: number;
+          original_price: number | null;
+          start_time: string | null;
+          end_time: string | null;
+          stock: number | null;
+          is_active: boolean | null;
+          created_at: string;
+        };
+        Insert: {
+          product_id: string;
+          sale_price: number;
+          original_price?: number | null;
+          start_time?: string | null;
+          end_time?: string | null;
+          stock?: number | null;
+          is_active?: boolean | null;
+        };
+        Update: Partial<Database['public']['Tables']['flash_sales']['Row']>;
+        Relationships: [];
+      };
+      rental_options: {
+        Row: {
+          id: string;
+          product_id: string;
+          duration: string;
+          price: number;
+          description: string | null;
+        };
+        Insert: {
+          product_id: string;
+          duration: string;
+          price: number;
+          description?: string | null;
+        };
+        Update: Partial<Database['public']['Tables']['rental_options']['Row']>;
+        Relationships: [];
+      };
+      game_titles: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string | null;
+          icon: string | null;
+          color: string | null;
+          logo_url: string | null;
+          logo_path: string | null;
+          is_popular: boolean | null;
+          is_active: boolean | null;
+          sort_order: number | null;
+          created_at: string;
+          updated_at: string | null;
+        };
+        Insert: Partial<Database['public']['Tables']['game_titles']['Row']>;
+        Update: Partial<Database['public']['Tables']['game_titles']['Row']>;
+        Relationships: [];
+      };
+      website_settings: {
+        Row: {
+          id: string;
+          site_name: string | null;
+          contact_email: string | null;
+          contact_phone: string | null;
+          whatsapp_number: string | null;
+          address: string | null;
+          facebook_url: string | null;
+          instagram_url: string | null;
+          tiktok_url: string | null;
+          youtube_url: string | null;
+          hero_title: string | null;
+          hero_subtitle: string | null;
+          logo_url: string | null;
+          favicon_url: string | null;
+        };
+        Insert: Partial<Database['public']['Tables']['website_settings']['Row']>;
+        Update: Partial<Database['public']['Tables']['website_settings']['Row']>;
+        Relationships: [];
+      };
+      users: {
+        Row: {
+          id: string;
+          name: string | null;
+          email: string | null;
+          phone: string | null;
+          phone_verified: boolean | null;
+          is_admin: boolean | null;
+          is_active: boolean | null;
+          created_at: string;
+          updated_at: string | null;
+          last_login_at: string | null;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+      orders: {
+        Row: {
+          id: string;
+          amount: number | string | null;
+          status: string | null;
+          created_at: string;
+        };
+        Insert: never;
+        Update: never;
+        Relationships: [];
+      };
+    };
+  Views: Record<string, never>;
+  Functions: Record<string, never>;
+  Enums: Record<string, never>;
+  CompositeTypes: Record<string, never>;
+  };
+}
 
 // Admin service with elevated permissions for CRUD operations
 class AdminService {
-  private adminClient: any = null;
+  private adminClient: SupabaseClient<Database> | null = null;
   private static instance: AdminService | null = null;
   // Lightweight in-memory cache (SWR-style)
-  private static cache = new Map<string, { data: any; expiry: number; inflight?: Promise<any> }>();
-  private static getFromCache<T = any>(key: string): T | null {
+  private static cache = new Map<string, { data: unknown; expiry: number; inflight?: Promise<unknown> }>();
+  private static getFromCache<T = unknown>(key: string): T | null {
     const hit = this.cache.get(key);
     if (!hit) return null;
     if (Date.now() > hit.expiry) return null;
     return hit.data as T;
   }
-  private static setCache<T = any>(key: string, data: T, ttlMs: number) {
+  private static setCache<T = unknown>(key: string, data: T, ttlMs: number) {
     const existing = this.cache.get(key);
     this.cache.set(key, { data, expiry: Date.now() + ttlMs, inflight: existing?.inflight });
   }
-  private static setInflight(key: string, p: Promise<any>) {
+  private static setInflight(key: string, p: Promise<unknown>) {
     const existing = this.cache.get(key);
     this.cache.set(key, { data: existing?.data, expiry: existing?.expiry || 0, inflight: p });
   }
@@ -42,7 +209,7 @@ class AdminService {
     const serviceRoleKey = process.env.REACT_APP_SUPABASE_SERVICE_ROLE_KEY;
 
     if (supabaseUrl && serviceRoleKey) {
-    this.adminClient = createClient(supabaseUrl, serviceRoleKey, {
+      this.adminClient = createClient<Database>(supabaseUrl, serviceRoleKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false,
@@ -70,7 +237,7 @@ class AdminService {
   }
 
   // Product CRUD operations with admin privileges
-  async createProduct(productData: any): Promise<{ data: any; error: any }> {
+  async createProduct(productData: Record<string, unknown>): Promise<{ data: unknown; error: unknown }> {
     if (!this.isAdminClient()) {
       return { 
         data: null, 
@@ -79,27 +246,34 @@ class AdminService {
     }
 
     try {
-      const payload = {
-        name: productData.name,
-        description: productData.description,
-        price: productData.price,
-        original_price: productData.originalPrice ?? productData.original_price ?? null,
-        image: productData.image || '',
-        images: productData.images || [],
-        category: productData.category || 'general',
-        account_level: productData.accountLevel ?? productData.account_level ?? null,
-        account_details: productData.accountDetails ?? productData.account_details ?? null,
-        is_flash_sale: productData.isFlashSale ?? false,
-        has_rental: productData.hasRental ?? false,
-        stock: productData.stock ?? 1,
-        game_title_id: productData.gameTitleId ?? productData.game_title_id ?? null,
-        tier_id: productData.tierId ?? productData.tier_id ?? null,
-        game_title: productData.gameTitle ?? productData.game_title ?? null
+      const client = this.adminClient;
+      if (!client) {
+        return { data: null, error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      if (!client) {
+        return { data: null, error: { message: 'Admin client not available. Service role key required.' } } as any;
+      }
+      const payload: Database['public']['Tables']['products']['Insert'] = {
+        name: String(productData.name ?? ''),
+        description: (productData.description as string) ?? null,
+        price: Number(productData.price ?? 0),
+        original_price: (productData as any).originalPrice ?? (productData as any).original_price ?? null,
+        image: (productData.image as string) ?? null,
+        images: (productData.images as Json) ?? null,
+        category: (productData.category as string) ?? 'general',
+        account_level: (productData as any).accountLevel ?? (productData as any).account_level ?? null,
+        account_details: (productData as any).accountDetails ?? (productData as any).account_details ?? null,
+        is_flash_sale: (productData as any).isFlashSale ?? null,
+        has_rental: (productData as any).hasRental ?? null,
+        stock: (productData.stock as number) ?? null,
+        game_title_id: (productData as any).gameTitleId ?? (productData as any).game_title_id ?? null,
+        tier_id: (productData as any).tierId ?? (productData as any).tier_id ?? null,
+        game_title: (productData as any).gameTitle ?? (productData as any).game_title ?? null,
       };
 
       console.log('🔧 AdminService: Creating product with payload:', payload);
 
-      const { data, error } = await this.adminClient
+      const { data, error } = await client
         .from('products')
         .insert([payload])
         .select()
@@ -110,7 +284,7 @@ class AdminService {
         return { data: null, error };
       }
 
-      console.log('✅ AdminService: Product created successfully:', data?.id);
+  console.log('✅ AdminService: Product created successfully:', (data as Database['public']['Tables']['products']['Row']).id);
       return { data, error: null };
 
     } catch (error) {
@@ -119,7 +293,7 @@ class AdminService {
     }
   }
 
-  async updateProduct(id: string, updates: any): Promise<{ data: any; error: any }> {
+  async updateProduct(id: string, updates: Record<string, unknown>): Promise<{ data: unknown; error: unknown }> {
     if (!this.isAdminClient()) {
       return { 
         data: null, 
@@ -128,36 +302,46 @@ class AdminService {
     }
 
     try {
-      const payload: any = {};
+      const client = this.adminClient;
+      if (!client) {
+        return { data: null, error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      if (!client) {
+        return { data: null, error: { message: 'Admin client not available. Service role key required.' } } as any;
+      }
+  const payload: Database['public']['Tables']['products']['Update'] = {};
+  const isString = (v: unknown): v is string => typeof v === 'string';
+  const isNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+  const isBool = (v: unknown): v is boolean => typeof v === 'boolean';
       
       // Map frontend fields to database fields
-      if (updates.name !== undefined) payload.name = updates.name;
-      if (updates.description !== undefined) payload.description = updates.description;
-      if (updates.price !== undefined) payload.price = updates.price;
-      if (updates.originalPrice !== undefined) payload.original_price = updates.originalPrice;
-      if (updates.original_price !== undefined) payload.original_price = updates.original_price;
-      if (updates.image !== undefined) payload.image = updates.image;
-      if (updates.images !== undefined) payload.images = updates.images;
-      if (updates.category !== undefined) payload.category = updates.category;
-      if (updates.accountLevel !== undefined) payload.account_level = updates.accountLevel;
-      if (updates.account_level !== undefined) payload.account_level = updates.account_level;
-      if (updates.accountDetails !== undefined) payload.account_details = updates.accountDetails;
-      if (updates.account_details !== undefined) payload.account_details = updates.account_details;
-      if (updates.isFlashSale !== undefined) payload.is_flash_sale = updates.isFlashSale;
-      if (updates.is_flash_sale !== undefined) payload.is_flash_sale = updates.is_flash_sale;
-      if (updates.hasRental !== undefined) payload.has_rental = updates.hasRental;
-      if (updates.has_rental !== undefined) payload.has_rental = updates.has_rental;
-      if (updates.stock !== undefined) payload.stock = updates.stock;
-      if (updates.gameTitleId !== undefined) payload.game_title_id = updates.gameTitleId;
-      if (updates.game_title_id !== undefined) payload.game_title_id = updates.game_title_id;
-      if (updates.tierId !== undefined) payload.tier_id = updates.tierId;
-      if (updates.tier_id !== undefined) payload.tier_id = updates.tier_id;
-      if (updates.gameTitle !== undefined) payload.game_title = updates.gameTitle;
-      if (updates.game_title !== undefined) payload.game_title = updates.game_title;
+  if (isString(updates.name)) payload.name = updates.name;
+  if (isString(updates.description)) payload.description = updates.description;
+  if (isNumber(updates.price)) payload.price = updates.price;
+  if (isNumber((updates as any).originalPrice)) payload.original_price = (updates as any).originalPrice;
+  if (isNumber((updates as any).original_price)) payload.original_price = (updates as any).original_price;
+  if (isString(updates.image)) payload.image = updates.image;
+  if (updates.images !== undefined) payload.images = updates.images as Json;
+  if (isString(updates.category)) payload.category = updates.category;
+  if (isString((updates as any).accountLevel)) payload.account_level = (updates as any).accountLevel;
+  if (isString((updates as any).account_level)) payload.account_level = (updates as any).account_level;
+  if (isString((updates as any).accountDetails)) payload.account_details = (updates as any).accountDetails;
+  if (isString((updates as any).account_details)) payload.account_details = (updates as any).account_details;
+  if (isBool((updates as any).isFlashSale)) payload.is_flash_sale = (updates as any).isFlashSale;
+  if (isBool((updates as any).is_flash_sale)) payload.is_flash_sale = (updates as any).is_flash_sale;
+  if (isBool((updates as any).hasRental)) payload.has_rental = (updates as any).hasRental;
+  if (isBool((updates as any).has_rental)) payload.has_rental = (updates as any).has_rental;
+  if (isNumber(updates.stock)) payload.stock = updates.stock;
+  if (isString((updates as any).gameTitleId)) payload.game_title_id = (updates as any).gameTitleId;
+  if (isString((updates as any).game_title_id)) payload.game_title_id = (updates as any).game_title_id;
+  if (isString((updates as any).tierId)) payload.tier_id = (updates as any).tierId;
+  if (isString((updates as any).tier_id)) payload.tier_id = (updates as any).tier_id;
+  if (isString((updates as any).gameTitle)) payload.game_title = (updates as any).gameTitle;
+  if (isString((updates as any).game_title)) payload.game_title = (updates as any).game_title;
 
       console.log('🔧 AdminService: Updating product with payload:', payload);
 
-      const { data, error } = await this.adminClient
+      const { data, error } = await client
         .from('products')
         .update(payload)
         .eq('id', id)
@@ -169,7 +353,7 @@ class AdminService {
         return { data: null, error };
       }
 
-      console.log('✅ AdminService: Product updated successfully:', data?.id);
+  console.log('✅ AdminService: Product updated successfully:', (data as Database['public']['Tables']['products']['Row']).id);
       return { data, error: null };
 
     } catch (error) {
@@ -178,7 +362,7 @@ class AdminService {
     }
   }
 
-  async deleteProduct(id: string): Promise<{ success: boolean; error: any; archived?: boolean }> {
+  async deleteProduct(id: string): Promise<{ success: boolean; error: unknown; archived?: boolean }> {
     if (!this.isAdminClient()) {
       return { 
         success: false, 
@@ -188,33 +372,42 @@ class AdminService {
 
     try {
       console.log('🔧 AdminService: Deleting product:', id);
+      const client = this.adminClient;
+      if (!client) {
+        return { success: false, error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      if (!client) {
+        return { success: false, error: { message: 'Admin client not available. Service role key required.' } } as any;
+      }
 
       // First delete related rental options
-      await this.adminClient
+  await client
         .from('rental_options')
         .delete()
         .eq('product_id', id);
 
       // Then delete related flash sales
-      await this.adminClient
+  await client
         .from('flash_sales')
         .delete()
         .eq('product_id', id);
 
       // Then delete the product
-      const { error } = await this.adminClient
+  const delResp = await client
         .from('products')
         .delete()
         .eq('id', id);
+  const error = (delResp as { error: unknown }).error;
 
       if (error) {
         // Handle FK conflict (e.g., orders referencing product): fallback to archive
-        if ((error as any).code === '409' || (error as any).message?.includes('foreign key')) {
+  if ((error as { code?: string; message?: string } | null)?.code === '409' || (error as { code?: string; message?: string } | null)?.message?.includes('foreign key')) {
           console.warn('⚠️ AdminService: FK conflict deleting product, archiving instead');
-          const { error: upErr } = await this.adminClient
+          const upResp = await client
             .from('products')
             .update({ is_active: false, archived_at: new Date().toISOString() })
             .eq('id', id);
+          const upErr = (upResp as { error: unknown }).error;
           if (upErr) {
             console.error('❌ AdminService: Archive fallback failed:', upErr);
             return { success: false, error: upErr };
@@ -256,7 +449,11 @@ class AdminService {
 
       console.log('🔧 AdminService: Creating flash sale with payload:', payload);
 
-      const { data, error } = await this.adminClient
+      const client = this.adminClient;
+      if (!client) {
+        return { data: null, error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      const { data, error } = await client
         .from('flash_sales')
         .insert([payload])
         .select()
@@ -267,7 +464,7 @@ class AdminService {
         return { data: null, error };
       }
 
-      console.log('✅ AdminService: Flash sale created successfully:', data?.id);
+  console.log('✅ AdminService: Flash sale created successfully:', (data as Database['public']['Tables']['flash_sales']['Row']).id);
       return { data, error: null };
 
     } catch (error) {
@@ -291,7 +488,11 @@ class AdminService {
       if (payload.end_time) payload.end_time = new Date(payload.end_time).toISOString();
       Object.keys(payload).forEach(k => payload[k] === undefined && delete payload[k]);
 
-      const { data, error } = await this.adminClient
+      const client = this.adminClient;
+      if (!client) {
+        return { data: null, error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      const { data, error } = await client
         .from('flash_sales')
         .update(payload)
         .eq('id', id)
@@ -319,10 +520,15 @@ class AdminService {
     }
 
     try {
-      const { error } = await this.adminClient
+      const client = this.adminClient;
+      if (!client) {
+        return { success: false, error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      const fsDelResp = await client
         .from('flash_sales')
         .delete()
         .eq('id', id);
+      const error = (fsDelResp as { error: unknown }).error as any;
       if (error) {
         console.error('❌ AdminService: Flash sale delete error:', error);
         return { success: false, error };
@@ -494,7 +700,7 @@ class AdminService {
       }
       const ids = (rows || []).map((r: any) => r.product_id).filter(Boolean);
       // Hydrate full product rows for cards
-      let productMap = new Map<string, any>();
+  const productMap = new Map<string, any>();
       if (ids.length) {
         try {
           const { data: prods } = await this.adminClient
@@ -507,8 +713,10 @@ class AdminService {
               tiers:tier_id ( id, name, slug, color, background_gradient, icon )
             `)
             .in('id', ids);
-          for (const p of prods || []) productMap.set(p.id, p);
-        } catch {}
+          for (const p of (prods as Array<Database['public']['Tables']['products']['Row']> | null) || []) productMap.set(p.id, p);
+        } catch (e) {
+          console.warn('AdminService: failed to hydrate products for flash sales', e);
+        }
       }
       const mapped = (rows || []).map((row: any) => {
         const p = productMap.get(row.product_id);
@@ -633,10 +841,16 @@ class AdminService {
       return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
     }
     try {
-      const { data, error } = await this.adminClient
+      const client = this.adminClient;
+      if (!client) {
+        return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      const gtResp = await client
         .from('game_titles')
-  .select('id, name, slug, icon, color, logo_url, logo_path, is_popular, is_active, sort_order, created_at, updated_at')
+        .select('id, name, slug, icon, color, logo_url, logo_path, is_popular, is_active, sort_order, created_at, updated_at')
         .order('name');
+      const data = (gtResp as { data: unknown }).data as any[] | null;
+      const error = (gtResp as { error: unknown }).error as any;
       if (error) return { data: [], error };
       return { data: data || [], error: null };
     } catch (error) {
@@ -649,10 +863,16 @@ class AdminService {
       return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
     }
     try {
-      const { data, error } = await this.adminClient
+      const client = this.adminClient;
+      if (!client) {
+        return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      const tResp = await client
         .from('tiers')
         .select('id, name, slug, description, color')
         .order('name');
+      const data = (tResp as { data: unknown }).data as any[] | null;
+      const error = (tResp as { error: unknown }).error as any;
       if (error) return { data: [], error };
       return { data: data || [], error: null };
     } catch (error) {
@@ -666,11 +886,17 @@ class AdminService {
       return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
     }
     try {
-      const { data, error } = await this.adminClient
+      const client = this.adminClient;
+      if (!client) {
+        return { data: [], error: { message: 'Admin client not available. Service role key required.' } };
+      }
+      const roResp = await client
         .from('rental_options')
         .select('id, duration, price, description')
         .eq('product_id', productId)
         .order('price', { ascending: true });
+      const data = (roResp as { data: unknown }).data as any[] | null;
+      const error = (roResp as { error: unknown }).error as any;
       if (error) return { data: [], error };
       return { data: data || [], error: null };
     } catch (error) {
@@ -761,8 +987,7 @@ class AdminService {
     // Uploads to <bucket>/settings/
     try {
       const bucket = this.getStorageBucket();
-      const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-      const safeName = file.name.replace(/[^a-zA-Z0-9-_\.]/g, '_');
+  const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
       const path = `settings/${Date.now()}_${Math.random().toString(36).slice(2)}_${kind}.${ext}`;
       const { error } = await this.adminClient.storage.from(bucket).upload(path, file, {
         cacheControl: '3600',
@@ -783,13 +1008,18 @@ class AdminService {
       return { data: null, error: { message: 'Admin client not available. Service role key required.' } };
     }
     try {
-      const { data, error } = await this.adminClient
+      const { error } = await this.adminClient
         .from('website_settings')
         .select('*')
         .limit(1)
         .maybeSingle();
       if (error) return { data: null, error };
-      return { data, error: null };
+      const { data } = await this.adminClient
+        .from('website_settings')
+        .select('*')
+        .limit(1)
+        .maybeSingle();
+      return { data: data ?? null, error: null };
     } catch (error) {
       return { data: null, error } as any;
     }
@@ -988,9 +1218,9 @@ class AdminService {
 
     try {
       // Test basic read operation
-      const { data, error } = await this.adminClient
+      const { error } = await this.adminClient
         .from('products')
-        .select('id')
+        .select('id', { head: true, count: 'exact' })
         .limit(1);
 
       if (error) {
@@ -1077,6 +1307,24 @@ class AdminService {
       }
 
       // Real dashboard queries from database
+      const client = this.adminClient;
+      if (!client) {
+        return {
+          success: false,
+          data: {
+            totalProducts: 0,
+            flashSales: 0,
+            totalOrders: 0,
+            totalRevenue: 0,
+            averageOrders: 0,
+            totalUsers: 0,
+            dailyOrders: 0,
+            orderStatuses: { paid: 0, pending: 0, cancelled: 0 },
+            conversionRate: 0
+          }
+        };
+      }
+
       const [
         productsResult,
         flashSalesResult,
@@ -1084,48 +1332,51 @@ class AdminService {
         ordersInRangeResult
       ] = await Promise.all([
         // a. Total Produk = Count dari produk yang tersedia
-        this.adminClient
+        client
           .from('products')
           .select('id', { count: 'exact', head: true })
           .eq('is_active', true)
           .is('archived_at', null),
 
         // b. Flash Sales = Count dari produk yang aktif di flash sale
-        this.adminClient
+  client
           .from('flash_sales')
           .select('id', { count: 'exact', head: true })
           .eq('is_active', true)
           .gte('end_time', new Date().toISOString()),
 
         // f. Total pengguna = Sum dari tabel users dengan yang sudah terverifikasi
-        this.adminClient
+  client
           .from('users')
           .select('id', { count: 'exact', head: true })
           .eq('phone_verified', true),
 
         // Orders within selected range (for dynamic dashboard)
-        (function(self){
-          let q = self.adminClient
+        (function(c){
+          let q = c
             .from('orders')
             .select('id, amount, status, created_at');
           if (startISO) q = q.gte('created_at', startISO);
           if (endISO) q = q.lte('created_at', endISO);
           return q;
-        })(this)
+        })(client)
       ]);
 
       // Calculate totals (dynamic by range)
       const totalProducts = productsResult.count || 0;
       const flashSales = flashSalesResult.count || 0;
-      const orders = (ordersInRangeResult.data || []).map((o: any) => ({
-        ...o,
-        amount: typeof o.amount === 'string' ? parseFloat(o.amount) : (typeof o.amount === 'number' ? o.amount : 0)
+      type OrderRow = Database['public']['Tables']['orders']['Row'];
+      const baseOrders = (ordersInRangeResult.data || []) as OrderRow[];
+      const orders = baseOrders.map((o) => ({
+        amount: typeof o.amount === 'string' ? parseFloat(o.amount) : (typeof o.amount === 'number' ? o.amount : 0),
+        status: o.status ?? null,
+        created_at: o.created_at,
       }));
       const totalOrders = orders.length;
 
   // Calculate revenue for paid/completed orders within range
-  const paidOrdersList = orders.filter((o: any) => o.status === 'paid' || o.status === 'completed');
-  const totalRevenue = paidOrdersList.reduce((sum: number, o: any) => sum + (o.amount || 0), 0);
+  const paidOrdersList = orders.filter((o) => o.status === 'paid' || o.status === 'completed');
+  const totalRevenue = paidOrdersList.reduce((sum: number, o) => sum + (o.amount || 0), 0);
   const averageOrders = paidOrdersList.length > 0 ? totalRevenue / paidOrdersList.length : 0;
 
       const totalUsers = usersResult.count || 0;
@@ -1133,11 +1384,11 @@ class AdminService {
       const today = new Date();
       const dayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
       const dayEnd = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23,59,59,999).toISOString();
-  const dailyOrders = orders.filter((o: any) => (o.status === 'paid' || o.status === 'completed') && o.created_at >= dayStart && o.created_at <= dayEnd).length;
+  const dailyOrders = orders.filter((o) => (o.status === 'paid' || o.status === 'completed') && o.created_at >= dayStart && o.created_at <= dayEnd).length;
 
       // Calculate order statuses
-      const orderStatuses = { paid: 0, pending: 0, canceled: 0, completed: 0 } as any;
-      orders.forEach((order: any) => {
+  const orderStatuses: { paid: number; pending: number; canceled: number; completed: number } = { paid: 0, pending: 0, canceled: 0, completed: 0 };
+  orders.forEach((order) => {
         if (order.status === 'paid') orderStatuses.paid++;
         else if (order.status === 'pending') orderStatuses.pending++;
         else if (order.status === 'completed') orderStatuses.completed++;
@@ -1159,7 +1410,7 @@ class AdminService {
         dailyMap.set(key, { revenue: 0, orders: 0 });
         cursor.setDate(cursor.getDate() + 1);
       }
-      for (const o of orders) {
+  for (const o of orders) {
         const d = new Date(o.created_at);
         const key = new Date(d.getFullYear(), d.getMonth(), d.getDate()).toISOString().slice(0,10);
         const cur = dailyMap.get(key) || { revenue: 0, orders: 0 };

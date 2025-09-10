@@ -42,13 +42,19 @@ export class ResourcePreloader {
     }
 
     return new Promise((resolve) => {
+      if (!('FontFace' in window)) {
+        resolve();
+        return;
+      }
       const font = new FontFace(fontFamily, `url(/fonts/${fontFamily}-${weight}.woff2)`, {
         weight,
         display: 'swap'
       });
 
       font.load().then(() => {
-        document.fonts.add(font);
+        if ('fonts' in document) {
+          document.fonts.add(font);
+        }
         this.preloadedFonts.add(key);
         resolve();
       }).catch(() => {
@@ -93,7 +99,7 @@ export class ResourcePreloader {
 
     const resources = routeResources[routeName as keyof typeof routeResources];
     if (resources) {
-      this.preloadImages(resources, 2);
+  void this.preloadImages(resources, 2);
     }
   }
 
@@ -120,6 +126,6 @@ export class ResourcePreloader {
 // Auto preload critical resources
 if (typeof window !== 'undefined') {
   // Preload critical fonts
-  ResourcePreloader.preloadFont('Inter', '400');
-  ResourcePreloader.preloadFont('Inter', '600');
+  void ResourcePreloader.preloadFont('Inter', '400');
+  void ResourcePreloader.preloadFont('Inter', '600');
 }

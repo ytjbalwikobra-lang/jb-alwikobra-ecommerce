@@ -1,6 +1,6 @@
 import { supabase } from './supabase';
 import { WebsiteSettings } from '../types/index';
-import { uploadFile, deletePublicUrls } from './storageService';
+import { uploadFile } from './storageService';
 
 const DEFAULT_SETTINGS: WebsiteSettings = {
   id: 'default',
@@ -13,29 +13,30 @@ export class SettingsService {
   static async get(): Promise<WebsiteSettings> {
     try {
       if (!supabase) return DEFAULT_SETTINGS;
-      const { data, error } = await (supabase as any)
+      const resp = await supabase
         .from('website_settings')
         .select('*')
         .limit(1)
         .maybeSingle();
-      if (error) throw error;
+      if (resp.error) throw resp.error;
+      const data = resp.data as Record<string, unknown> | null;
       if (!data) return DEFAULT_SETTINGS;
       return {
-        id: data.id ?? 'default',
-        siteName: data.site_name ?? DEFAULT_SETTINGS.siteName,
-        logoUrl: data.logo_url ?? undefined,
-        faviconUrl: data.favicon_url ?? undefined,
-        contactEmail: data.contact_email ?? undefined,
-        contactPhone: data.contact_phone ?? undefined,
-        whatsappNumber: data.whatsapp_number ?? undefined,
-        address: data.address ?? undefined,
-        facebookUrl: data.facebook_url ?? undefined,
-        instagramUrl: data.instagram_url ?? undefined,
-        tiktokUrl: data.tiktok_url ?? undefined,
-        youtubeUrl: data.youtube_url ?? undefined,
-        heroTitle: data.hero_title ?? undefined,
-        heroSubtitle: data.hero_subtitle ?? undefined,
-        updatedAt: data.updated_at ?? undefined,
+        id: (data.id as string) ?? 'default',
+        siteName: (data.site_name as string | undefined) ?? DEFAULT_SETTINGS.siteName,
+        logoUrl: data.logo_url as string | undefined,
+        faviconUrl: data.favicon_url as string | undefined,
+        contactEmail: data.contact_email as string | undefined,
+        contactPhone: data.contact_phone as string | undefined,
+        whatsappNumber: data.whatsapp_number as string | undefined,
+        address: data.address as string | undefined,
+        facebookUrl: data.facebook_url as string | undefined,
+        instagramUrl: data.instagram_url as string | undefined,
+        tiktokUrl: data.tiktok_url as string | undefined,
+        youtubeUrl: data.youtube_url as string | undefined,
+        heroTitle: data.hero_title as string | undefined,
+        heroSubtitle: data.hero_subtitle as string | undefined,
+        updatedAt: data.updated_at as string | undefined,
       };
     } catch (e) {
       console.error('SettingsService.get error:', e);
@@ -47,7 +48,7 @@ export class SettingsService {
     try {
       if (!supabase) return null;
       const current = await this.get();
-      const payload: any = {
+  const payload: Record<string, unknown> = {
         site_name: input.siteName ?? current.siteName ?? null,
         contact_email: input.contactEmail ?? current.contactEmail ?? null,
         contact_phone: input.contactPhone ?? current.contactPhone ?? null,
@@ -72,10 +73,10 @@ export class SettingsService {
       } else if (input.faviconUrl) {
         payload.favicon_url = input.faviconUrl;
       }
-      let data: any = null;
-      let error: any = null;
+      let data: unknown = null;
+      let error: unknown = null;
       if (current.id && current.id !== 'default') {
-        const resp = await (supabase as any)
+        const resp = await supabase
           .from('website_settings')
           .update(payload)
           .eq('id', current.id)
@@ -84,7 +85,7 @@ export class SettingsService {
         data = resp.data;
         error = resp.error;
       } else {
-        const resp = await (supabase as any)
+        const resp = await supabase
           .from('website_settings')
           .insert(payload)
           .select()
@@ -92,24 +93,24 @@ export class SettingsService {
         data = resp.data;
         error = resp.error;
       }
-      if (error) throw error;
-      const row = data || payload;
+      if (error) throw error as Error;
+      const row = (data && typeof data === 'object' ? data : payload) as Record<string, unknown>;
       return {
-        id: row.id ?? current.id ?? 'default',
-        siteName: row.site_name ?? current.siteName,
-        logoUrl: row.logo_url ?? current.logoUrl,
-        faviconUrl: row.favicon_url ?? current.faviconUrl,
-        contactEmail: row.contact_email ?? current.contactEmail,
-        contactPhone: row.contact_phone ?? current.contactPhone,
-        whatsappNumber: row.whatsapp_number ?? current.whatsappNumber,
-        address: row.address ?? current.address,
-        facebookUrl: row.facebook_url ?? current.facebookUrl,
-        instagramUrl: row.instagram_url ?? current.instagramUrl,
-        tiktokUrl: row.tiktok_url ?? current.tiktokUrl,
-        youtubeUrl: row.youtube_url ?? current.youtubeUrl,
-        heroTitle: row.hero_title ?? current.heroTitle,
-        heroSubtitle: row.hero_subtitle ?? current.heroSubtitle,
-        updatedAt: row.updated_at ?? new Date().toISOString(),
+        id: (row.id as string) ?? current.id ?? 'default',
+        siteName: (row.site_name as string) ?? current.siteName,
+        logoUrl: (row.logo_url as string | undefined) ?? current.logoUrl,
+        faviconUrl: (row.favicon_url as string | undefined) ?? current.faviconUrl,
+        contactEmail: (row.contact_email as string | undefined) ?? current.contactEmail,
+        contactPhone: (row.contact_phone as string | undefined) ?? current.contactPhone,
+        whatsappNumber: (row.whatsapp_number as string | undefined) ?? current.whatsappNumber,
+        address: (row.address as string | undefined) ?? current.address,
+        facebookUrl: (row.facebook_url as string | undefined) ?? current.facebookUrl,
+        instagramUrl: (row.instagram_url as string | undefined) ?? current.instagramUrl,
+        tiktokUrl: (row.tiktok_url as string | undefined) ?? current.tiktokUrl,
+        youtubeUrl: (row.youtube_url as string | undefined) ?? current.youtubeUrl,
+        heroTitle: (row.hero_title as string | undefined) ?? current.heroTitle,
+        heroSubtitle: (row.hero_subtitle as string | undefined) ?? current.heroSubtitle,
+        updatedAt: (row.updated_at as string | undefined) ?? new Date().toISOString(),
       };
     } catch (e) {
       console.error('SettingsService.upsert error:', e);

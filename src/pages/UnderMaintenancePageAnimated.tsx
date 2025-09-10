@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { Wrench, Mail, Star, Sparkles } from 'lucide-react';
+import { Wrench, Star, Sparkles, MessageCircle } from 'lucide-react';
 
 const UnderMaintenancePage: React.FC = () => {
   const [progress, setProgress] = useState(0);
@@ -29,17 +28,16 @@ const UnderMaintenancePage: React.FC = () => {
   }, []);
 
   return (
-    <div className="min-h-screen bg-app-dark flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
+    <div className="min-h-screen ios-fixed-safe bg-app-dark flex items-center justify-center px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Floating Stars Background */}
-      {stars.map(star => (
+      {stars.slice(0, 8).map(star => (
         <div
           key={star.id}
-          className="absolute animate-pulse"
+          className="absolute"
           style={{
             left: `${star.x}%`,
             top: `${star.y}%`,
-            animationDelay: `${star.delay}s`,
-            animationDuration: '3s'
+            opacity: 0.15
           }}
         >
           <Star className="text-pink-400/20" size={16} />
@@ -47,20 +45,20 @@ const UnderMaintenancePage: React.FC = () => {
       ))}
 
       {/* Sparkle Effects */}
-      <div className="absolute top-20 left-20 animate-bounce">
+  <div className="absolute top-20 left-20">
         <Sparkles className="text-pink-300/30" size={24} />
       </div>
-      <div className="absolute top-40 right-32 animate-bounce" style={{ animationDelay: '1s' }}>
+  <div className="absolute top-40 right-32">
         <Sparkles className="text-pink-300/30" size={20} />
       </div>
-      <div className="absolute bottom-32 left-16 animate-bounce" style={{ animationDelay: '2s' }}>
+  <div className="absolute bottom-32 left-16">
         <Sparkles className="text-pink-300/30" size={18} />
       </div>
 
       <div className="max-w-2xl mx-auto text-center relative z-10">
         {/* Maintenance Icon with Animation */}
-        <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-8 animate-spin hover:animate-pulse transition-all duration-300">
-          <Wrench className="text-white animate-pulse" size={48} />
+        <div className="w-24 h-24 bg-gradient-to-br from-pink-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-8">
+          <Wrench className="text-white" size={48} />
         </div>
 
         {/* Main Heading with Typing Effect */}
@@ -97,13 +95,15 @@ const UnderMaintenancePage: React.FC = () => {
 
         {/* Action Button with Hover Effects */}
         <div className="flex justify-center">
-          <Link
-            to="/help"
-            className="bg-transparent text-pink-300 border-2 border-pink-500/60 px-8 py-4 rounded-xl font-semibold hover:bg-pink-500/10 transition-colors flex items-center justify-center space-x-2 transform hover:scale-105"
+          <a
+            href="https://wa.me/6281234567890?text=Halo,%20saya%20mengunjungi%20website%20dan%20sedang%20dalam%20maintenance.%20Bisakah%20membantu%20saya?"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="bg-transparent text-green-300 border-2 border-green-500/60 px-8 py-4 rounded-xl font-semibold hover:bg-green-500/10 transition-colors flex items-center justify-center space-x-2 transform hover:scale-105"
           >
-            <Mail size={20} className="animate-pulse" />
-            <span>Hubungi Support</span>
-          </Link>
+            <MessageCircle size={20} className="animate-pulse" />
+            <span>Hubungi Support WhatsApp</span>
+          </a>
         </div>
 
         {/* Footer Text */}

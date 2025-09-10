@@ -1,7 +1,17 @@
 // React Performance Optimization Configuration
 // This file contains critical performance improvements for mobile devices
 
-import { StrictMode, lazy } from 'react';
+// no react imports needed here
+
+// Minimal typing for web performance entries to avoid any
+interface PerformanceEventTiming extends PerformanceEntry {
+  processingStart: number;
+}
+
+interface LayoutShift extends PerformanceEntry {
+  value: number;
+  hadRecentInput: boolean;
+}
 
 // Preload critical chunks for better perceived performance
 export const preloadCriticalChunks = () => {
@@ -14,12 +24,23 @@ export const preloadCriticalChunks = () => {
 
   const runPreload = () => {
     criticalChunks.forEach(loader => {
-      try { loader().catch(() => {}); } catch { /* ignore */ }
+      try {
+        void loader().catch((e) => {
+          if (process.env.NODE_ENV === 'development') {
+            console.warn('Preload chunk failed:', e);
+          }
+        });
+      } catch (e) {
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Preload schedule failed:', e);
+        }
+      }
     });
   };
 
   if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(runPreload);
+    const ric = (window as unknown as { requestIdleCallback?: (cb: () => void) => void }).requestIdleCallback;
+    if (typeof ric === 'function') ric(runPreload);
   } else {
     setTimeout(runPreload, 2000);
   }
@@ -101,22 +122,22 @@ export const initPerformanceMonitoring = () => {
     // First Input Delay
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const anyEntry: any = entry as any;
-        if (typeof anyEntry.processingStart === 'number') {
-          console.log('FID:', anyEntry.processingStart - anyEntry.startTime);
+        const e = entry as PerformanceEventTiming;
+        if (typeof e.processingStart === 'number') {
+          console.log('FID:', e.processingStart - e.startTime);
         }
       }
-    }).observe({ entryTypes: ['first-input'] });
+    }).observe({ entryTypes: ['first-input'] as unknown as PerformanceObserverInit['entryTypes'] });
 
     // Cumulative Layout Shift
     new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const anyEntry: any = entry as any;
-        if (!anyEntry.hadRecentInput && typeof anyEntry.value === 'number') {
-          console.log('CLS:', anyEntry.value);
+        const e = entry as LayoutShift;
+        if (!e.hadRecentInput && typeof e.value === 'number') {
+          console.log('CLS:', e.value);
         }
       }
-    }).observe({ entryTypes: ['layout-shift'] });
+    }).observe({ entryTypes: ['layout-shift'] as unknown as PerformanceObserverInit['entryTypes'] });
   }
 };
 
@@ -151,13 +172,13 @@ export const initializePerformanceOptimizations = () => {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
       preloadCriticalChunks();
-      registerServiceWorker();
+      void registerServiceWorker();
       initPerformanceMonitoring();
       optimizeMemoryUsage();
     });
   } else {
     preloadCriticalChunks();
-    registerServiceWorker();
+    void registerServiceWorker();
     initPerformanceMonitoring();
     optimizeMemoryUsage();
   }

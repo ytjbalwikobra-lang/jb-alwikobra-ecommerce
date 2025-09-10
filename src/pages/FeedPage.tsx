@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { feedService } from '../services/feedService';
 import { useAuth } from '../contexts/TraditionalAuthContext';
 import { useToast } from '../components/Toast';
@@ -39,10 +39,37 @@ function RolePill({ isAdmin }: { isAdmin?: boolean }) {
   return <span className={`text-[10px] px-2 py-0.5 rounded-full border ${cls}`}>{text}</span>;
 }
 
+// Narrow unknown errors into a friendly message without using any
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (err instanceof Error && err.message) return err.message;
+  if (typeof err === 'string' && err) return err;
+  if (err && typeof err === 'object' && 'message' in err) {
+    const m = (err as { message?: unknown }).message;
+    if (typeof m === 'string' && m) return m;
+  }
+  return fallback;
+}
+
 const FeedPage: React.FC = () => {
   const { user } = useAuth();
   const { showToast } = useToast();
-  const [posts, setPosts] = useState<any[]>([]);
+  type FeedItem = {
+    id: string;
+    type: 'post' | 'announcement' | 'review';
+    title?: string;
+    content?: string;
+    rating?: number;
+    image_url?: string;
+    created_at: string;
+    user_id: string;
+    users?: { name?: string; avatar_url?: string; is_admin?: boolean };
+    products?: { name?: string };
+    liked_by_me?: boolean;
+    likes_count?: number;
+    comments_count?: number;
+    is_pinned?: boolean;
+  };
+  const [posts, setPosts] = useState<FeedItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
@@ -57,18 +84,18 @@ const FeedPage: React.FC = () => {
   const [editPostId, setEditPostId] = useState<string | null>(null);
   const [editFields, setEditFields] = useState<{ title: string; content: string; type: 'post'|'announcement'; imageFile?: File | null; removeImage?: boolean }>({ title: '', content: '', type: 'post' });
   const [editPreview, setEditPreview] = useState<string | null>(null);
-  const [editReviewPost, setEditReviewPost] = useState<any | null>(null);
+  const [editReviewPost, setEditReviewPost] = useState<FeedItem | null>(null);
   const [editReviewFields, setEditReviewFields] = useState<{ title: string; content: string; rating: number }>({ title: '', content: '', rating: 5 });
 
-  const load = async (p = 1) => {
+  const load = useCallback(async (p = 1) => {
     setLoading(true);
     const { data, total } = await feedService.list(p, limit, filter);
     setPosts(data || []);
     setTotal(total || 0);
     setLoading(false);
-  };
+  }, [filter]);
 
-  useEffect(() => { load(1); /* eslint-disable-next-line */ }, [filter]);
+  useEffect(() => { load(1); }, [load]);
   // Mark notifications read and hide badge when entering feed route
   useEffect(() => {
     try {
@@ -83,8 +110,9 @@ const FeedPage: React.FC = () => {
   const [newPostImage, setNewPostImage] = useState<File | null>(null);
   const [newPostPreview, setNewPostPreview] = useState<string | null>(null);
   const [newReview, setNewReview] = useState<{title:string;content:string;rating:number;product_id:string}>({ title: '', content: '', rating: 5, product_id: '' });
-  const [eligibleProducts, setEligibleProducts] = useState<any[]>([]);
-  const [notReviewedProducts, setNotReviewedProducts] = useState<any[]>([]);
+  type EligibleProduct = { id: string; name: string };
+  // const [eligibleProducts, setEligibleProducts] = useState<EligibleProduct[]>([]);
+  const [notReviewedProducts, setNotReviewedProducts] = useState<EligibleProduct[]>([]);
   const [hasPurchases, setHasPurchases] = useState<boolean>(false);
   const [submitting, setSubmitting] = useState<boolean>(false);
   useEffect(() => {
@@ -92,7 +120,7 @@ const FeedPage: React.FC = () => {
       if (user) {
         const res = await fetch('/api/feed?action=eligible-products', { headers: { 'Authorization': `Bearer ${localStorage.getItem('session_token')||''}` } });
         const j = await res.json();
-  setEligibleProducts(j.products || []);
+  // setEligibleProducts(j.products || []);
   setNotReviewedProducts(j.notReviewedProducts || []);
   setHasPurchases(!!j.hasPurchases);
       }
@@ -113,8 +141,8 @@ const FeedPage: React.FC = () => {
       } else {
         showToast(res?.error || 'Gagal membuat post', 'error');
       }
-    } catch (e: any) {
-      showToast(e?.message || 'Gagal membuat post', 'error');
+    } catch (e: unknown) {
+      showToast(getErrorMessage(e, 'Gagal membuat post'), 'error');
     } finally {
       setSubmitting(false);
     }
@@ -133,12 +161,12 @@ const FeedPage: React.FC = () => {
       } else {
         showToast(res?.error || 'Gagal membuat review', 'error');
       }
-    } catch (e: any) {
-      showToast(e?.message || 'Gagal membuat review', 'error');
+    } catch (e: unknown) {
+      showToast(getErrorMessage(e, 'Gagal membuat review'), 'error');
     } finally { setSubmitting(false); }
   };
 
-  const toggleLike = async (post: any) => {
+  const toggleLike = async (post: FeedItem) => {
     if (isGuest) return;
     const liked = post.liked_by_me;
     // optimistic update
@@ -159,7 +187,8 @@ const FeedPage: React.FC = () => {
 
   const [commentInputs, setCommentInputs] = useState<Record<string,string>>({});
   const [openComments, setOpenComments] = useState<Record<string, boolean>>({});
-  const [comments, setComments] = useState<Record<string, any[]>>({});
+  type FeedComment = { id: string; content: string; created_at: string; parent_comment_id?: string | null; users?: { name?: string; avatar_url?: string; is_admin?: boolean } };
+  const [comments, setComments] = useState<Record<string, FeedComment[]>>({});
 
   const loadComments = async (postId: string) => {
     const { comments } = await feedService.listComments(postId);
@@ -170,7 +199,7 @@ const FeedPage: React.FC = () => {
     if (isGuest) return;
     const content = parentId ? (commentInputs[`reply_${parentId}`] || '') : (commentInputs[postId] || '');
     if (!content.trim()) return;
-    const { comment, comments_count } = await feedService.comment(postId, content, parentId);
+  const { comments_count } = await feedService.comment(postId, content, parentId);
     setCommentInputs(prev => ({ ...prev, [postId]: '', [`reply_${parentId}`]: '' }));
     await loadComments(postId);
     if (typeof comments_count === 'number') {
@@ -181,9 +210,18 @@ const FeedPage: React.FC = () => {
     }
   };
 
-  const onClickEdit = (post: any) => {
+  const onClickEdit = (post: FeedItem) => {
     if (post.type === 'review') {
       if (!user || user.id !== post.user_id) return;
+      // Allow edit only within 5 minutes since creation (client hint; server should enforce too)
+      try {
+        const created = new Date(post.created_at).getTime();
+        const withinWindow = Date.now() - created <= 5 * 60 * 1000;
+        if (!withinWindow) {
+          showToast('Review tidak dapat diedit lagi (lebih dari 5 menit)', 'error');
+          return;
+        }
+      } catch {}
       setEditReviewPost(post);
       setEditReviewFields({ title: post.title || '', content: post.content || '', rating: post.rating || 5 });
     } else {
@@ -193,7 +231,7 @@ const FeedPage: React.FC = () => {
       setEditPreview(null);
     }
   };
-  const onClickDelete = async (post: any) => {
+  const onClickDelete = async (post: FeedItem) => {
     if (!user) return;
     if (post.type === 'review') {
       if (!user.isAdmin) return;
@@ -219,8 +257,8 @@ const FeedPage: React.FC = () => {
       } else {
         showToast(res?.error || 'Gagal memperbarui post', 'error');
       }
-    } catch (e: any) {
-      showToast(e?.message || 'Gagal memperbarui post', 'error');
+    } catch (e: unknown) {
+      showToast(getErrorMessage(e, 'Gagal memperbarui post'), 'error');
     } finally { setSubmitting(false); }
   };
   const submitEditReview = async () => {
@@ -236,8 +274,8 @@ const FeedPage: React.FC = () => {
       } else {
         showToast(res?.error || 'Gagal memperbarui review', 'error');
       }
-    } catch (e: any) {
-      showToast(e?.message || 'Gagal memperbarui review', 'error');
+    } catch (e: unknown) {
+      showToast(getErrorMessage(e, 'Gagal memperbarui review'), 'error');
     } finally { setSubmitting(false); }
   };
 
@@ -332,7 +370,7 @@ const FeedPage: React.FC = () => {
                 }} className={`px-2 py-1 text-xs rounded border ${post.is_pinned ? 'border-green-500 text-green-400' : 'border-white/10 text-gray-300'} hover:bg-white/5`}>{post.is_pinned ? 'Unpin' : 'Pin'}</button>
               )}
               {(user && (
-                (post.type === 'review' && user.id === post.user_id) ||
+                (post.type === 'review' && user.id === post.user_id && (Date.now() - new Date(post.created_at).getTime() <= 5 * 60 * 1000)) ||
                 (post.type !== 'review' && user.isAdmin)
               )) && (
                 <div className="flex items-center gap-1">
@@ -351,6 +389,9 @@ const FeedPage: React.FC = () => {
           <h3 className="text-lg font-semibold mt-2">{post.title}</h3>
           {post.type === 'review' && <RatingStars value={post.rating} />}
           <p className="text-gray-300 mt-2 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: linkify(post.content) }} />
+          {post.type === 'review' && user && user.id === post.user_id && (Date.now() - new Date(post.created_at).getTime() <= 5 * 60 * 1000) && (
+            <div className="mt-2 text-xs text-gray-400">Review dapat diedit dalam 5 menit setelah posting</div>
+          )}
           {post.image_url && <img src={post.image_url} alt="post" className="mt-3 rounded-lg border border-white/10" />}
           {post.products?.name && (
             <div className="mt-3 text-sm text-gray-400">Untuk produk: <span className="text-gray-200">{post.products.name}</span></div>
@@ -478,7 +519,7 @@ const FeedPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-2">Tipe</label>
-                  <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as any}))} className="w-full bg-black/70 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30">
+                  <select value={newPost.type} onChange={e=>setNewPost(p=>({...p, type: e.target.value as 'post'|'announcement'}))} className="w-full bg-black/70 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30">
                     <option className="bg-black text-white" value="post">Post</option>
                     <option className="bg-black text-white" value="announcement">Announcement</option>
                   </select>
@@ -550,7 +591,7 @@ const FeedPage: React.FC = () => {
                     ) : (
                       // Show existing image when available and not marked for removal
                       (() => {
-                        const existing = (posts.find(p => p.id === editPostId) || {}).image_url as string | undefined;
+                        const existing = posts.find(p => p.id === editPostId)?.image_url;
                         if (existing && !editFields.removeImage) {
                           return (
                             <>
@@ -578,7 +619,7 @@ const FeedPage: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-xs text-gray-400 mb-2">Tipe</label>
-                  <select value={editFields.type} onChange={e=>setEditFields(p=>({...p, type: e.target.value as any}))} className="w-full bg-black/70 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30">
+                  <select value={editFields.type} onChange={e=>setEditFields(p=>({...p, type: e.target.value as 'post'|'announcement'}))} className="w-full bg-black/70 text-white border border-white/20 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-pink-500/30">
                     <option className="bg-black text-white" value="post">Post</option>
                     <option className="bg-black text-white" value="announcement">Announcement</option>
                   </select>

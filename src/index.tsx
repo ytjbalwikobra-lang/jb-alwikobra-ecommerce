@@ -52,9 +52,11 @@ root.render(
     <App />
   </React.StrictMode>
 );
-// Cleanup listeners on HMR/dev
-if ((import.meta as any)?.hot) {
-  (import.meta as any).hot.dispose(() => {
+// Cleanup listeners on HMR/dev without import.meta to satisfy CRA
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const maybeModule: any = typeof module !== 'undefined' ? (module as any) : undefined;
+if (maybeModule?.hot) {
+  maybeModule.hot.dispose(() => {
     window.removeEventListener('resize', setVh);
     window.removeEventListener('orientationchange', setVh);
   });
