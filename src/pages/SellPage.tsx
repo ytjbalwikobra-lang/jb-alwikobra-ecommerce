@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   generateWhatsAppUrl,
   generateSellAccountMessage
-} from '../utils/helpers.ts';
-import { SettingsService } from '../services/settingsService.ts';
+} from '../utils/helpers';
+import { SettingsService } from '../services/settingsService';
 import { ProductService } from '../services/productService';
+import { IOSHero, IOSContainer, IOSCard, IOSButton } from '../components/ios/IOSDesignSystem';
 import {
   MessageCircle,
   DollarSign,
@@ -39,10 +40,11 @@ const SellPage: React.FC = () => {
     { name: 'Free Fire', count: '300+', icon: Trophy, color: '#ef4444' },
     { name: 'Genshin Impact', count: '200+', icon: Star, color: '#8b5cf6' },
   ]);
-  const [loadingGames, setLoadingGames] = useState(false);
+  const [loadingGames, setLoadingGames] = useState(true);
 
   const [whatsappNumber, setWhatsappNumber] = useState<string>(process.env.REACT_APP_WHATSAPP_NUMBER || '6281234567890');
-  useEffect(()=>{ (async ()=>{ try { const s = await SettingsService.get(); if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber); } catch {} })(); }, []);
+  const formRef = useRef<HTMLDivElement | null>(null);
+  useEffect(()=>{ (async ()=>{ try { const s = await SettingsService.get(); if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber); } catch (_e) { /* ignore settings fetch for smoother UX */ } })(); }, []);
 
   // Format price with thousand separator
   const formatPrice = (value: string) => {
@@ -96,7 +98,9 @@ const SellPage: React.FC = () => {
     })();
   }, []);
 
-  const getGameIconComponent = (iconName: string) => {
+  const getGameIconComponent = (iconName: any) => {
+    // Support both string icon names and direct Lucide components
+    if (typeof iconName === 'function') return iconName;
     const iconMap: {[key: string]: any} = {
       'Gamepad2': Gamepad2,
       'Smartphone': Smartphone,
@@ -108,6 +112,13 @@ const SellPage: React.FC = () => {
     return iconMap[iconName] || Gamepad2;
   };
 
+  const normalizePhoneNumber = (phone: string) => {
+    // Keep digits only, convert leading 0 to 62 (ID)
+    let digits = (phone || '').replace(/[^0-9]/g, '');
+    if (digits.startsWith('0')) digits = '62' + digits.slice(1);
+    return digits;
+  };
+
   const handleSellAccount = () => {
     // Generate detailed message using form data
     const gameInfo = selectedGame || 'Game yang ingin dijual';
@@ -117,8 +128,23 @@ const SellPage: React.FC = () => {
     
     const customMessage = `Halo admin JB Alwikobra! 👋\n\nSaya ingin menjual akun ${gameInfo}${levelInfo}${priceInfo}.${detailsInfo}\n\nMohon bantuan untuk evaluasi dan proses penjualan akun saya. Terima kasih!`;
     
-    const whatsappUrl = generateWhatsAppUrl(whatsappNumber, customMessage);
+  const whatsappUrl = generateWhatsAppUrl(normalizePhoneNumber(whatsappNumber), customMessage);
     window.open(whatsappUrl, '_blank');
+  };
+
+  const scrollToForm = () => {
+    const el = formRef.current || document.getElementById('sell-form');
+    if (el) {
+      // Offset for fixed header (approx 56px mobile / 64px desktop)
+      const headerOffset = window.innerWidth < 768 ? 56 : 64;
+      const rect = el.getBoundingClientRect();
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const top = rect.top + scrollTop - headerOffset - 8;
+      window.scrollTo({ top, behavior: 'smooth' });
+      return;
+    }
+    // Fallback anchor navigation
+    window.location.hash = '#sell-form';
   };
 
   const benefits = [
@@ -168,60 +194,49 @@ const SellPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-app-dark text-gray-200">
+    <div className="min-h-screen bg-ios-background text-ios-text">
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-pink-600 via-pink-500 to-rose-600 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-              Jual Akun Game Anda
-              <span className="text-black/80"> dengan Harga Terbaik</span>
-            </h1>
-            <p className="text-xl text-pink-100 mb-8 max-w-3xl mx-auto">
-              Platform terpercaya untuk menjual akun game Anda. Proses mudah, aman, dan harga kompetitif.
-              Sudah dipercaya oleh ribuan gamer di Indonesia.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button
-                onClick={handleSellAccount}
-                className="bg-black border border-white/30 text-white px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transition-colors flex items-center justify-center space-x-2"
-              >
-                <MessageCircle size={20} />
-                <span>Mulai Jual Akun</span>
-              </button>
-              <a
-                href="#how-it-works"
-                className="bg-black text-pink-400 border-2 border-pink-600 px-8 py-4 rounded-xl font-semibold hover:bg-white/10 transition-colors"
-              >
-                Cara Kerjanya
-              </a>
-            </div>
-          </div>
+      <IOSHero
+        title="Jual Akun Game Anda"
+        subtitle="Platform terpercaya untuk menjual akun game Anda. Proses mudah, aman, dan harga kompetitif. Sudah dipercaya oleh ribuan gamer di Indonesia."
+      >
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <IOSButton variant="secondary" size="large" onClick={scrollToForm}>
+            <MessageCircle size={20} />
+            <span className="ml-2">Mulai Jual Akun</span>
+          </IOSButton>
+          <a
+            href="#how-it-works"
+            className="bg-white/20 backdrop-blur-sm text-white border-2 border-white px-8 py-4 rounded-xl font-semibold hover:bg-white/30 transition-colors text-center shadow-lg"
+          >
+            Cara Kerjanya
+          </a>
         </div>
-      </section>
+      </IOSHero>
 
       {/* Quick Form Section */}
-      <section className="py-16 bg-black/60 border-t border-pink-500/20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="sell-form" className="py-16 bg-ios-background border-t border-ios-border">
+  <div ref={formRef} className="scroll-mt-20">
+  <IOSContainer maxWidth="lg" className="with-bottom-nav">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className="text-3xl font-bold text-ios-text mb-4">
               Estimasi Harga Akun Anda
             </h2>
-            <p className="text-gray-300">
+            <p className="text-ios-text-secondary">
               Isi form di bawah untuk mendapat estimasi harga akun game Anda
             </p>
           </div>
 
-          <div className="bg-black rounded-2xl p-8 border border-pink-500/30">
+          <IOSCard padding="large">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                   Pilih Game
                 </label>
                 <select
                   value={selectedGame}
                   onChange={(e) => setSelectedGame(e.target.value)}
-                  className="w-full px-4 py-3 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-ios-border bg-ios-surface text-ios-text rounded-lg focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
                 >
                   <option value="">{loadingGames ? 'Memuat…' : 'Pilih game...'}</option>
                   {gameOptions.map(game => (
@@ -231,39 +246,39 @@ const SellPage: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                   Level/Rank Akun
                 </label>
                 <input
                   type="text"
                   value={accountLevel}
                   onChange={(e) => setAccountLevel(e.target.value)}
-                  className="w-full px-4 py-3 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-ios-border bg-ios-surface text-ios-text rounded-lg focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
                   placeholder="Contoh: Mythic Glory, Conqueror, dll"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                   Estimasi Harga (Opsional)
                 </label>
                 <input
                   type="text"
                   value={estimatedPrice}
                   onChange={handlePriceChange}
-                  className="w-full px-4 py-3 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-ios-border bg-ios-surface text-ios-text rounded-lg focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
                   placeholder="Contoh: Rp 2,000,000"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                   Detail Akun
                 </label>
                 <textarea
                   value={accountDetails}
                   onChange={(e) => setAccountDetails(e.target.value)}
-                  className="w-full px-4 py-3 border border-pink-500/40 bg-black text-white rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-ios-border bg-ios-surface text-ios-text rounded-lg focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
                   rows={3}
                   placeholder="Skin, hero, item khusus, dll"
                 />
@@ -271,107 +286,117 @@ const SellPage: React.FC = () => {
             </div>
 
             <div className="mt-8 text-center">
-              <button
-                onClick={handleSellAccount}
-                className="bg-pink-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-pink-700 transition-colors flex items-center justify-center space-x-2 mx-auto"
-              >
-                <MessageCircle size={20} />
-                <span>Hubungi Admin untuk Evaluasi</span>
-                <ArrowRight size={20} />
-              </button>
-              <p className="text-sm text-gray-400 mt-4">
+              <IOSButton size="large" onClick={handleSellAccount} className="w-full sm:w-auto">
+                <div className="flex items-center gap-2">
+                  <MessageCircle size={20} />
+                  <span>Hubungi Admin untuk Evaluasi</span>
+                  <ArrowRight size={20} />
+                </div>
+              </IOSButton>
+              <p className="text-sm text-ios-text-secondary mt-4">
                 Admin akan menghubungi Anda untuk evaluasi lebih lanjut
               </p>
             </div>
-          </div>
-        </div>
+          </IOSCard>
+    </IOSContainer>
+  </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="py-16 bg-black/60 border-t border-pink-500/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 bg-ios-background border-t border-ios-border">
+  <IOSContainer className="with-bottom-nav">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className="text-3xl font-bold text-ios-text mb-4">
               Mengapa Jual di JB Alwikobra?
             </h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
+            <p className="text-ios-text-secondary max-w-2xl mx-auto">
               Platform terpercaya dengan sistem yang aman dan transparan untuk menjual akun game Anda
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {benefits.map((benefit, index) => {
               const Icon = benefit.icon;
               return (
-                <div key={index} className="bg-black p-6 rounded-xl border border-pink-500/30 text-center">
-                  <div className="w-16 h-16 bg-black border border-pink-500/40 rounded-xl flex items-center justify-center mx-auto mb-4">
+        <IOSCard key={index} padding="large" className="text-center">
+                  <div className="w-16 h-16 bg-ios-surface border border-ios-border rounded-xl flex items-center justify-center mx-auto mb-4">
                     <Icon className="text-pink-400" size={24} />
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{benefit.title}</h3>
-                  <p className="text-gray-300">{benefit.description}</p>
-                </div>
+                  <h3 className="text-lg font-semibold text-ios-text mb-2">{benefit.title}</h3>
+                  <p className="text-ios-text-secondary">{benefit.description}</p>
+        </IOSCard>
               );
             })}
           </div>
-        </div>
+    </IOSContainer>
       </section>
 
       {/* Popular Games */}
-      <section className="py-16 bg-black/60 border-t border-pink-500/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-16 bg-ios-background border-t border-ios-border">
+  <IOSContainer className="with-bottom-nav">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className="text-3xl font-bold text-ios-text mb-4">
               Game Paling Laris Dijual
             </h2>
-            <p className="text-gray-300">
+            <p className="text-ios-text-secondary">
               Akun game yang paling banyak dicari pembeli di platform kami
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {popularGames.map((game, index) => {
-              const IconComponent = getGameIconComponent(game.icon);
-              return (
-                <div key={index} className="bg-black p-6 rounded-xl text-center border border-pink-500/30 hover:bg-white/5 transition-colors">
-                  <div 
-                    className="w-12 h-12 bg-black border border-pink-500/40 rounded-lg flex items-center justify-center mx-auto mb-3"
-                    style={{ borderColor: game.color + '40', backgroundColor: game.color + '10' }}
-                  >
-                    <IconComponent className="text-pink-400" size={20} style={{ color: game.color }} />
-                  </div>
-                  <h3 className="font-semibold text-white mb-1">{game.name}</h3>
-                  <p className="text-sm text-gray-400">
-                    {game.count === 'Tersedia' ? 'Siap dibeli' : `${game.count} terjual`}
-                  </p>
-                </div>
-              );
-            })}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {loadingGames ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <IOSCard key={i} padding="large" className="text-center">
+                  <div className="w-12 h-12 rounded-lg mx-auto mb-3 ios-skeleton"></div>
+                  <div className="h-4 w-24 mx-auto ios-skeleton mb-2"></div>
+                  <div className="h-3 w-20 mx-auto ios-skeleton"></div>
+                </IOSCard>
+              ))
+            ) : (
+              popularGames.map((game, index) => {
+                const IconComponent = getGameIconComponent(game.icon);
+                return (
+          <IOSCard key={index} padding="large" className="text-center">
+                    <div 
+                      className="w-12 h-12 bg-ios-surface border border-ios-border rounded-lg flex items-center justify-center mx-auto mb-3"
+                      style={{ borderColor: game.color + '40', backgroundColor: game.color + '10' }}
+                    >
+                      <IconComponent className="text-pink-400" size={20} style={{ color: game.color }} />
+                    </div>
+                    <h3 className="font-semibold text-ios-text mb-1">{game.name}</h3>
+                    <p className="text-sm text-ios-text-secondary">
+                      {game.count === 'Tersedia' ? 'Siap dibeli' : `${game.count} terjual`}
+                    </p>
+          </IOSCard>
+                );
+              })
+            )}
           </div>
-        </div>
+    </IOSContainer>
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" className="py-16 bg-black/60 border-t border-pink-500/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="how-it-works" className="py-16 bg-ios-background border-t border-ios-border">
+  <IOSContainer className="with-bottom-nav">
           <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-white mb-4">
+            <h2 className="text-3xl font-bold text-ios-text mb-4">
               Cara Jual Akun di JB Alwikobra
             </h2>
-            <p className="text-gray-300 max-w-2xl mx-auto">
+            <p className="text-ios-text-secondary max-w-2xl mx-auto">
               Proses yang mudah dan aman untuk menjual akun game Anda dalam 4 langkah sederhana
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {steps.map((step, index) => (
               <div key={index} className="relative">
-                <div className="bg-black p-6 rounded-xl border border-pink-500/30 text-center">
+  <IOSCard padding="large" className="text-center">
                   <div className="w-16 h-16 bg-pink-600 text-white rounded-xl flex items-center justify-center mx-auto mb-4 text-xl font-bold">
                     {step.number}
                   </div>
-                  <h3 className="text-lg font-semibold text-white mb-2">{step.title}</h3>
-                  <p className="text-gray-300">{step.description}</p>
-                </div>
+      <h3 className="text-lg font-semibold text-ios-text mb-2">{step.title}</h3>
+      <p className="text-ios-text-secondary">{step.description}</p>
+        </IOSCard>
                 
                 {/* Arrow connector */}
                 {index < steps.length - 1 && (
@@ -382,12 +407,12 @@ const SellPage: React.FC = () => {
               </div>
             ))}
           </div>
-        </div>
+    </IOSContainer>
       </section>
 
       {/* Stats Section */}
       <section className="py-16 bg-pink-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <IOSContainer>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="flex items-center justify-center space-x-1 text-white mb-2">
@@ -418,27 +443,28 @@ const SellPage: React.FC = () => {
               <p className="text-pink-100">Transaksi Aman</p>
             </div>
           </div>
-        </div>
+        </IOSContainer>
       </section>
 
       {/* CTA Section */}
-      <section className="py-16 bg-black/60 border-t border-pink-500/20">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold text-white mb-4">
+    <section className="py-16 bg-ios-background border-t border-ios-border">
+  <IOSContainer maxWidth="lg" className="with-bottom-nav">
+          <div className="text-center">
+      <h2 className="text-3xl font-bold text-ios-text mb-4">
             Siap Menjual Akun Game Anda?
           </h2>
-          <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+      <p className="text-ios-text-secondary mb-8 max-w-2xl mx-auto">
             Bergabunglah dengan ribuan gamer lainnya yang sudah mempercayakan penjualan akun mereka kepada kami.
             Proses mudah, aman, dan harga terbaik!
           </p>
-          <button
-            onClick={handleSellAccount}
-            className="bg-pink-600 text-white px-8 py-4 rounded-xl font-semibold hover:bg-pink-700 transition-colors flex items-center justify-center space-x-2 mx-auto"
-          >
-            <MessageCircle size={20} />
-            <span>Mulai Jual Akun Sekarang</span>
-          </button>
-        </div>
+          <IOSButton size="large" onClick={handleSellAccount}>
+            <div className="flex items-center gap-2">
+              <MessageCircle size={20} />
+              <span>Mulai Jual Akun Sekarang</span>
+            </div>
+          </IOSButton>
+          </div>
+        </IOSContainer>
       </section>
     </div>
   );

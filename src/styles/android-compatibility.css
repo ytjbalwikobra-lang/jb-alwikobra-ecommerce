@@ -1,0 +1,126 @@
+/**
+ * Android-specific compatibility enhancements
+ * Additional optimizations specifically for Android devices and browsers
+ */
+
+/* Android Material Design improvements */
+@media screen and (-webkit-min-device-pixel-ratio: 1) {
+  /* Android WebView optimizations */
+  body {
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  
+  /* Improve font rendering on Android */
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+}
+
+/* Android Chrome specific optimizations */
+@media screen and (-webkit-min-device-pixel-ratio: 2) {
+  /* High DPI Android devices */
+  .ios-button {
+    border: 0.5px solid transparent; /* Improve button rendering */
+  }
+  
+  .ios-card {
+    border: 0.5px solid var(--ios-border); /* Sharper borders on high DPI */
+  }
+}
+
+/* Android-specific touch improvements */
+@media (pointer: coarse) {
+  /* Touch-optimized for Android devices */
+  .ios-button {
+    min-height: 48px; /* Android Material Design minimum */
+    min-width: 48px;
+    touch-action: manipulation; /* Disable double-tap zoom */
+  }
+  
+  .ios-card {
+    touch-action: manipulation;
+  }
+  
+  /* Improve scrolling on Android */
+  .ios-scroll {
+    scroll-behavior: smooth;
+    overscroll-behavior: contain;
+  }
+}
+
+/* Android WebView compatibility */
+@supports not (backdrop-filter: blur(10px)) {
+  /* Fallback for Android browsers without backdrop-filter support */
+  .ios-navigation {
+    background: rgba(28, 28, 30, 0.95);
+  }
+  
+  .ios-header {
+    background: rgba(0, 0, 0, 0.95);
+  }
+}
+
+/* Android keyboard handling */
+@media screen and (max-height: 500px) {
+  /* Landscape or keyboard open optimizations */
+  .ios-modal {
+    max-height: 90vh;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .ios-input {
+    font-size: 16px; /* Prevent zoom on focus */
+  }
+}
+
+/* Android Performance optimizations */
+.android-optimized {
+  /* Force hardware acceleration */
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
+  
+  /* Optimize compositing */
+  will-change: transform;
+}
+
+/* Android-specific grid improvements */
+@media (max-width: 768px) and (orientation: portrait) {
+  .ios-grid {
+    /* Better spacing for Android portrait mode */
+    gap: 8px;
+  }
+  
+  .ios-card {
+    /* Prevent overly tall cards on Android */
+    min-height: auto;
+    max-height: 400px;
+  }
+}
+
+/* Android Chrome PWA optimizations */
+@media (display-mode: standalone) {
+  /* PWA mode optimizations for Android */
+  .ios-header {
+    padding-top: 16px; /* Account for PWA status bar */
+  }
+  
+  .ios-navigation {
+    padding-bottom: 16px; /* Account for PWA navigation gestures */
+  }
+}
+
+/* Android Dark mode improvements */
+@media (prefers-color-scheme: dark) and (max-width: 768px) {
+  /* Enhanced dark mode for Android devices */
+  .ios-card {
+    border-color: #333333; /* Better contrast on Android OLED screens */
+  }
+  
+  .ios-text-secondary {
+    color: #cccccc; /* Improved readability on Android */
+  }
+}

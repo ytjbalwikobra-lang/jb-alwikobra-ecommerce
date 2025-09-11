@@ -1,11 +1,12 @@
-import { supabase } from './supabase.ts';
+import { supabase } from './supabase';
 
 const BUCKET = process.env.REACT_APP_SUPABASE_STORAGE_BUCKET || 'product-images';
 
 export async function uploadFile(file: File, folder = 'products'): Promise<string | null> {
   if (!supabase) throw new Error('Supabase not initialized');
   const ext = file.name.split('.').pop()?.toLowerCase() || 'jpg';
-  const safeName = file.name.replace(/[^a-zA-Z0-9-_\.]/g, '_');
+  // Escape rule: include dot and dash literally; eslint no-useless-escape requires no escaping for '-_.'
+  const safeName = file.name.replace(/[^a-zA-Z0-9_.-]/g, '_');
   const path = `${folder}/${Date.now()}_${Math.random().toString(36).slice(2)}_${safeName}`;
   const { error } = await (supabase as any).storage.from(BUCKET).upload(path, file, {
     upsert: false,
@@ -32,7 +33,12 @@ export async function uploadFiles(
     const url = await uploadFile(f, folder);
     if (url) urls.push(url);
     done += 1;
-    try { onProgress?.(done, total); } catch {}
+    try { onProgress?.(done, total); } catch (cbErr) {
+      // Intentionally ignore progress callback errors to avoid breaking uploads
+      if (process.env.NODE_ENV === 'development') {
+        console.debug('uploadFiles progress callback error (ignored):', cbErr);
+      }
+    }
   }
   return urls;
 }
@@ -44,7 +50,7 @@ function urlToPath(url: string): string | null {
     const idx = u.pathname.indexOf(marker);
     if (idx === -1) return null;
     return u.pathname.substring(idx + marker.length) + (u.search || '');
-  } catch {
+  } catch (_e) {
     return null;
   }
 }

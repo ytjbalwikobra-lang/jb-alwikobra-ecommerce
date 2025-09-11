@@ -4,7 +4,7 @@
  */
 
 import { ProductService as BaseProductService } from './productService';
-import { globalCache, cacheUtils } from './globalCacheManager';
+import { globalCache } from './globalCacheManager';
 import { Product, FlashSale, Tier, GameTitle } from '../types/index';
 
 export interface ProductCacheConfig {
@@ -121,7 +121,7 @@ export class EnhancedProductService {
   /**
    * Get popular games with intelligent prefetching
    */
-  async getPopularGames(limit: number = 10): Promise<any[]> {
+  async getPopularGames(limit = 10): Promise<any[]> {
     const cacheKey = `popular-games:${limit}`;
     
     return globalCache.getOrSet(
@@ -229,12 +229,14 @@ export class EnhancedProductService {
 
     // Prefetch in background without blocking
     Promise.all([
-      this.getTiers().catch(() => {}),
-      this.getGameTitles().catch(() => {}),
-      this.getFlashSales().catch(() => {}),
-      this.getPopularGames(10).catch(() => {})
-    ]).catch(() => {
+      this.getTiers().catch((e) => { if (process.env.NODE_ENV === 'development') console.debug('prefetch tiers failed', e); return []; }),
+      this.getGameTitles().catch((e) => { if (process.env.NODE_ENV === 'development') console.debug('prefetch game titles failed', e); return []; }),
+      this.getFlashSales().catch((e) => { if (process.env.NODE_ENV === 'development') console.debug('prefetch flash sales failed', e); return []; }),
+      this.getPopularGames(10).catch((e) => { if (process.env.NODE_ENV === 'development') console.debug('prefetch popular games failed', e); return []; })
+    ]).catch((e) => {
       // Silently handle prefetch errors
+      if (process.env.NODE_ENV === 'development') console.debug('prefetch group failed', e);
+      return [] as any;
     });
   }
 
@@ -277,7 +279,7 @@ export class EnhancedProductService {
     return {
       hitRate: stats.hitRate,
       entries: stats.entries,
-      tags: Object.values(EnhancedProductService.CACHE_TAGS)
+  tags: Object.values(EnhancedProductService.CACHE_TAGS)
     };
   }
 

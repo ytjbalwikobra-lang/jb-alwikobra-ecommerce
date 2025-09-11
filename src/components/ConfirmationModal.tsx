@@ -34,7 +34,14 @@ export const ConfirmationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     isOpen: false,
     title: '',
     message: '',
-    resolve: () => {},
+    resolve: (_: boolean) => {
+      // Intentionally a no-op until a real resolver is set by confirm();
+      // keep side-effect to satisfy no-empty-function rule in dev.
+      if (process.env.NODE_ENV !== 'production') {
+        // eslint-disable-next-line no-console
+        console.debug('ConfirmationProvider resolve called before mount');
+      }
+    },
   });
 
   const confirm = useCallback((options: ConfirmationOptions): Promise<boolean> => {

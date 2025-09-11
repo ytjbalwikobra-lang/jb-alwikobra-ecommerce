@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Product } from '../../types/index.ts';
+import { Product } from '../../types';
 import { ProductService } from '../../services/productService';
 import { OptimizedProductService } from '../../services/optimizedProductService';
-import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
-import { useToast } from '../../components/Toast.tsx';
+import { formatNumberID, parseNumberID } from '../../utils/helpers';
+import { useToast } from '../../components/Toast';
 
 type FSForm = {
   id?: string;

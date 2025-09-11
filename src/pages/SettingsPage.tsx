@@ -50,8 +50,7 @@ const SettingsPage: React.FC = () => {
       // initialize theme from provider mode on first load
       setSettings((prev) => ({ ...prev, theme: mode }));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [mode]);
 
   const saveSettings = () => {
     localStorage.setItem('appSettings', JSON.stringify(settings));
@@ -83,7 +82,7 @@ const SettingsPage: React.FC = () => {
 
   return (
     <AuthRequired>
-      <div className="min-h-screen bg-app-bg">
+      <div className="min-h-screen bg-ios-background">
         <div className="pt-20 pb-20 px-4 with-bottom-nav">
           <div className="max-w-4xl mx-auto">
             {/* Header */}
@@ -99,22 +98,22 @@ const SettingsPage: React.FC = () => {
                 <SettingsIcon size={24} className="text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-app-text">Pengaturan</h1>
-                <p className="text-app-muted">Kelola preferensi aplikasi Anda</p>
+                <h1 className="text-3xl font-bold text-ios-text">Pengaturan</h1>
+                <p className="text-ios-text-secondary">Kelola preferensi aplikasi Anda</p>
               </div>
             </div>
 
             <div className="space-y-6">
               {/* Theme Settings */}
-              <div className="bg-app-surface backdrop-blur rounded-2xl p-6 border border-app-border">
-                <h2 className="text-xl font-semibold text-app-text mb-6 flex items-center">
-                  <Moon size={20} className="mr-3 text-app-accent" />
+              <div className="bg-ios-surface backdrop-blur rounded-2xl p-6 border border-ios-border">
+                <h2 className="text-xl font-semibold text-ios-text mb-6 flex items-center">
+                  <Moon size={20} className="mr-3 text-ios-accent" />
                   Tampilan
                 </h2>
 
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-app-text">Tema</span>
+                    <span className="text-ios-text">Tema</span>
                     <select
                       value={settings.theme}
                       onChange={(e) => {
@@ -122,7 +121,7 @@ const SettingsPage: React.FC = () => {
                         setSettings((prev) => ({ ...prev, theme: next }));
                         setMode(next);
                       }}
-                      className="bg-app-surface2 border border-app-border rounded-lg px-3 py-2 text-app-text"
+                      className="bg-ios-surface border border-ios-border rounded-lg px-3 py-2 text-ios-text focus:outline-none focus:ring-2 focus:ring-ios-accent/40 focus:border-ios-accent"
                     >
                       <option value="dark">Gelap</option>
                       <option value="light">Terang</option>
@@ -131,7 +130,7 @@ const SettingsPage: React.FC = () => {
                   </div>
 
                   <div className="flex items-center justify-between">
-                    <span className="text-app-text">Bahasa</span>
+                    <span className="text-ios-text">Bahasa</span>
                     <select
                       value={settings.language}
                       onChange={(e) =>
@@ -140,7 +139,7 @@ const SettingsPage: React.FC = () => {
                           language: e.target.value as AppSettings['language'],
                         }))
                       }
-                      className="bg-app-surface2 border border-app-border rounded-lg px-3 py-2 text-app-text"
+                      className="bg-ios-surface border border-ios-border rounded-lg px-3 py-2 text-ios-text focus:outline-none focus:ring-2 focus:ring-ios-accent/40 focus:border-ios-accent"
                     >
                       <option value="id">Indonesia</option>
                       <option value="en">English</option>
@@ -150,8 +149,8 @@ const SettingsPage: React.FC = () => {
               </div>
 
               {/* Notification Settings */}
-              <div className="bg-app-surface backdrop-blur rounded-xl p-6 border border-app-border">
-                <h2 className="text-lg font-semibold text-app-text mb-4 flex items-center">
+              <div className="bg-ios-surface backdrop-blur rounded-xl p-6 border border-ios-border">
+                <h2 className="text-lg font-semibold text-ios-text mb-4 flex items-center">
                   <Bell size={20} className="mr-2" />
                   Notifikasi
                 </h2>
@@ -159,8 +158,8 @@ const SettingsPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-app-text">Email</div>
-                      <div className="text-app-muted text-sm">
+                      <div className="text-ios-text">Email</div>
+                      <div className="text-ios-text-secondary text-sm">
                         Notifikasi pesanan dan promo via email
                       </div>
                     </div>
@@ -173,14 +172,14 @@ const SettingsPage: React.FC = () => {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-app-surface2 border border-app-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-accent"></div>
+                      <div className="w-11 h-6 bg-ios-surface border border-ios-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-ios-accent"></div>
                     </label>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-app-text">WhatsApp</div>
-                      <div className="text-app-muted text-sm">
+                      <div className="text-ios-text">WhatsApp</div>
+                      <div className="text-ios-text-secondary text-sm">
                         Konfirmasi pesanan via WhatsApp
                       </div>
                     </div>
@@ -193,14 +192,14 @@ const SettingsPage: React.FC = () => {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-app-surface2 border border-app-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-accent"></div>
+                      <div className="w-11 h-6 bg-ios-surface border border-ios-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-ios-accent"></div>
                     </label>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-app-text">Push Notification</div>
-                      <div className="text-app-muted text-sm">
+                      <div className="text-ios-text">Push Notification</div>
+                      <div className="text-ios-text-secondary text-sm">
                         Notifikasi browser (coming soon)
                       </div>
                     </div>
@@ -214,15 +213,15 @@ const SettingsPage: React.FC = () => {
                         className="sr-only peer"
                         disabled
                       />
-                      <div className="w-11 h-6 bg-app-surface2 border border-app-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-accent opacity-50"></div>
+                      <div className="w-11 h-6 bg-ios-surface border border-ios-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-ios-accent opacity-50"></div>
                     </label>
                   </div>
                 </div>
               </div>
 
               {/* Privacy Settings */}
-              <div className="bg-app-surface backdrop-blur rounded-xl p-6 border border-app-border">
-                <h2 className="text-lg font-semibold text-app-text mb-4 flex items-center">
+              <div className="bg-ios-surface backdrop-blur rounded-xl p-6 border border-ios-border">
+                <h2 className="text-lg font-semibold text-ios-text mb-4 flex items-center">
                   <Shield size={20} className="mr-2" />
                   Privasi
                 </h2>
@@ -230,8 +229,8 @@ const SettingsPage: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-app-text">Profil Publik</div>
-                      <div className="text-app-muted text-sm">
+                      <div className="text-ios-text">Profil Publik</div>
+                      <div className="text-ios-text-secondary text-sm">
                         Tampilkan profil di leaderboard
                       </div>
                     </div>
@@ -244,14 +243,14 @@ const SettingsPage: React.FC = () => {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-app-surface2 border border-app-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-accent"></div>
+                      <div className="w-11 h-6 bg-ios-surface border border-ios-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-ios-accent"></div>
                     </label>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-app-text">Riwayat Pesanan</div>
-                      <div className="text-app-muted text-sm">
+                      <div className="text-ios-text">Riwayat Pesanan</div>
+                      <div className="text-ios-text-secondary text-sm">
                         Sembunyikan riwayat pesanan dari publik
                       </div>
                     </div>
@@ -264,14 +263,14 @@ const SettingsPage: React.FC = () => {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-app-surface2 border border-app-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-accent"></div>
+                      <div className="w-11 h-6 bg-ios-surface border border-ios-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-ios-accent"></div>
                     </label>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div>
-                      <div className="text-app-text">Email Marketing</div>
-                      <div className="text-app-muted text-sm">
+                      <div className="text-ios-text">Email Marketing</div>
+                      <div className="text-ios-text-secondary text-sm">
                         Terima email promo dan penawaran
                       </div>
                     </div>
@@ -284,7 +283,7 @@ const SettingsPage: React.FC = () => {
                         }
                         className="sr-only peer"
                       />
-                      <div className="w-11 h-6 bg-app-surface2 border border-app-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-app-accent"></div>
+                      <div className="w-11 h-6 bg-ios-surface border border-ios-border relative rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-ios-accent"></div>
                     </label>
                   </div>
                 </div>
@@ -293,18 +292,18 @@ const SettingsPage: React.FC = () => {
               {/* Save Button */}
               <button
                 onClick={saveSettings}
-                className="w-full bg-app-accent hover:opacity-90 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20"
+                className="w-full bg-ios-accent hover:opacity-90 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2 shadow-lg shadow-pink-500/20"
               >
                 <Save size={20} />
                 <span>Simpan Pengaturan</span>
               </button>
 
               {/* App Info */}
-              <div className="bg-app-surface2 backdrop-blur rounded-xl p-4 border border-app-border text-center">
-                <div className="text-app-muted text-sm">
+              <div className="bg-ios-surface backdrop-blur rounded-xl p-4 border border-ios-border text-center">
+                <div className="text-ios-text-secondary text-sm">
                   JB Alwikobra E-commerce v1.0.0
                 </div>
-                <div className="text-app-muted text-xs mt-1 opacity-70">
+                <div className="text-ios-text-secondary text-xs mt-1 opacity-70">
                   © 2024 All rights reserved
                 </div>
               </div>
@@ -313,7 +312,7 @@ const SettingsPage: React.FC = () => {
         </div>
 
         <Footer />
-      </div>
+  </div>
     </AuthRequired>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useToast } from '../../components/Toast.tsx';
+import { useToast } from '../../components/Toast';
 import { RefreshCw, Filter } from 'lucide-react';
 
 type OrderRow = {

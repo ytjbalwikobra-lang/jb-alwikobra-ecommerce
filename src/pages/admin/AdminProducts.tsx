@@ -1,13 +1,13 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Product, Tier, GameTitle, ProductTier } from '../../types/index.ts';
+import { Product, Tier, GameTitle, ProductTier } from '../../types';
 import { ProductService } from '../../services/productService';
 import { OptimizedProductService } from '../../services/optimizedProductService';
-import { supabase } from '../../services/supabase.ts';
-import ImageUploader from '../../components/ImageUploader.tsx';
-import { uploadFiles } from '../../services/storageService.ts';
-import { formatNumberID, parseNumberID } from '../../utils/helpers.ts';
-import { useToast } from '../../components/Toast.tsx';
+import { supabase } from '../../services/supabase';
+import ImageUploader from '../../components/ImageUploader';
+import { uploadFiles } from '../../services/storageService';
+import { formatNumberID, parseNumberID } from '../../utils/helpers';
+import { useToast } from '../../components/Toast';
 // Admin page cleaned: diagnostics imports removed
 
 type FormState = {

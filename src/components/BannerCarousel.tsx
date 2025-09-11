@@ -110,9 +110,9 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
   if (loading) {
     return (
       <div className="relative rounded-2xl overflow-hidden shadow-md border border-pink-500/40">
-        <div className="w-full aspect-[3/2] bg-gray-800 animate-pulse flex items-center justify-center">
-          <div className="text-gray-400">Memuat banner...</div>
-        </div>
+           <div className="w-full aspect-[3/2] flex items-center justify-center">
+             <div className="ios-skeleton w-[92%] h-[85%] rounded-xl"></div>
+           </div>
       </div>
     );
   }
@@ -174,7 +174,7 @@ const BannerCarousel: React.FC<Props> = ({ slides }) => {
               {active.ctaText && active.ctaLink && (
                 <a 
                   href={active.ctaLink} 
-                  className="inline-block ios-button ios-button-primary px-3 sm:px-4 md:px-5 py-2 rounded-lg font-semibold text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+                  className="inline-flex items-center justify-center gap-2 bg-pink-600 hover:bg-pink-700 text-white px-4 sm:px-5 md:px-6 py-2.5 rounded-xl font-semibold text-sm sm:text-base transition-all duration-200 shadow-lg hover:shadow-xl active:scale-95 border-2 border-pink-500"
                 >
                   {active.ctaText}
                 </a>

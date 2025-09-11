@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { SettingsService } from '../../services/settingsService.ts';
-import { WebsiteSettings } from '../../types/index.ts';
+import { SettingsService } from '../../services/settingsService';
+import { WebsiteSettings } from '../../types';
 import { Save, Loader2, Image as ImageIcon } from 'lucide-react';
-import PhoneInput from '../../components/PhoneInput.tsx';
-import { useToast } from '../../components/Toast.tsx';
+import PhoneInput from '../../components/PhoneInput';
+import { useToast } from '../../components/Toast';
 
 const AdminSettings: React.FC = () => {
   const { showToast } = useToast();
@@ -122,7 +122,7 @@ const AdminSettings: React.FC = () => {
                   }} />
                 </label>
                 {(logoPreview || settings?.logoUrl) && (
-                  <img src={logoPreview || settings?.logoUrl!} alt="logo" className="h-8 rounded border border-white/10" />
+                  <img src={logoPreview ? logoPreview : (settings?.logoUrl || '')} alt="logo" className="h-8 rounded border border-white/10" />
                 )}
               </div>
             </div>
@@ -137,7 +137,7 @@ const AdminSettings: React.FC = () => {
                   }} />
                 </label>
                 {(faviconPreview || settings?.faviconUrl) && (
-                  <img src={faviconPreview || settings?.faviconUrl!} alt="favicon" className="h-8 rounded border border-white/10" />
+                  <img src={faviconPreview ? faviconPreview : (settings?.faviconUrl || '')} alt="favicon" className="h-8 rounded border border-white/10" />
                 )}
               </div>
             </div>

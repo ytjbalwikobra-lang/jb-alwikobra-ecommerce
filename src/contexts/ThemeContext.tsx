@@ -13,9 +13,27 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue>({
   theme: 'dark',
   mode: 'dark',
-  toggle: () => {},
-  set: () => {},
-  setMode: () => {},
+  toggle: () => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn('ThemeProvider is not mounted; toggle() is a no-op');
+    }
+    return; // explicit no-op
+  },
+  set: () => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn('ThemeProvider is not mounted; set() is a no-op');
+    }
+    return; // explicit no-op
+  },
+  setMode: () => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn('ThemeProvider is not mounted; setMode() is a no-op');
+    }
+    return; // explicit no-op
+  },
 });
 
 export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -36,16 +54,23 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   // Apply theme to DOM
   const applyTheme = (t: Theme) => {
     try {
-      if (t === 'dark') document.documentElement.classList.add('dark');
-      else document.documentElement.classList.remove('dark');
-      document.documentElement.style.backgroundColor = t === 'dark' ? '#000' : '#fff';
-      document.body.style.backgroundColor = t === 'dark' ? '#000' : '#fff';
-    } catch {}
+      const root = document.documentElement;
+      if (t === 'dark') root.classList.add('dark');
+      else root.classList.remove('dark');
+      root.style.backgroundColor = t === 'dark' ? '#000' : '#fff';
+      if (document.body) document.body.style.backgroundColor = root.style.backgroundColor;
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      if (process.env.NODE_ENV !== 'production') console.debug('applyTheme skipped (no DOM)');
+    }
   };
 
   useEffect(() => {
     // persist mode
-    try { localStorage.setItem('themeMode', mode); } catch {}
+    try { localStorage.setItem('themeMode', mode); } catch (err) {
+      // eslint-disable-next-line no-console
+      if (process.env.NODE_ENV !== 'production') console.debug('persist themeMode failed');
+    }
 
     // update theme derived from mode
     const next = computeTheme(mode);

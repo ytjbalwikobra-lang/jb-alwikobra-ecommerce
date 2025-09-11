@@ -8,8 +8,20 @@ type ToastCtx = {
 };
 
 const Ctx = createContext<ToastCtx>({ 
-  push: () => {}, 
-  showToast: () => {} 
+  push: (_message: string, _type?: ToastItem['type']) => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn('ToastProvider is not mounted. Ignoring toast:', _message);
+    }
+    return; // explicit no-op
+  }, 
+  showToast: (_message: string, _type?: ToastItem['type']) => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line no-console
+      console.warn('ToastProvider is not mounted. Ignoring toast:', _message);
+    }
+    return; // explicit no-op
+  } 
 });
 
 export const useToast = () => useContext(Ctx);

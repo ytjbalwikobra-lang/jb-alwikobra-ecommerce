@@ -8,8 +8,12 @@ const RequireAdmin: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center text-gray-300">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-pink-500"></div>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="w-full max-w-xs px-6">
+          <div className="ios-skeleton h-4 w-28 mb-3"></div>
+          <div className="ios-skeleton h-3.5 w-full mb-2"></div>
+          <div className="ios-skeleton h-3.5 w-5/6"></div>
+        </div>
       </div>
     );
   }

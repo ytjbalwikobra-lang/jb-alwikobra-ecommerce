@@ -102,9 +102,9 @@ class EnhancedServiceManager {
       };
 
       // Use deduplication for GET requests unless skipped
-      const result = skipDeduplication || method !== 'GET'
+        const result = skipDeduplication || method !== 'GET'
         ? await requestFn()
-        : await this.deduplicator.dedupeRequest(cacheKey, requestFn);
+          : await this.deduplicator.dedupe(cacheKey, requestFn);
 
       // Cache successful GET requests
       if (method === 'GET' && !skipCache && result !== null) {

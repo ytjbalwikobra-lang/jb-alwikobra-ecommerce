@@ -1,5 +1,5 @@
 import React from 'react';
-import { SettingsService } from '../services/settingsService.ts';
+import { SettingsService } from '../services/settingsService';
 import { 
   HelpCircle, 
   ShieldCheck, 
@@ -19,6 +19,7 @@ import {
   Clock,
   AlertTriangle
 } from 'lucide-react';
+import { IOSContainer, IOSCard } from '../components/ios/IOSDesignSystem';
 
 const faqs = [
   {
@@ -113,7 +114,9 @@ const HelpPage: React.FC = () => {
       try {
         const s = await SettingsService.get();
         if (s?.whatsappNumber) setWhatsappNumber(s.whatsappNumber);
-      } catch {}
+      } catch (_e) {
+        // ignore settings fetch error in help page
+      }
     })();
   }, []);
 
@@ -131,7 +134,7 @@ const HelpPage: React.FC = () => {
     <div className="min-h-screen bg-app-dark text-gray-200">
       {/* Hero */}
       <div className="bg-gradient-to-r from-pink-600/20 to-rose-600/20 border-b border-pink-500/20">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <IOSContainer maxWidth="lg" className="py-12">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-black border border-pink-500/40 mb-6">
               <HelpCircle className="text-pink-400 w-8 h-8" />
@@ -150,37 +153,37 @@ const HelpPage: React.FC = () => {
               <Search size={20} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" />
             </div>
           </div>
-        </div>
+        </IOSContainer>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <IOSContainer className="py-12">
 
         {/* Quick Topics */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-12">
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          <IOSCard padding="small" className="text-center hover:border-pink-500/50 transition-colors cursor-pointer">
             <User className="mx-auto text-pink-400 mb-2" size={24} />
             <p className="text-sm font-medium">Akun</p>
-          </div>
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          </IOSCard>
+          <IOSCard padding="small" className="text-center hover:border-pink-500/50 transition-colors cursor-pointer">
             <ShoppingBag className="mx-auto text-pink-400 mb-2" size={24} />
             <p className="text-sm font-medium">Pembelian</p>
-          </div>
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          </IOSCard>
+          <IOSCard padding="small" className="text-center hover:border-pink-500/50 transition-colors cursor-pointer">
             <CreditCard className="mx-auto text-pink-400 mb-2" size={24} />
             <p className="text-sm font-medium">Pembayaran</p>
-          </div>
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          </IOSCard>
+          <IOSCard padding="small" className="text-center hover:border-pink-500/50 transition-colors cursor-pointer">
             <ShieldCheck className="mx-auto text-pink-400 mb-2" size={24} />
             <p className="text-sm font-medium">Keamanan</p>
-          </div>
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          </IOSCard>
+          <IOSCard padding="small" className="text-center hover:border-pink-500/50 transition-colors cursor-pointer">
             <Heart className="mx-auto text-pink-400 mb-2" size={24} />
             <p className="text-sm font-medium">Wishlist</p>
-          </div>
-          <div className="bg-black/60 border border-pink-500/30 rounded-xl p-4 text-center hover:border-pink-500/50 transition-colors cursor-pointer">
+          </IOSCard>
+          <IOSCard padding="small" className="text-center hover:border-pink-500/50 transition-colors cursor-pointer">
             <Zap className="mx-auto text-pink-400 mb-2" size={24} />
             <p className="text-sm font-medium">Flash Sale</p>
-          </div>
+          </IOSCard>
         </div>
 
         {/* Category Filter */}
@@ -210,7 +213,7 @@ const HelpPage: React.FC = () => {
               Pertanyaan Umum
             </h2>
             
-            <div className="bg-black/60 border border-pink-500/30 rounded-xl divide-y divide-pink-500/20">
+            <IOSCard className="divide-y divide-pink-500/20">
               {filteredFaqs.map((item, idx) => (
                 <div key={idx} className="p-6">
                   <button
@@ -234,21 +237,21 @@ const HelpPage: React.FC = () => {
                   )}
                 </div>
               ))}
-            </div>
+            </IOSCard>
 
             {filteredFaqs.length === 0 && (
-              <div className="bg-black/60 border border-pink-500/30 rounded-xl p-8 text-center">
+              <IOSCard padding="large" className="text-center">
                 <Search className="mx-auto text-gray-500 mb-4" size={48} />
                 <p className="text-gray-400">Tidak ada FAQ yang cocok dengan pencarian Anda.</p>
                 <p className="text-gray-500 text-sm mt-2">Coba gunakan kata kunci lain atau hubungi support.</p>
-              </div>
+              </IOSCard>
             )}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Quick Contact */}
-            <div className="bg-black/60 border border-pink-500/30 rounded-xl p-6">
+            <IOSCard padding="large">
               <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <MessageSquare className="text-pink-400" />
                 Butuh Bantuan Cepat?
@@ -279,10 +282,10 @@ const HelpPage: React.FC = () => {
                   <span>Rating 4.9/5 customer satisfaction</span>
                 </div>
               </div>
-            </div>
+            </IOSCard>
 
             {/* System Status */}
-            <div className="bg-black/60 border border-pink-500/30 rounded-xl p-6">
+            <IOSCard padding="large">
               <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Settings className="text-pink-400" />
                 Status Sistem
@@ -313,7 +316,7 @@ const HelpPage: React.FC = () => {
               <p className="text-xs text-gray-500 mt-4">
                 Terakhir update: {new Date().toLocaleString('id-ID')}
               </p>
-            </div>
+            </IOSCard>
           </div>
         </div>
 
@@ -367,7 +370,7 @@ const HelpPage: React.FC = () => {
             </a>
           </div>
         </div>
-      </div>
+  </IOSContainer>
     </div>
   );
 };

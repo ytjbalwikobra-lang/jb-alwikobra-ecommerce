@@ -21,17 +21,17 @@ const AdminLayout: React.FC = () => {
   if (isSuper) links.push({ to: '/admin/users', label: 'Users', icon: Users } as any);
 
   return (
-    <div className="min-h-screen bg-app-dark text-gray-200">
+    <div className="min-h-screen bg-ios-background text-ios-text">
       {/* Top bar */}
-      <header className="sticky top-0 z-30 bg-black/80 backdrop-blur border-b border-pink-500/20 pt-safe-top">
+      <header className="sticky top-0 z-30 bg-ios-background/90 backdrop-blur border-b border-ios-border pt-safe-top">
         <div className="h-14 px-4 md:px-6 flex items-center justify-between">
-          <button onClick={() => setOpen(!open)} className="md:hidden text-gray-200" aria-label="Menu">
+          <button onClick={() => setOpen(!open)} className="md:hidden text-ios-text" aria-label="Menu">
             <Menu size={20} />
           </button>
-          <div className="flex-1 text-center md:text-left font-semibold">Admin</div>
+          <div className="flex-1 text-center md:text-left font-semibold text-ios-text">Admin</div>
           <button
             onClick={async ()=>{ await logout(); window.location.href='/' }}
-            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 hover:bg-white/5 text-sm text-white"
+            className="inline-flex items-center gap-2 px-3 py-2 rounded-lg border border-ios-border hover:bg-white/5 text-sm text-ios-text"
             title="Keluar"
           >
             <LogOut size={16} />
@@ -43,7 +43,7 @@ const AdminLayout: React.FC = () => {
       {/* Shell with sidebar */}
       <div className="grid grid-cols-1 md:grid-cols-[240px_1fr]">
         {/* Sidebar */}
-        <aside className={`bg-black/60 border-r border-white/10 md:sticky md:top-14 md:h-[calc(100vh-56px)] overflow-y-auto ${open ? 'block' : 'hidden'} md:block`}>
+  <aside className={`bg-ios-surface border-r border-ios-border md:sticky md:top-14 md:h-[calc(100vh-56px)] overflow-y-auto ${open ? 'block' : 'hidden'} md:block`}>
           <nav className="py-3">
             {links.map((l) => {
               const Icon = l.icon as any;
@@ -52,7 +52,7 @@ const AdminLayout: React.FC = () => {
                   key={l.to}
                   to={l.to}
                   end={(l as any).end}
-                  className={({ isActive }) => `flex items-center gap-3 px-4 py-2 text-sm font-medium border-l-2 transition-colors ${isActive ? 'text-pink-300 bg-pink-600/10 border-pink-500' : 'text-gray-300 hover:text-pink-200 hover:bg-white/5 border-transparent'}`}
+      className={({ isActive }) => `flex items-center gap-3 px-4 py-2 text-sm font-medium border-l-2 transition-colors ${isActive ? 'text-ios-text bg-white/5 border-ios-accent' : 'text-ios-text-secondary hover:text-ios-text hover:bg-white/5 border-transparent'}`}
                 >
                   <Icon size={16} />
                   <span>{l.label}</span>
@@ -63,7 +63,7 @@ const AdminLayout: React.FC = () => {
         </aside>
 
         {/* Content */}
-        <main className="p-4 md:p-6">
+  <main className="p-4 md:p-6 text-ios-text">
           <Outlet />
         </main>
       </div>

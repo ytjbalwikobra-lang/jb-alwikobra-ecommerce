@@ -15,6 +15,7 @@ import { WishlistProvider } from './contexts/WishlistContext';
 import { FaviconService } from './services/faviconService';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { productionMonitor } from './utils/productionMonitor';
+import { onIdle, warmImport } from './utils/prefetch';
 
 // CRITICAL PERFORMANCE FIX: Lazy load ALL pages including HomePage
 // This reduces initial JS bundle by 70%+
@@ -50,12 +51,15 @@ const AdminGameTitles = React.lazy(() => import('./pages/admin/AdminGameTitles')
 const WhatsAppTestPage = React.lazy(() => import('./pages/admin/WhatsAppTestPage'));
 const AdminPosts = React.lazy(() => import('./pages/admin/AdminPosts'));
 
-// Optimized loading component for better perceived performance
+// Optimized loading component for better perceived performance (iOS skeleton)
 const PageLoader = () => (
-  <div className="min-h-screen bg-black flex items-center justify-center">
-    <div className="text-center">
-      <div className="animate-spin rounded-full h-8 w-8 border-2 border-pink-500 border-t-transparent mx-auto mb-3"></div>
-      <div className="text-gray-400 text-sm">Loading...</div>
+  <div className="min-h-screen bg-ios-background text-ios-text flex items-center justify-center px-6">
+    <div className="w-full max-w-md">
+      <div className="ios-skeleton h-6 w-40 mb-4"></div>
+      <div className="ios-skeleton h-4 w-full mb-2"></div>
+      <div className="ios-skeleton h-4 w-5/6 mb-2"></div>
+      <div className="ios-skeleton h-4 w-2/3 mb-6"></div>
+      <div className="ios-skeleton h-10 w-32 rounded-lg"></div>
     </div>
   </div>
 );
@@ -113,6 +117,14 @@ function App() {
     if (productionMonitor.isProduction()) {
       console.log('🔍 Production monitoring active');
     }
+
+    // Idle warmup: pre-load frequently visited routes
+    onIdle(() => {
+      warmImport(() => import('./pages/ProductsPage'));
+      warmImport(() => import('./pages/FlashSalesPage'));
+      warmImport(() => import('./pages/SellPage'));
+      warmImport(() => import('./pages/ProfilePage'));
+    }, 1000);
   }, []);
 
   return (
@@ -194,7 +206,7 @@ function App() {
                 <Route path="*" element={
                   <div className="App min-h-screen flex flex-col bg-app-dark text-gray-200">
                     <Header />
-                    <main className="flex-1 with-bottom-nav">
+                    <main className="flex-1 with-bottom-nav pt-16 md:pt-20">
                       {!process.env.REACT_APP_SUPABASE_URL || !process.env.REACT_APP_SUPABASE_ANON_KEY ? (
                         <div className="max-w-3xl mx-auto p-4">
                           <div className="bg-black/60 border border-yellow-500/40 rounded-lg p-4 mb-4">

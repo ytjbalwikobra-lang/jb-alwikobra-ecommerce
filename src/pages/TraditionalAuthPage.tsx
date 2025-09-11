@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/TraditionalAuthContext';
-import { useToast } from '../components/Toast.tsx';
-import PhoneInput from '../components/PhoneInput.tsx';
-import PasswordInput from '../components/PasswordInput.tsx';
+import { useToast } from '../components/Toast';
+import PhoneInput from '../components/PhoneInput';
+import PasswordInput from '../components/PasswordInput';
+import { IOSButton, IOSCard } from '../components/ios/IOSDesignSystem';
 
 const AuthPage: React.FC = () => {
   const [mode, setMode] = useState<'login' | 'signup' | 'verify' | 'complete'>('login');
@@ -185,18 +186,18 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-app-dark flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-ios-background text-ios-text flex items-center justify-center px-4 py-8 with-bottom-nav">
       <div className="max-w-md w-full">
-        <div className="bg-black/60 backdrop-blur border border-pink-500/30 rounded-xl p-8 shadow-2xl">
+        <div className="bg-ios-surface border border-ios-border rounded-2xl p-8 shadow-lg">
           {/* Header */}
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-white mb-2">
+            <h1 className="text-2xl font-bold text-ios-text mb-2">
               {mode === 'login' && 'Masuk ke Akun'}
               {mode === 'signup' && 'Daftar Akun Baru'}
               {mode === 'verify' && 'Verifikasi WhatsApp'}
               {mode === 'complete' && 'Lengkapi Profil'}
             </h1>
-            <p className="text-gray-400 text-sm">
+            <p className="text-ios-text-secondary text-sm">
               {mode === 'login' && 'Pilih metode masuk yang Anda inginkan'}
               {mode === 'signup' && 'Buat akun dengan nomor WhatsApp'}
               {mode === 'verify' && 'Masukkan kode yang dikirim ke WhatsApp'}
@@ -208,14 +209,14 @@ const AuthPage: React.FC = () => {
           {mode === 'login' && (
             <div className="space-y-6">
               {/* Login Tabs */}
-              <div className="flex bg-gray-800/50 rounded-lg p-1">
+        <div className="flex bg-ios-surface rounded-xl p-1 border border-ios-border">
                 <button
                   type="button"
                   onClick={() => setLoginTab('email')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
                     loginTab === 'email'
-                      ? 'bg-pink-500 text-white shadow-md'
-                      : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/50'
+            ? 'bg-ios-accent text-white shadow-sm'
+            : 'text-ios-text-secondary hover:bg-white/5'
                   }`}
                 >
                   Email
@@ -223,10 +224,10 @@ const AuthPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setLoginTab('phone')}
-                  className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-all ${
+          className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-all ${
                     loginTab === 'phone'
-                      ? 'bg-pink-500 text-white shadow-md'
-                      : 'text-gray-400 hover:text-gray-300 hover:bg-gray-700/50'
+            ? 'bg-ios-accent text-white shadow-sm'
+            : 'text-ios-text-secondary hover:bg-white/5'
                   }`}
                 >
                   Nomor HP
@@ -239,14 +240,14 @@ const AuthPage: React.FC = () => {
                 {loginTab === 'email' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                         Email
                       </label>
                       <input
                         type="email"
                         value={emailLoginData.email}
                         onChange={(e) => setEmailLoginData({ ...emailLoginData, email: e.target.value })}
-                        className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                        className="w-full px-4 py-3 bg-ios-surface border border-ios-border rounded-xl text-ios-text placeholder:text-ios-text-secondary focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
                         placeholder="email@example.com"
                         required
                       />
@@ -267,7 +268,7 @@ const AuthPage: React.FC = () => {
                 {loginTab === 'phone' && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                      <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                         Nomor HP
                       </label>
                       <PhoneInput
@@ -287,11 +288,7 @@ const AuthPage: React.FC = () => {
                   </>
                 )}
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:from-pink-600 hover:to-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
+                <button type="submit" disabled={loading} className="ios-button w-full disabled:opacity-50">
                   {loading ? 'Masuk...' : `Masuk dengan ${loginTab === 'email' ? 'Email' : 'Nomor HP'}`}
                 </button>
 
@@ -299,7 +296,7 @@ const AuthPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setMode('signup')}
-                    className="text-pink-400 hover:text-pink-300 text-sm font-medium"
+                    className="text-ios-accent hover:opacity-90 text-sm font-medium"
                   >
                     Belum punya akun? Daftar di sini
                   </button>
@@ -312,7 +309,7 @@ const AuthPage: React.FC = () => {
           {mode === 'signup' && (
             <form onSubmit={handleSignup} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                   Nomor WhatsApp
                 </label>
                 <PhoneInput
@@ -324,7 +321,7 @@ const AuthPage: React.FC = () => {
                   placeholder="Masukkan Nomor WhatsApp"
                   required
                 />
-                <p className="text-xs text-gray-400 mt-1">
+                <p className="text-xs text-ios-text-secondary mt-1">
                   Verification code will be sent to this number (Supports Asian countries)
                 </p>
               </div>
@@ -344,11 +341,7 @@ const AuthPage: React.FC = () => {
                 required
               />
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:from-pink-600 hover:to-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
+              <button type="submit" disabled={loading} className="ios-button w-full disabled:opacity-50">
                 {loading ? 'Mendaftar...' : 'Daftar'}
               </button>
 
@@ -356,7 +349,7 @@ const AuthPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setMode('login')}
-                  className="text-pink-400 hover:text-pink-300 text-sm font-medium"
+                  className="text-ios-accent hover:opacity-90 text-sm font-medium"
                 >
                   Sudah punya akun? Masuk di sini
                 </button>
@@ -368,18 +361,18 @@ const AuthPage: React.FC = () => {
           {mode === 'verify' && (
             <form onSubmit={handleVerification} className="space-y-6">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-ios-surface border border-ios-border rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
                   </svg>
                 </div>
-                <p className="text-gray-300 text-sm">
+                <p className="text-ios-text-secondary text-sm">
                   Kode verifikasi telah dikirim ke WhatsApp Anda
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                   Kode Verifikasi (6 digit)
                 </label>
                 <input
@@ -389,18 +382,14 @@ const AuthPage: React.FC = () => {
                     ...verificationData, 
                     code: e.target.value.replace(/\D/g, '').slice(0, 6)
                   })}
-                  className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent text-center text-2xl tracking-widest"
+                  className="w-full px-4 py-3 bg-ios-surface border border-ios-border rounded-xl text-ios-text placeholder:text-ios-text-secondary focus:ring-2 focus:ring-ios-accent focus:border-ios-accent text-center text-2xl tracking-widest"
                   placeholder="123456"
                   maxLength={6}
                   required
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={loading || verificationData.code.length !== 6}
-                className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:from-pink-600 hover:to-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
+              <button type="submit" disabled={loading || verificationData.code.length !== 6} className="ios-button w-full disabled:opacity-50">
                 {loading ? 'Memverifikasi...' : 'Verifikasi'}
               </button>
 
@@ -408,7 +397,7 @@ const AuthPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setMode('signup')}
-                  className="text-pink-400 hover:text-pink-300 text-sm font-medium"
+                  className="text-ios-accent hover:opacity-90 text-sm font-medium"
                 >
                   Kembali ke pendaftaran
                 </button>
@@ -420,39 +409,39 @@ const AuthPage: React.FC = () => {
           {mode === 'complete' && (
             <form onSubmit={handleProfileCompletion} className="space-y-6">
               <div className="text-center mb-6">
-                <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-ios-surface border border-ios-border rounded-full flex items-center justify-center mx-auto mb-4">
                   <svg className="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <p className="text-gray-300 text-sm">
+                <p className="text-ios-text-secondary text-sm">
                   Lengkapi profil Anda untuk menyelesaikan pendaftaran
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                   Email
                 </label>
                 <input
                   type="email"
                   value={profileData.email}
                   onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-ios-surface border border-ios-border rounded-xl text-ios-text placeholder:text-ios-text-secondary focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
                   placeholder="email@example.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-ios-text-secondary mb-2">
                   Nama Lengkap
                 </label>
                 <input
                   type="text"
                   value={profileData.name}
                   onChange={(e) => setProfileData({ ...profileData, name: e.target.value })}
-                  className="w-full px-4 py-3 bg-white/10 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  className="w-full px-4 py-3 bg-ios-surface border border-ios-border rounded-xl text-ios-text placeholder:text-ios-text-secondary focus:ring-2 focus:ring-ios-accent focus:border-ios-accent"
                   placeholder="Nama lengkap Anda"
                   required
                 />
@@ -476,11 +465,7 @@ const AuthPage: React.FC = () => {
                 />
               </div>
 
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-pink-500 to-pink-600 text-white py-3 px-4 rounded-lg font-medium hover:from-pink-600 hover:to-pink-700 focus:ring-2 focus:ring-pink-500 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-              >
+              <button type="submit" disabled={loading} className="ios-button w-full disabled:opacity-50">
                 {loading ? 'Menyelesaikan...' : 'Selesaikan Pendaftaran'}
               </button>
             </form>

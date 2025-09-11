@@ -1,6 +1,6 @@
-import { supabase } from './supabase.ts';
-import { deletePublicUrls } from './storageService.ts';
-import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types/index.ts';
+import { supabase } from './supabase';
+import { deletePublicUrls } from './storageService';
+import { Product, FlashSale, Tier, GameTitle, ProductTier } from '../types';
 
 // Global cache for ProductService
 const g = globalThis as any;
@@ -339,8 +339,8 @@ export class ProductService {
         return sampleProducts;
       }
       hasRelations = false;
-      // Fetch rental options separately
-      let rentalsByProduct = new Map<string, any[]>();
+  // Fetch rental options separately
+  const rentalsByProduct = new Map<string, any[]>();
       try {
         const ids = (basic || []).map((p: any) => p.id);
         if (ids.length) {
@@ -351,7 +351,12 @@ export class ProductService {
             rentalsByProduct.set(ro.product_id, arr);
           }
         }
-      } catch {}
+      } catch (e) {
+        // Ignore rental options fetch failure; proceed with base products
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('rental_options fetch failed (non-fatal):', e);
+        }
+      }
   return (basic || []).map((p: any) => ({
         ...p,
   isActive: p.is_active ?? p.isActive,
@@ -521,10 +526,10 @@ export class ProductService {
           }));
         }
         hasFlashSaleJoin = false;
-        const ids = (basic || []).map((b: any) => b.product_id);
+  const ids = (basic || []).map((b: any) => b.product_id);
         const { data: prods } = await supabase.from('products').select('*').in('id', ids);
         // Best-effort fetch rental options to derive hasRental when has_rental column is absent
-        let rentalsMap = new Map<string, number>();
+  const rentalsMap = new Map<string, number>();
         try {
           if (ids.length) {
             const { data: ros } = await supabase
@@ -535,8 +540,13 @@ export class ProductService {
               rentalsMap.set(ro.product_id, (rentalsMap.get(ro.product_id) || 0) + 1);
             }
           }
-        } catch {}
-        const pmap = new Map((prods || []).map((p: any) => [p.id, p]));
+        } catch (e) {
+          // Ignore rental options fetch failure; proceed without enrichment
+          if (process.env.NODE_ENV === 'development') {
+            console.debug('rental_options fetch failed (non-fatal):', e);
+          }
+        }
+  const pmap = new Map((prods || []).map((p: any) => [p.id, p]));
         return (basic || []).map((sale: any) => {
           const raw = pmap.get(sale.product_id) || {};
           const product = { ...raw, hasRental: (raw as any).has_rental ?? (raw as any).hasRental ?? ((rentalsMap.get(sale.product_id) || 0) > 0) };
@@ -555,8 +565,8 @@ export class ProductService {
         });
       }
 
-      // When relational join succeeds, also check rental options to infer hasRental if needed
-      let rentalsMap = new Map<string, number>();
+  // When relational join succeeds, also check rental options to infer hasRental if needed
+  const rentalsMap = new Map<string, number>();
       try {
         const prodIds = (data || []).map((s: any) => s.product_id || s.productId || s.products?.id).filter(Boolean);
         if (prodIds.length) {
@@ -568,9 +578,14 @@ export class ProductService {
             rentalsMap.set(ro.product_id, (rentalsMap.get(ro.product_id) || 0) + 1);
           }
         }
-      } catch {}
+      } catch (e) {
+        // Ignore rental options fetch failure; proceed
+        if (process.env.NODE_ENV === 'development') {
+          console.debug('rental_options fetch failed (non-fatal):', e);
+        }
+      }
 
-      const result = data?.map((sale: any) => {
+  const result = data?.map((sale: any) => {
         const prod = sale.products || {};
         const gt = prod.game_titles;
         const tier = prod.tiers;
@@ -946,14 +961,20 @@ export class ProductService {
   try {
     // Some deployments don't have ON DELETE CASCADE on these tables
     await (supabase as any).from('rental_options').delete().eq('product_id', id);
-  } catch (_) {}
+  } catch (_) {
+    // ignore
+  }
   try {
     await (supabase as any).from('flash_sales').delete().eq('product_id', id);
-  } catch (_) {}
+  } catch (_) {
+    // ignore
+  }
   try {
     // Orders usually reference product_id without cascade; set to NULL to keep order history
     await (supabase as any).from('orders').update({ product_id: null }).eq('product_id', id);
-  } catch (_) {}
+  } catch (_) {
+    // ignore
+  }
 
   const { error } = await supabase
         .from('products')
@@ -1089,7 +1110,7 @@ export class ProductService {
   }
 
   // Popular games with product counts for the Home page carousel
-  static async getPopularGames(limit: number = 12): Promise<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>> {
+  static async getPopularGames(limit = 12): Promise<Array<{ id: string; name: string; slug: string; logoUrl?: string | null; count: number }>> {
     try {
       // Lightweight in-memory cache for popular games query
       const cacheKey = `popular_games_${limit}`;
@@ -1121,7 +1142,7 @@ export class ProductService {
       }
 
       // Single relational query with product counts to reduce egress
-      let relQuery = supabase
+  const relQuery = supabase
         .from('game_titles')
         .select(`
           id, name, slug, logo_url, logo_path, is_active,
@@ -1141,7 +1162,9 @@ export class ProductService {
               .from('game-logos')
               .getPublicUrl(g.logo_path);
             logoUrl = urlData.publicUrl;
-          } catch {}
+          } catch (_e) {
+            // ignore
+          }
         }
         const count = Array.isArray(g.products) ? g.products.length : 0;
         return { id: g.id, name: g.name, slug: g.slug, logoUrl, count };

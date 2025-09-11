@@ -2,8 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Import iOS compatibility layer */
+/* Import iOS and Android compatibility layers */
 @import './styles/ios-compatibility.css';
+@import './styles/android-compatibility.css';
 
 /* Mobile-first font sizing - like native apps */
 html {
@@ -238,7 +239,7 @@ textarea:focus {
 
 /* Reserve space for bottom nav on mobile */
 .with-bottom-nav {
-  padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  padding-bottom: calc(76px + env(safe-area-inset-bottom)); /* ensure footer never overlaps with bottom nav */
 }
 @media (min-width: 768px) {
   .with-bottom-nav {
@@ -257,6 +258,15 @@ textarea:focus {
   --muted: #9ca3af;
   --accent: #ec4899; /* pink-500 */
   --accent-600: #db2777;
+
+  /* Force iOS-compatible variables to dark theme regardless of OS light mode */
+  --ios-background: #000000;
+  --ios-surface: #1c1c1e;
+  --ios-surface-secondary: #2c2c2e;
+  --ios-text: #ffffff;
+  --ios-text-secondary: #aeaeb2;
+  --ios-border: #38383a;
+  --ios-accent: #FF2D92;
 }
 
 .dark {
@@ -269,6 +279,15 @@ textarea:focus {
   --muted: #9ca3af;
   --accent: #ec4899;
   --accent-600: #db2777;
+
+  /* Mirror iOS variables inside .dark scope as well */
+  --ios-background: #000000;
+  --ios-surface: #1c1c1e;
+  --ios-surface-secondary: #2c2c2e;
+  --ios-text: #ffffff;
+  --ios-text-secondary: #aeaeb2;
+  --ios-border: #38383a;
+  --ios-accent: #FF2D92;
 }
 
 /* Default dark mode on body */

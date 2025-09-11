@@ -1,4 +1,4 @@
-import { supabase } from '../services/supabase.ts';
+import { supabase } from '../services/supabase';
 
 // Test database connectivity and schema
 export const testDatabaseConnection = async () => {

@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { normalizeAsianPhone, formatDisplayPhone, isPhoneNumber, getSupportedCountries } from '../utils/phoneUtils.ts';
+import { normalizeAsianPhone, formatDisplayPhone, isPhoneNumber, getSupportedCountries } from '../utils/phoneUtils';
 
 interface SmartPhoneInputProps {
   value: string;

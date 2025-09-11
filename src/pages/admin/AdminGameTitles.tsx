@@ -1,9 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { GameTitle } from '../../types/index.ts';
+import { GameTitle } from '../../types';
 import { ProductService } from '../../services/productService';
-import { supabase } from '../../services/supabase.ts';
-import { useToast } from '../../components/Toast.tsx';
-import { gameLogoStorage } from '../../services/storageService.ts';
+import { supabase } from '../../services/supabase';
+import { useToast } from '../../components/Toast';
+import { gameLogoStorage } from '../../services/storageService';
 import { Plus, Pencil, Trash2, RefreshCw, Upload, X } from 'lucide-react';
 
 type FormState = {

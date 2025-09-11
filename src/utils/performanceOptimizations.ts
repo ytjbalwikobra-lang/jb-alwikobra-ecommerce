@@ -1,30 +1,41 @@
 // React Performance Optimization Configuration
 // This file contains critical performance improvements for mobile devices
 
-import { StrictMode } from 'react';
+// Note: keep this file side-effect free and browser-safe
 
 // Preload critical chunks for better perceived performance
 export const preloadCriticalChunks = () => {
   // Preload the most commonly visited pages after HomePage
   const criticalChunks = [
-    () => import('./pages/ProductsPage.tsx'),
-    () => import('./pages/AuthPage.tsx'),
+    () => import('../pages/ProductsPage'),
+    () => import('../pages/TraditionalAuthPage'),
   ];
   
   // Use requestIdleCallback for better performance
-  if ('requestIdleCallback' in window) {
-    (window as any).requestIdleCallback(() => {
+  try {
+    const loadAll = () => {
+      // Load all critical chunks; log failures in dev for visibility
       criticalChunks.forEach(chunk => {
-        chunk().catch(() => {}); // Silently fail if preload fails
+        void chunk().catch((e: any) => {
+          if (process.env.NODE_ENV !== 'production') {
+            // eslint-disable-next-line no-console
+            console.debug('prefetch chunk failed (non-fatal):', e?.message || e);
+          }
+        });
       });
-    });
-  } else {
-    // Fallback for browsers without requestIdleCallback
-    setTimeout(() => {
-      criticalChunks.forEach(chunk => {
-        chunk().catch(() => {});
-      });
-    }, 2000);
+    };
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      const cb = () => { loadAll(); return undefined; };
+      (window as any).requestIdleCallback(cb);
+    } else {
+      // Fallback for browsers without requestIdleCallback
+      const cb = () => { loadAll(); return undefined; };
+      setTimeout(cb, 2000);
+    }
+  } catch (e) {
+    // ignore in non-browser environments - explicit no-op
+    if (process.env.NODE_ENV !== 'production') { /* noop */ }
+    return;
   }
 };
 
@@ -32,25 +43,31 @@ export const preloadCriticalChunks = () => {
 export const optimizeImages = () => {
   // Enable modern image formats
   const supportsWebP = () => {
+    if (typeof document === 'undefined') return false;
     const canvas = document.createElement('canvas');
     canvas.width = 1;
     canvas.height = 1;
-    return canvas.toDataURL('image/webp').indexOf('webp') > -1;
+    return canvas.toDataURL('image/webp').includes('webp');
   };
 
   const supportsAVIF = () => {
+    if (typeof document === 'undefined') return false;
     const canvas = document.createElement('canvas');
     canvas.width = 1;
     canvas.height = 1;
-    return canvas.toDataURL('image/avif').indexOf('avif') > -1;
+    return canvas.toDataURL('image/avif').includes('avif');
   };
 
   // Store in sessionStorage to avoid recalculating
-  if (!sessionStorage.getItem('imageFormats')) {
-    sessionStorage.setItem('imageFormats', JSON.stringify({
-      webp: supportsWebP(),
-      avif: supportsAVIF()
-    }));
+  try {
+    if (!sessionStorage.getItem('imageFormats')) {
+      sessionStorage.setItem('imageFormats', JSON.stringify({
+        webp: supportsWebP(),
+        avif: supportsAVIF()
+      }));
+    }
+  } catch (_e) {
+    // ignore storage errors
   }
 };
 
@@ -70,17 +87,21 @@ export const inlineCriticalCSS = () => {
   `;
 
   // Only inject if not already present
-  if (!document.querySelector('#critical-css')) {
-    const style = document.createElement('style');
-    style.id = 'critical-css';
-    style.textContent = criticalCSS;
-    document.head.insertBefore(style, document.head.firstChild);
+  try {
+    if (typeof document !== 'undefined' && !document.querySelector('#critical-css')) {
+      const style = document.createElement('style');
+      style.id = 'critical-css';
+      style.textContent = criticalCSS;
+      document.head.insertBefore(style, document.head.firstChild);
+    }
+  } catch (_e) {
+    // ignore DOM errors
   }
 };
 
 // Service Worker registration for caching
 export const registerServiceWorker = async () => {
-  if ('serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
+  if (typeof navigator !== 'undefined' && 'serviceWorker' in navigator && process.env.NODE_ENV === 'production') {
     try {
       const registration = await navigator.serviceWorker.register('/sw.js');
       console.log('Service Worker registered:', registration);
@@ -93,29 +114,31 @@ export const registerServiceWorker = async () => {
 // Performance monitoring
 export const initPerformanceMonitoring = () => {
   // Measure Core Web Vitals
-  if ('PerformanceObserver' in window) {
+  if (typeof window !== 'undefined' && 'PerformanceObserver' in window) {
     // Largest Contentful Paint
     new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        console.log('LCP:', entry.startTime);
+      for (const entry of list.getEntries() as PerformanceEntry[]) {
+        console.log('LCP:', (entry as any).startTime);
       }
-    }).observe({ entryTypes: ['largest-contentful-paint'] });
+    }).observe({ type: 'largest-contentful-paint', buffered: true } as any);
 
     // First Input Delay
     new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        console.log('FID:', entry.processingStart - entry.startTime);
+      for (const entry of list.getEntries() as PerformanceEntry[]) {
+        const e: any = entry;
+        console.log('FID:', (e.processingStart || 0) - (e.startTime || 0));
       }
-    }).observe({ entryTypes: ['first-input'] });
+    }).observe({ type: 'first-input', buffered: true } as any);
 
     // Cumulative Layout Shift
     new PerformanceObserver((list) => {
-      for (const entry of list.getEntries()) {
-        if (!entry.hadRecentInput) {
-          console.log('CLS:', entry.value);
+      for (const entry of list.getEntries() as PerformanceEntry[]) {
+        const e: any = entry;
+        if (!e.hadRecentInput) {
+          console.log('CLS:', e.value);
         }
       }
-    }).observe({ entryTypes: ['layout-shift'] });
+    }).observe({ type: 'layout-shift', buffered: true } as any);
   }
 };
 
@@ -137,7 +160,9 @@ export const optimizeMemoryUsage = () => {
   };
 
   // Run cleanup every 5 minutes
-  setInterval(clearCaches, 5 * 60 * 1000);
+  if (typeof window !== 'undefined') {
+    setInterval(clearCaches, 5 * 60 * 1000);
+  }
 };
 
 // Initialize all optimizations
@@ -147,17 +172,19 @@ export const initializePerformanceOptimizations = () => {
   optimizeImages();
   
   // Run after DOM load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
+  if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        preloadCriticalChunks();
+        registerServiceWorker();
+        initPerformanceMonitoring();
+        optimizeMemoryUsage();
+      });
+    } else {
       preloadCriticalChunks();
       registerServiceWorker();
       initPerformanceMonitoring();
       optimizeMemoryUsage();
-    });
-  } else {
-    preloadCriticalChunks();
-    registerServiceWorker();
-    initPerformanceMonitoring();
-    optimizeMemoryUsage();
+    }
   }
 };

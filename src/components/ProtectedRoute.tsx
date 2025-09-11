@@ -17,10 +17,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 size={48} className="text-pink-400 animate-spin mx-auto mb-4" />
-          <p className="text-white">Memuat...</p>
+      <div className="min-h-screen bg-ios-background text-ios-text flex items-center justify-center px-6">
+        <div className="w-full max-w-sm">
+          <div className="ios-skeleton h-5 w-36 mb-4"></div>
+          <div className="ios-skeleton h-4 w-full mb-2"></div>
+          <div className="ios-skeleton h-4 w-4/5 mb-2"></div>
+          <div className="ios-skeleton h-4 w-2/3"></div>
         </div>
       </div>
     );

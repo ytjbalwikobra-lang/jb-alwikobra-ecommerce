@@ -10,6 +10,8 @@ import { dedupeRequest } from '../utils/requestDeduplicator';
 export type FeedPost = {
   id: string;
   author_id: string;
+  authorName?: string | null;
+  authorAvatarUrl?: string | null;
   content: string | null;
   created_at: string;
   is_hidden: boolean;
@@ -30,6 +32,8 @@ const IOS_MOCK_POSTS: FeedPost[] = [
   {
     id: 'ios-mock-1',
     author_id: 'mock-user-1',
+  authorName: 'Kobra One',
+  authorAvatarUrl: 'https://i.pravatar.cc/100?img=1',
     created_at: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
     content: '🎮 Dapatkan akun Mobile Legends ML terbaik! Level tinggi dengan skin langka. Perfect untuk push rank!',
     is_hidden: false,
@@ -46,6 +50,8 @@ const IOS_MOCK_POSTS: FeedPost[] = [
   {
     id: 'ios-mock-2',
     author_id: 'mock-user-2',
+  authorName: 'Kobra Two',
+  authorAvatarUrl: 'https://i.pravatar.cc/100?img=2',
     created_at: new Date(Date.now() - 1000 * 60 * 120).toISOString(),
     content: '⚡ Flash Sale Free Fire! Akun dengan diamond melimpah dan rank Grandmaster. Limited time offer!',
     is_hidden: false,
@@ -62,6 +68,8 @@ const IOS_MOCK_POSTS: FeedPost[] = [
   {
     id: 'ios-mock-3',
     author_id: 'mock-user-3',
+  authorName: 'Kobra Three',
+  authorAvatarUrl: 'https://i.pravatar.cc/100?img=3',
     created_at: new Date(Date.now() - 1000 * 60 * 240).toISOString(),
     content: '🏆 Koleksi akun PUBG Mobile terlengkap! Dari Conqueror hingga Ace. Semua region tersedia!',
     is_hidden: false,
@@ -78,6 +86,8 @@ const IOS_MOCK_POSTS: FeedPost[] = [
   {
     id: 'ios-mock-4',
     author_id: 'mock-user-4',
+  authorName: 'Kobra Four',
+  authorAvatarUrl: 'https://i.pravatar.cc/100?img=4',
     created_at: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
     content: '💎 Genshin Impact dengan 5-star characters lengkap! Primogems unlimited. Siap adventure!',
     is_hidden: false,
@@ -153,6 +163,7 @@ export class EnhancedFeedService {
       .select(`
         id,
         author_id,
+        profiles(full_name, avatar_url),
         content,
         created_at,
         is_hidden,
@@ -198,6 +209,8 @@ export class EnhancedFeedService {
     const transformedPosts: FeedPost[] = posts.map((post: any) => ({
       id: post.id,
       author_id: post.author_id,
+      authorName: (post.profiles && post.profiles.full_name) || null,
+      authorAvatarUrl: (post.profiles && post.profiles.avatar_url) || null,
       content: post.content,
       created_at: post.created_at,
       is_hidden: post.is_hidden || false,

@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { supabase } from '../services/supabase.ts';
+import { supabase } from '../services/supabase';
 import { useAuth } from '../contexts/TraditionalAuthContext';
-import Footer from '../components/Footer.tsx';
-import { AuthRequired } from '../components/ProtectedRoute.tsx';
+import Footer from '../components/Footer';
+import { AuthRequired } from '../components/ProtectedRoute';
 
 type Order = {
   id: string;
@@ -55,10 +55,21 @@ const OrderHistoryPage: React.FC = () => {
           <div className="max-w-4xl mx-auto">
             <h1 className="text-2xl font-bold text-white mb-6">Riwayat Order Saya</h1>
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center text-gray-200">
-                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto mb-4"></div>
-                  <p>Memuat riwayat pesanan...</p>
+              <div className="bg-ios-surface border border-ios-border rounded-lg p-6">
+                <div className="ios-skeleton h-5 w-48 mb-4"></div>
+                <div className="divide-y divide-ios-border/60">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className="py-4 flex items-center justify-between">
+                      <div className="flex-1 pr-4">
+                        <div className="ios-skeleton h-3.5 w-40 mb-2"></div>
+                        <div className="ios-skeleton h-3.5 w-56"></div>
+                      </div>
+                      <div className="text-right w-40">
+                        <div className="ios-skeleton h-4 w-28 mb-2 ml-auto"></div>
+                        <div className="ios-skeleton h-6 w-20 rounded-md ml-auto"></div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ) : orders.length === 0 ? (

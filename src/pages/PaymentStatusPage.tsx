@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { supabase } from '../services/supabase.ts';
-import { isLoggedIn } from '../services/authService.ts';
+import { supabase } from '../services/supabase';
+import { isLoggedIn } from '../services/authService';
 
 type Order = {
   id: string;
@@ -51,10 +51,12 @@ const PaymentStatusPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-app-dark text-gray-200">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Memuat status pembayaran...</p>
+      <div className="min-h-screen flex items-center justify-center bg-ios-background text-ios-text px-6">
+        <div className="w-full max-w-md">
+          <div className="ios-skeleton h-6 w-60 mb-4"></div>
+          <div className="ios-skeleton h-4 w-full mb-2"></div>
+          <div className="ios-skeleton h-4 w-5/6 mb-2"></div>
+          <div className="ios-skeleton h-4 w-2/3"></div>
         </div>
       </div>
     );

@@ -1,4 +1,4 @@
-import { supabase } from './supabase.ts';
+import { supabase } from './supabase';
 import { dedupeRequest, generateCacheKey } from '../utils/requestDeduplicator';
 
 export type FeedPost = {

@@ -1,30 +1,31 @@
 import React from 'react';
 import { Heart, MessageCircle, Share2, MoreHorizontal } from 'lucide-react';
 import { enhancedFeedService, type FeedPost } from '../services/enhancedFeedService';
+import { IOSContainer, IOSCard, IOSButton } from '../components/ios/IOSDesignSystem';
 
 // Fallback loading component
 const FeedSkeleton: React.FC = () => (
-  <div className="space-y-6">
+  <div className="space-y-4">
     {[1, 2, 3].map((i) => (
-      <div key={i} className="ios-card p-4">
-        <div className="ios-skeleton h-4 w-3/4 mb-2"></div>
-        <div className="ios-skeleton h-32 w-full mb-3"></div>
-        <div className="flex space-x-4">
-          <div className="ios-skeleton h-6 w-12"></div>
-          <div className="ios-skeleton h-6 w-12"></div>
-          <div className="ios-skeleton h-6 w-12"></div>
+      <IOSCard key={i} padding="medium">
+        <div className="ios-skeleton h-4 w-32 mb-3"></div>
+        <div className="ios-skeleton h-40 w-full mb-4 rounded-lg"></div>
+        <div className="flex gap-3">
+          <div className="ios-skeleton h-8 w-16 rounded-md"></div>
+          <div className="ios-skeleton h-8 w-20 rounded-md"></div>
+          <div className="ios-skeleton h-8 w-24 rounded-md"></div>
         </div>
-      </div>
+      </IOSCard>
     ))}
   </div>
 );
 
 function timeAgo(iso: string) {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60) return `${Math.floor(diff)}d`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m`;
-  if (diff < 86400) return `${Math.floor(diff / 3600)}j`;
-  return `${Math.floor(diff / 86400)}h`;
+  if (diff < 60) return `${Math.max(1, Math.floor(diff))} dtk`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} m`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)} j`;
+  return `${Math.floor(diff / 86400)} h`;
 }
 
 const FeedPage: React.FC = () => {
@@ -112,35 +113,39 @@ const FeedPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-app-dark text-gray-200">
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 pt-4 pb-24 with-bottom-nav">
+    <div className="min-h-screen bg-ios-background text-ios-text">
+      <IOSContainer maxWidth="md" className="pt-4 pb-24 with-bottom-nav">
         {/* Title */}
         <div className="flex items-center justify-between mb-4">
           <h1 className="text-xl font-semibold">Feed</h1>
-          <button className="text-sm text-pink-400 hover:text-pink-300">Refresh</button>
+          <IOSButton variant="ghost" size="small" onClick={loadInitialPosts}>Refresh</IOSButton>
         </div>
 
         {/* Feed list */}
         <div className="space-y-4">
-          {loading && (
-            <div className="bg-black/60 border border-white/10 rounded-xl p-4 animate-pulse">
-              <div className="h-4 w-24 bg-white/10 rounded mb-2" />
-              <div className="h-3 w-48 bg-white/10 rounded" />
-            </div>
-          )}
+          {loading && <FeedSkeleton />}
 
           {!loading && (items || []).map((post) => (
-            <article key={post.id} className="bg-black/60 border border-white/10 rounded-xl p-3 sm:p-4 animate-fade-in">
+            <IOSCard key={post.id} padding="medium" className="animate-fade-in">
               {/* User row */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-500 to-pink-600 flex items-center justify-center text-xs font-bold">P</div>
+                  {post.authorAvatarUrl ? (
+                    <img
+                      src={post.authorAvatarUrl}
+                      alt={post.authorName || 'User'}
+                      className="w-9 h-9 rounded-full object-cover border border-ios-border"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-ios-accent to-pink-600 flex items-center justify-center text-xs font-bold">P</div>
+                  )}
                   <div>
-                    <div className="text-sm font-medium">Postingan</div>
-                    <div className="text-xs text-gray-400">{timeAgo(post.created_at)}</div>
+                    <div className="text-sm font-medium">{post.authorName || 'Postingan'}</div>
+                    <div className="text-xs text-ios-text-secondary">{timeAgo(post.created_at)}</div>
                   </div>
                 </div>
-                <button className="text-gray-400 hover:text-gray-200" aria-label="More">
+                <button className="text-ios-text-secondary hover:text-ios-text" aria-label="More">
                   <MoreHorizontal size={18} />
                 </button>
               </div>
@@ -154,7 +159,7 @@ const FeedPage: React.FC = () => {
               {post.media && post.media.length > 0 && (
                 <div className={`mt-3 grid gap-2 ${post.media.length > 1 ? 'grid-cols-2' : ''}`}>
                   {post.media.map((m) => (
-                    <div key={m.id} className="overflow-hidden rounded-lg border border-white/10">
+                    <div key={m.id} className="overflow-hidden rounded-lg border border-ios-border">
                       {m.type === 'image' ? (
                         <img src={m.url} alt={`media`} className="w-full h-60 object-cover" loading="lazy" />
                       ) : (
@@ -167,30 +172,60 @@ const FeedPage: React.FC = () => {
 
               {/* Actions */}
               <div className="mt-3 flex items-center justify-between text-xs">
-                <button onClick={() => toggleLike(post.id)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300">
-                  <Heart size={16} className="text-pink-400" /> <span>{post.counts.likes}</span>
-                </button>
-                <button onClick={() => addComment(post.id)} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300">
-                  <MessageCircle size={16} /> <span>{post.counts.comments}</span>
-                </button>
-                <button className="inline-flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 text-gray-300">
-                  <Share2 size={16} /> <span>Bagikan</span>
-                </button>
+                <IOSButton
+                  variant="ghost"
+                  size="small"
+                  onClick={() => toggleLike(post.id)}
+                  aria-label="Suka"
+                >
+                  <div className="inline-flex items-center gap-2">
+                    <Heart size={16} className="text-ios-accent" />
+                    <span className="text-ios-text-secondary">{post.counts.likes}</span>
+                  </div>
+                </IOSButton>
+                <IOSButton
+                  variant="ghost"
+                  size="small"
+                  onClick={() => addComment(post.id)}
+                  aria-label="Komentar"
+                >
+                  <div className="inline-flex items-center gap-2">
+                    <MessageCircle size={16} />
+                    <span className="text-ios-text-secondary">{post.counts.comments}</span>
+                  </div>
+                </IOSButton>
+                <IOSButton variant="ghost" size="small" aria-label="Bagikan">
+                  <div className="inline-flex items-center gap-2">
+                    <Share2 size={16} />
+                    <span className="text-ios-text-secondary">Bagikan</span>
+                  </div>
+                </IOSButton>
               </div>
-            </article>
+            </IOSCard>
           ))}
 
+          {/* Error state */}
+          {error && !loading && (
+            <IOSCard padding="medium" className="border border-ios-border">
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-ios-text-secondary">{error}</p>
+                <IOSButton variant="secondary" size="small" onClick={loadInitialPosts}>Coba lagi</IOSButton>
+              </div>
+            </IOSCard>
+          )}
+
           <div className="flex justify-center pt-2">
-            <button
-              onClick={loadMore}
-              disabled={loadingMore || !hasMore}
-              className="px-4 py-2 rounded-lg border border-pink-500/40 text-pink-300 hover:bg-pink-500/10 disabled:opacity-60"
-            >
-              {loadingMore ? 'Memuat…' : hasMore ? 'Muat lebih banyak' : 'Sudah semua'}
-            </button>
+            <IOSButton variant="secondary" onClick={loadMore} disabled={loadingMore || !hasMore}>
+              {loadingMore ? (
+                <span className="inline-flex items-center gap-2">
+                  <span className="animate-spin rounded-full h-4 w-4 border border-ios-border border-t-ios-accent" />
+                  Memuat…
+                </span>
+              ) : hasMore ? 'Muat lebih banyak' : 'Sudah semua'}
+            </IOSButton>
           </div>
         </div>
-      </div>
+      </IOSContainer>
     </div>
   );
 };

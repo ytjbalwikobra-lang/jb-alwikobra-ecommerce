@@ -1,9 +1,9 @@
 /**
  * iOS Design System Compatibility Layer
- * Ensures all components work perfectly on iOS devices with native-like behavior
+ * Ensures all components work perfectly on iOS and Android devices with native-like behavior
  */
 
-/* iOS Safe Area and Touch Optimization */
+/* Universal Mobile Device Safe Area and Touch Optimization */
 :root {
   /* iOS safe area variables */
   --safe-area-inset-top: env(safe-area-inset-top);
@@ -11,20 +11,30 @@
   --safe-area-inset-bottom: env(safe-area-inset-bottom);
   --safe-area-inset-left: env(safe-area-inset-left);
   
-  /* iOS-specific colors that match system appearance */
+  /* Cross-platform colors that work on both iOS and Android */
   --ios-background: #000000;
-  --ios-secondary-background: #1c1c1e;
-  --ios-tertiary-background: #2c2c2e;
-  --ios-primary-text: #ffffff;
-  --ios-secondary-text: #aeaeb2;
-  --ios-separator: #38383a;
-  --ios-accent: #007aff;
+  --ios-surface: #1c1c1e;
+  --ios-surface-secondary: #2c2c2e;
+  --ios-text: #ffffff;
+  --ios-text-secondary: #aeaeb2;
+  --ios-border: #38383a;
+  --ios-accent: #FF2D92;
+  --ios-primary: #007aff;
+  --ios-secondary: #5856d6;
   --ios-destructive: #ff3b30;
   --ios-success: #30d158;
   --ios-warning: #ff9500;
+  
+  /* Android Material Design compatibility colors */
+  --android-primary: #FF2D92;
+  --android-surface: #1c1c1e;
+  --android-on-surface: #ffffff;
+  --android-outline: #38383a;
+  --android-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+  --android-elevation-2: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
 }
 
-/* iOS-specific body styling */
+/* Universal mobile body styling for iOS and Android */
 @supports (padding: max(0px)) {
   body {
     padding-left: max(var(--safe-area-inset-left), 16px);
@@ -34,13 +44,25 @@
   }
 }
 
-/* iOS touch and interaction optimizations */
+/* Android fallback for devices without safe area support */
+@supports not (padding: max(0px)) {
+  body {
+    padding: 16px;
+  }
+}
+
+/* Cross-platform touch and interaction optimizations */
 * {
-  /* Improve touch response on iOS */
+  /* Improve touch response on iOS and Android */
   -webkit-tap-highlight-color: transparent;
   -webkit-touch-callout: none;
   -webkit-user-select: none;
   user-select: none;
+  
+  /* Android-specific touch improvements */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 /* Allow text selection for content areas */
@@ -54,15 +76,17 @@ p, span, h1, h2, h3, h4, h5, h6 {
   user-select: text;
 }
 
-/* iOS scrolling improvements */
+/* Cross-platform scrolling improvements */
 .ios-scroll {
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain; /* Prevent pull-to-refresh on Android */
 }
 
-/* iOS-specific button styling */
+/* Universal button styling for iOS and Android */
 .ios-button {
-  /* Remove iOS default button styling */
+  /* Remove default button styling for both platforms */
   -webkit-appearance: none;
+  -moz-appearance: none;
   appearance: none;
   border: none;
   border-radius: 12px;
@@ -71,12 +95,17 @@ p, span, h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
   padding: 12px 24px;
   min-height: 44px; /* iOS minimum touch target */
+  min-width: 48px; /* Android minimum touch target */
   display: flex;
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
   cursor: pointer;
   outline: none;
+  
+  /* Android Material Design ripple effect simulation */
+  position: relative;
+  overflow: hidden;
 }
 
 .ios-button:active {
@@ -89,157 +118,108 @@ p, span, h1, h2, h3, h4, h5, h6 {
   transform: none;
 }
 
-/* iOS-specific card styling */
+/* Android-style ripple effect for buttons */
+.ios-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  transition: width 0.3s, height 0.3s, top 0.3s, left 0.3s;
+  transform: translate(-50%, -50%);
+}
+
+.ios-button:active::before {
+  width: 300px;
+  height: 300px;
+  top: 50%;
+  left: 50%;
+}
+
+/* Cross-platform card styling with design system integration */
 .ios-card {
-  background: var(--ios-secondary-background);
-  border-radius: 16px;
-  border: 1px solid var(--ios-separator);
+  background: var(--ios-surface);
+  border-radius: 20px;
+  border: 1px solid var(--ios-border);
   overflow: hidden;
   transition: all 0.3s ease;
+  
+  /* Android elevation simulation */
+  box-shadow: var(--android-elevation-1);
 }
 
-.ios-card:active {
-  transform: scale(0.98);
+.ios-card:hover,
+.ios-card:focus-within {
+  box-shadow: var(--android-elevation-2);
+  transform: translateY(-2px);
 }
 
-/* iOS-specific navigation styling */
-.ios-navigation {
-  background: rgba(28, 28, 30, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--ios-separator);
-  padding-bottom: max(var(--safe-area-inset-bottom), 8px);
+/* Android-specific optimizations */
+@media screen and (max-device-width: 768px) {
+  /* Disable hover effects on touch devices */
+  .ios-button:hover,
+  .ios-card:hover {
+    transform: none;
+  }
+  
+  /* Optimize touch targets for Android */
+  .ios-button {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Improve text readability on various Android screens */
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+/* Enhanced card styling optimizations */
+.ios-card {
+  /* Fix mobile overlap issue */
+  min-height: 200px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-/* iOS-specific header styling */
-.ios-header {
-  background: rgba(0, 0, 0, 0.9);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid var(--ios-separator);
-  padding-top: max(var(--safe-area-inset-top), 12px);
-}
-
-/* iOS-specific modal styling */
-.ios-modal {
-  background: var(--ios-background);
-  border-radius: 16px 16px 0 0;
-  border: 1px solid var(--ios-separator);
-  max-height: calc(100vh - max(var(--safe-area-inset-top), 44px));
-}
-
-/* iOS-specific input styling */
-.ios-input {
-  -webkit-appearance: none;
-  appearance: none;
-  background: var(--ios-tertiary-background);
-  border: 1px solid var(--ios-separator);
-  border-radius: 12px;
-  color: var(--ios-primary-text);
-  padding: 12px 16px;
-  font-size: 16px; /* Prevents zoom on iOS */
-  min-height: 44px;
-  outline: none;
-  transition: all 0.2s ease;
-}
-
-.ios-input:focus {
-  border-color: var(--ios-accent);
-  box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.2);
-}
-
-.ios-input::placeholder {
-  color: var(--ios-secondary-text);
-}
-
-/* iOS-specific image styling */
-.ios-image {
-  border-radius: 12px;
-  overflow: hidden;
-  /* Improve image rendering on iOS */
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: optimize-contrast;
-}
-
-/* iOS-specific list styling */
-.ios-list {
-  background: var(--ios-secondary-background);
-  border-radius: 16px;
-  overflow: hidden;
-  border: 1px solid var(--ios-separator);
-}
-
-.ios-list-item {
-  padding: 16px;
-  border-bottom: 1px solid var(--ios-separator);
-  min-height: 44px;
-  display: flex;
-  align-items: center;
-  transition: background-color 0.2s ease;
-}
-
-.ios-list-item:last-child {
-  border-bottom: none;
-}
-
-.ios-list-item:active {
-  background: var(--ios-tertiary-background);
-}
-
-/* iOS-specific typography */
-.ios-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: var(--ios-primary-text);
-  line-height: 1.2;
-}
-
-.ios-subtitle {
-  font-size: 20px;
-  font-weight: 600;
-  color: var(--ios-primary-text);
-  line-height: 1.3;
-}
-
-.ios-body {
-  font-size: 16px;
-  font-weight: 400;
-  color: var(--ios-primary-text);
-  line-height: 1.4;
-}
-
-.ios-caption {
-  font-size: 14px;
-  font-weight: 400;
-  color: var(--ios-secondary-text);
-  line-height: 1.3;
-}
-
-/* iOS-specific loading states */
-.ios-loading {
-  display: inline-block;
-  width: 20px;
-  height: 20px;
-  border: 2px solid var(--ios-separator);
-  border-radius: 50%;
-  border-top-color: var(--ios-accent);
-  animation: ios-spin 1s linear infinite;
-}
-
-@keyframes ios-spin {
-  to {
-    transform: rotate(360deg);
+/* Enhanced mobile-specific card fixes */
+@media (max-width: 640px) {
+  .ios-card {
+    min-height: 240px; /* Increased height for better content display */
+    margin-bottom: 12px; /* More breathing room between cards */
+    border-radius: 16px; /* Slightly smaller radius on mobile */
+  }
+  
+  /* Fix grid spacing on mobile */
+  .grid-cols-2 {
+    gap: 12px !important; /* Optimal spacing for mobile */
+  }
+  
+  .grid-cols-2 > * {
+    min-width: 0; /* Prevent flex-grow issues */
+    width: 100%; /* Ensure full width utilization */
+  }
+  
+  /* Prevent card content overflow */
+  .ios-card * {
+    max-width: 100%;
+    word-wrap: break-word;
   }
 }
 
-/* iOS-specific skeleton loading */
+/* Medium screens optimization */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .ios-card {
+    min-height: 220px;
+  }
+}
+
+/* iOS skeleton loading animation - Enhanced */
 .ios-skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--ios-tertiary-background) 25%,
-    var(--ios-separator) 50%,
-    var(--ios-tertiary-background) 75%
-  );
+  background: linear-gradient(90deg, var(--ios-border) 25%, var(--ios-surface-secondary) 50%, var(--ios-border) 75%);
   background-size: 200% 100%;
   animation: ios-skeleton-loading 1.5s infinite;
   border-radius: 8px;
@@ -251,6 +231,136 @@ p, span, h1, h2, h3, h4, h5, h6 {
   }
   100% {
     background-position: -200% 0;
+  }
+}
+
+/* Enhanced iOS-specific navigation styling */
+.ios-navigation {
+  background: rgba(28, 28, 30, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--ios-border);
+  padding-bottom: max(var(--safe-area-inset-bottom), 8px);
+}
+
+/* Enhanced iOS-specific header styling */
+.ios-header {
+  background: rgba(0, 0, 0, 0.9);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--ios-border);
+  padding-top: max(var(--safe-area-inset-top), 12px);
+}
+
+/* Android and iOS modal compatibility */
+.ios-modal {
+  background: var(--ios-background);
+  border-radius: 16px 16px 0 0;
+  border: 1px solid var(--ios-border);
+  max-height: calc(100vh - max(var(--safe-area-inset-top), 44px));
+  
+  /* Android Material Design elevation */
+  box-shadow: var(--android-elevation-2);
+}
+
+/* Cross-platform input styling */
+.ios-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: var(--ios-surface);
+  border: 1px solid var(--ios-border);
+  border-radius: 12px;
+  color: var(--ios-text);
+  padding: 12px 16px;
+  font-size: 16px; /* Prevents zoom on iOS */
+  min-height: 44px;
+  outline: none;
+  transition: all 0.2s ease;
+  
+  /* Android compatibility */
+  min-width: 48px;
+}
+
+.ios-input:focus {
+  border-color: var(--ios-accent);
+  box-shadow: 0 0 0 2px rgba(255, 45, 146, 0.2);
+}
+
+.ios-input::placeholder {
+  color: var(--ios-text-secondary);
+}
+
+/* Cross-platform typography */
+.ios-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--ios-text);
+  line-height: 1.2;
+}
+
+.ios-subtitle {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--ios-text);
+  line-height: 1.3;
+}
+
+.ios-body {
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--ios-text);
+  line-height: 1.4;
+}
+
+.ios-caption {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--ios-text-secondary);
+  line-height: 1.3;
+}
+
+/* Cross-platform loading states */
+.ios-loading {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--ios-border);
+  border-radius: 50%;
+  border-top-color: var(--ios-accent);
+  animation: ios-spin 1s linear infinite;
+}
+
+@keyframes ios-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Mobile performance optimizations for both iOS and Android */
+@media (hover: none) and (pointer: coarse) {
+  /* Touch device optimizations */
+  .ios-button:hover {
+    transform: none;
+  }
+  
+  .ios-card:hover {
+    transform: none;
+  }
+  
+  /* Improve scrolling performance */
+  * {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+  }
+  
+  /* Reduce animations on lower-end devices */
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
 

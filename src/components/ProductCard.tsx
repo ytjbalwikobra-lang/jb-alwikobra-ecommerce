@@ -1,10 +1,11 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Product } from '../types/index.ts';
-import { formatCurrency, calculateTimeRemaining } from '../utils/helpers.ts';
+import { Product } from '../types';
+import { formatCurrency, calculateTimeRemaining } from '../utils/helpers';
 import { Zap, ArrowUpRight, Users, Trophy, Crown, Sparkles } from 'lucide-react';
-import FlashSaleTimer from './FlashSaleTimer.tsx';
-import ResponsiveImage from './ResponsiveImage.tsx';
+import FlashSaleTimer from './FlashSaleTimer';
+import ResponsiveImage from './ResponsiveImage';
+import { IOSCard } from './ios/IOSDesignSystem';
 
 interface ProductCardProps {
   product: Product;
@@ -260,7 +261,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                   {formatCurrency(displayPrice)}
                 </span>
                 {isFlashSaleActive && product.originalPrice && product.originalPrice > product.price && (
-                  <span className="text-xs font-semibold px-1.5 sm:px-2 py-1 rounded-md sm:rounded-lg bg-red-500/30 text-white border border-red-400/60 backdrop-blur-sm shadow-sm">
+                  <span className="inline-flex items-center text-xs font-semibold px-1.5 sm:px-2 py-1 rounded-md sm:rounded-lg bg-red-500/30 text-white border border-red-400/60 backdrop-blur-sm shadow-sm whitespace-nowrap leading-none">
                     -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
                   </span>
                 )}

@@ -15,7 +15,23 @@ module.exports = {
           text: 'var(--text)',
           muted: 'var(--muted)',
           accent: 'var(--accent)',
-          accent600: 'var(--accent-600)'
+          accent600: 'var(--accent-600)',
+          dark: '#000000'
+        },
+        // iOS Design System Colors
+        ios: {
+          background: 'var(--ios-background)',
+          surface: 'var(--ios-surface)',
+          'surface-secondary': 'var(--ios-surface-secondary)',
+          text: 'var(--ios-text)',
+          'text-secondary': 'var(--ios-text-secondary)',
+          border: 'var(--ios-border)',
+          accent: 'var(--ios-accent)',
+          primary: 'var(--ios-primary)',
+          secondary: 'var(--ios-secondary)',
+          destructive: 'var(--ios-destructive)',
+          success: 'var(--ios-success)',
+          warning: 'var(--ios-warning)'
         },
         primary: {
           50: '#fdf2f8',

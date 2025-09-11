@@ -260,7 +260,7 @@ const WhatsAppTestPage: React.FC = () => {
               <ul className="list-disc list-inside text-sm text-gray-400 mt-2">
                 <li>Login ke panel Woo-wa.com dengan API key Anda</li>
                 <li>Scan QR code untuk menghubungkan WhatsApp</li>
-                <li>Pastikan status device "authenticated"</li>
+                <li>Pastikan status device &quot;authenticated&quot;</li>
               </ul>
             </div>
 

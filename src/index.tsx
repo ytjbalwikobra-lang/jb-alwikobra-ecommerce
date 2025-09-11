@@ -13,9 +13,18 @@ if (process.env.NODE_ENV === 'development') {
     (window as any).__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
       isDisabled: false,
       supportsFiber: true,
-      inject: () => {},
-      onCommitFiberRoot: () => {},
-      onCommitFiberUnmount: () => {},
+      inject: (..._args: any[]) => {
+        // Provide a harmless return to satisfy no-empty-function
+        return { renderer: 'noop' } as any;
+      },
+      onCommitFiberRoot: (..._args: any[]) => {
+        // Intentionally no-op
+        return undefined;
+      },
+      onCommitFiberUnmount: (..._args: any[]) => {
+        // Intentionally no-op
+        return undefined;
+      },
     };
   }
 }

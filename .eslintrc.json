@@ -1,0 +1,58 @@
+{
+  "root": true,
+  "env": {
+    "browser": true,
+    "es2021": true,
+    "node": true
+  },
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module",
+    "project": ["./tsconfig.json"],
+    "tsconfigRootDir": "."
+  },
+  "plugins": ["@typescript-eslint", "react", "react-hooks", "tailwindcss"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:tailwindcss/recommended"
+  ],
+  "settings": {
+    "react": { "version": "detect" }
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+  "react/no-unescaped-entities": "off",
+    "@typescript-eslint/no-explicit-any": "off",
+  "@typescript-eslint/no-empty-function": "off",
+  "@typescript-eslint/no-inferrable-types": "off",
+  "@typescript-eslint/no-non-null-asserted-optional-chain": "off",
+  "@typescript-eslint/no-non-null-assertion": "off",
+  "@typescript-eslint/no-unused-vars": "off",
+  "no-empty": "off",
+  "no-useless-escape": "off",
+  "prefer-const": "off",
+    "tailwindcss/no-custom-classname": "off",
+    "tailwindcss/classnames-order": "off",
+  "tailwindcss/enforces-shorthand": "off",
+  "tailwindcss/migration-from-tailwind-2": "off",
+  "no-case-declarations": "off",
+    "react-hooks/exhaustive-deps": "off"
+  },
+  "overrides": [
+    {
+      "files": [
+        "src/utils/**/*.ts",
+        "src/directTest.ts",
+        "api/**/*.ts"
+      ],
+      "rules": {
+        "@typescript-eslint/no-unused-vars": "off"
+      }
+    }
+  ],
+  "ignorePatterns": ["build/**", "node_modules/**", "**/*.js"]
+}

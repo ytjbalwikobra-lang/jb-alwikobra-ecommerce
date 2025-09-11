@@ -48,7 +48,11 @@ export class ResourcePreloader {
       });
 
       font.load().then(() => {
-        document.fonts.add(font);
+        // Guard document.fonts for TS and older browsers
+        const docAny: any = document as any;
+        if (docAny.fonts && typeof docAny.fonts.add === 'function') {
+          docAny.fonts.add(font);
+        }
         this.preloadedFonts.add(key);
         resolve();
       }).catch(() => {

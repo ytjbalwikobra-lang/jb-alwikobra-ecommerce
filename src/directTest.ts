@@ -1,4 +1,4 @@
-import { supabase } from './services/supabase.ts';
+import { supabase } from './services/supabase';
 
 const runDirectTest = async () => {
   console.log('🧪 Running direct database test...');

@@ -80,16 +80,15 @@ const WhatsAppConfirmPage: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-ios-background flex items-center justify-center">
         <div className="max-w-md w-full mx-auto p-6">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Processing Confirmation
-            </h2>
-            <p className="text-gray-600">
-              Please wait while we verify your request...
-            </p>
+          <div className="bg-ios-surface rounded-2xl border border-ios-border p-6">
+            <div className="ios-skeleton h-6 w-40 mb-4 rounded"></div>
+            <div className="space-y-2 mb-4">
+              <div className="ios-skeleton h-4 w-full rounded"></div>
+              <div className="ios-skeleton h-4 w-5/6 rounded"></div>
+            </div>
+            <div className="ios-skeleton h-10 w-full rounded-xl"></div>
           </div>
         </div>
       </div>
@@ -97,34 +96,34 @@ const WhatsAppConfirmPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-ios-background flex items-center justify-center">
       <div className="max-w-md w-full mx-auto p-6">
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
+        <div className="bg-ios-surface rounded-2xl border border-ios-border p-6 text-center">
           {isSuccess ? (
-            <div className="text-green-600">
+            <div className="text-ios-success">
               <svg className="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
           ) : (
-            <div className="text-red-600">
+            <div className="text-ios-destructive">
               <svg className="mx-auto h-16 w-16 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
           )}
-          
-          <h2 className={`text-xl font-semibold mb-4 ${isSuccess ? 'text-green-800' : 'text-red-800'}`}>
+
+          <h2 className={`text-xl font-semibold mb-4 ${isSuccess ? 'text-ios-success' : 'text-ios-destructive'}`}>
             {isSuccess ? 'Success!' : 'Error'}
           </h2>
-          
-          <p className="text-gray-600 mb-6">
+
+          <p className="text-ios-text-secondary mb-6">
             {message}
           </p>
-          
+
           <button
             onClick={() => navigate('/')}
-            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors"
+            className="w-full bg-ios-accent text-white py-3 px-4 rounded-xl border border-transparent hover:opacity-90 transition-colors"
           >
             Return to Home
           </button>

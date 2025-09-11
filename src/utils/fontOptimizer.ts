@@ -102,7 +102,10 @@ class FontOptimizer {
         );
 
         await fontFace.load();
-        document.fonts.add(fontFace);
+        const docAny: any = document as any;
+        if (docAny.fonts && typeof docAny.fonts.add === 'function') {
+          docAny.fonts.add(fontFace);
+        }
         this.loadedFonts.add(fontKey);
       } catch (error) {
         console.warn(`Failed to load font ${fontKey}:`, error);
@@ -157,12 +160,13 @@ class FontOptimizer {
 
   // Measure font loading performance
   static measureFontPerformance(): void {
-    if ('fonts' in document) {
-      document.fonts.addEventListener('loadingdone', () => {
+    const docAny: any = document as any;
+    if (docAny.fonts && typeof docAny.fonts.addEventListener === 'function') {
+      docAny.fonts.addEventListener('loadingdone', () => {
         console.log('All fonts loaded');
       });
 
-      document.fonts.addEventListener('loadingerror', (e) => {
+      docAny.fonts.addEventListener('loadingerror', (e: any) => {
         console.warn('Font loading error:', e);
       });
     }
@@ -170,11 +174,12 @@ class FontOptimizer {
 
   // Detect if fonts are loaded
   static async waitForFonts(timeout = 3000): Promise<boolean> {
-    if (!('fonts' in document)) return true;
+  const docAny: any = document as any;
+  if (!docAny.fonts) return true;
 
     try {
       await Promise.race([
-        document.fonts.ready,
+  docAny.fonts.ready,
         new Promise((_, reject) => 
           setTimeout(() => reject(new Error('Font loading timeout')), timeout)
         )

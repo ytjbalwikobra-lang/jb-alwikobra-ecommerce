@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 // WhatsApp Service using Woo-wa.com API (notifapi.com)
 // This service handles WhatsApp notifications through Woo-wa platform
 export class WhatsAppService {
-  private static API_KEY = process.env.REACT_APP_WHATSAPP_API_KEY || 'f104a4c19ea118dd464e9de20605c4e5';
+  // Use env var; avoid trivial type annotations and hard-coded secrets in source
+  private static API_KEY = process.env.REACT_APP_WHATSAPP_API_KEY || '';
   private static API_BASE_URL = 'https://notifapi.com'; // Woo-wa.com uses notifapi.com
   
     // Woo-wa.com API endpoints
@@ -30,7 +31,7 @@ export class WhatsAppService {
   /**
    * Test the WhatsApp API key with Woo-wa.com service
    */
-  static async testApiKey(phoneNumber: string = '6281234567890'): Promise<{ 
+  static async testApiKey(phoneNumber = '6281234567890'): Promise<{ 
     success: boolean; 
     provider?: string; 
     endpoint?: string; 
